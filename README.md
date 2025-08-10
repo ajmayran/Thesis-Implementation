@@ -7,7 +7,7 @@ This repository contains the implementation for our thesis project, which aims t
 - [Project Overview](#project-overview)
 - [Technologies Used](#technologies-used)
 - [Installation](#installation)
-- [Contributors](#contributors)
+- [Members](#members)
 
 
 ## Project Overview
@@ -37,7 +37,7 @@ This project explores and develops predictive models using ensemble techniques t
     pip install -r requirements.txt
     ```
 
-## Contributors
+## Members
 
 - Alvan Jay Mayran
 - Cyrus Bon Dimain
