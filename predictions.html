@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predictions - Social Work Licensure Exam Predictor</title>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href=https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css />
+
+    <style>
+        .kpi-card {
+            border-radius: 10px;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+            border-radius: 12px;
+        }
+
+        .metric {
+            font-weight: 700;
+        }
+
+        .muted {
+            color: #6b7280;
+        }
+
+        .sidebar {
+            background: linear-gradient(180deg, #1f2937, #111827);
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .small-card {
+            border-radius: 10px;
+            padding: 18px;
+        }
+
+        .feature-bar {
+            height: 12px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 font-sans text-gray-800">
+
+    <div class="flex min-h-screen">
+
+        <!-- Sidebar -->
+        <aside class="sidebar w-64 text-white p-6 hidden md:block"
+            style="background: linear-gradient(180deg,#1f2937,#111827);">
+            <div class="flex items-center mb-8">
+                <div class="mr-3 bg-white/10 p-2 rounded-lg">
+                    <i class="fa-solid fa-user-graduate text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold">Social Work<br />Predictor</h1>
+                </div>
+            </div>
+
+            <nav class="space-y-2">
+                <a href="admin-dashboard.html" class="flex items-center p-3 nav-item rounded text-sm"><i
+                        class="fa-solid fa-house-chimney mr-3 w-5"></i>Dashboard</a>
+                <a href="predictions.html"
+                    class="flex items-center p-3 nav-item rounded text-sm bg-[#232b47] text-white"><i
+                        class="fa-solid fa-brain mr-3 w-5"></i>Predictions</a>
+                <a href="#" class="flex items-center p-3 nav-item rounded text-sm"><i
+                        class="fa-solid fa-chart-line mr-3 w-5"></i>Reports</a>
+                <a href="#" class="flex items-center p-3 nav-item rounded text-sm"><i
+                        class="fa-solid fa-file-export mr-3 w-5"></i>Export</a>
+                <a href="#" class="flex items-center p-3 nav-item rounded text-sm"><i
+                        class="fa-solid fa-gear mr-3 w-5"></i>Settings</a>
+            </nav>
+
+            <div class="mt-10 text-xs text-gray-300">w
+                <div>© Thesis Project</div>
+            </div>
+        </aside>
+
+        <!-- Main content -->
+        <div class="flex-1">
+
+            <!-- Top bar -->
+            <header class="bg-white p-4 md:pl-8 md:pr-8 flex items-center justify-between shadow-sm">
+                <div class="text-xl font-semibold">Social Work Licensure Exam Predictor</div>
+                <div class="flex items-center space-x-4">
+                    <button class="hidden md:inline-flex items-center bg-slate-700 p-3 rounded text-sm text-white"><i
+                            class="fa-solid fa-magnifying-glass mr-2"></i>Search</button>
+                    <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center"><i
+                            class="fa-solid fa-user text-white"></i></div>
+                </div>
+            </header>
+
+            <main class="p-6 md:p-8">
+                <form class="max-w-3xl mx-auto glass p-8 space-y-8">
+                    <h2 class="text-2xl font-bold mb-6 text-slate-800">Student Information Form</h2>
+
+                    <!-- Personal Information -->
+                    <div class="space-y-6 p-6 bg-gray-50 rounded-lg">
+                        <h3 class="text-lg font-semibold text-slate-700 border-b pb-2">Personal Information</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="age" class="block font-medium text-gray-700 mb-1">Age when first took the
+                                    exam</label>
+                                <input type="number" min="20" max="60" id="age" name="age" required
+                                    class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="gender" class="block font-medium text-gray-700 mb-1">Gender</label>
+                                <select id="gender" name="gender" required
+                                    class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Select</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="prefer_not">Prefer not to say</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Academic Performance -->
+                    <div class="space-y-6 p-6 bg-gray-50 rounded-lg">
+                        <h3 class="text-lg font-semibold text-slate-700 border-b pb-2">Academic Performance</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="gpa" class="block font-medium text-gray-700 mb-1">GPA</label>
+                                <select id="gpa" name="gpa" required
+                                    class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Select</option>
+                                    <option value="E">Excellent (1.00–1.25)</option>
+                                    <option value="VG">Very Good (1.50–1.75)</option>
+                                    <option value="G">Good (2.00–2.25)</option>
+                                    <option value="S">Satisfactory (2.50–2.75)</option>
+                                    <option value="P">Passing (3.00)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="major_subjects" class="block font-medium text-gray-700 mb-1">Major Subjects
+                                    Grades</label>
+                                <select id="major_subjects" name="major_subjects" required
+                                    class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Select</option>
+                                    <option value="E">Excellent (1.00–1.25)</option>
+                                    <option value="VG">Very Good (1.50–1.75)</option>
+                                    <option value="G">Good (2.00–2.25)</option>
+                                    <option value="S">Satisfactory (2.50–2.75)</option>
+                                    <option value="P">Passing (3.00)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="internship_grade" class="block font-medium text-gray-700 mb-1">Internship
+                                    Grade</label>
+                                <select id="internship_grade" name="internship_grade" required
+                                    class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Select</option>
+                                    <option value="E">Excellent (1.00–1.25)</option>
+                                    <option value="VG">Very Good (1.50–1.75)</option>
+                                    <option value="G">Good (2.00–2.25)</option>
+                                    <option value="S">Satisfactory (2.50–2.75)</option>
+                                    <option value="P">Passing (3.00)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="scholarship" class="block font-medium text-gray-700 mb-1">Scholarship
+                                    Status</label>
+                                <select id="scholarship" name="scholarship" required
+                                    class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Select</option>
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Review Preparation -->
+                    <div class="space-y-6 p-6 bg-gray-50 rounded-lg">
+                        <h3 class="text-lg font-semibold text-slate-700 border-b pb-2">Review Preparation</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="review_center" class="block font-medium text-gray-700 mb-1">Attended Review
+                                    Center</label>
+                                <select id="review_center" name="review_center" required
+                                    class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Select</option>
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="mock_exam_score" class="block font-medium text-gray-700 mb-1">Mock Exam
+                                    Performance</label>
+                                <select id="mock_exam_score" name="mock_exam_score" required
+                                    class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Select</option>
+                                    <option value="5">5 - Highest</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                    <option value="1">1 - Lowest</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Personal Factors -->
+                    <div class="space-y-6 p-6 bg-gray-50 rounded-lg">
+                        <h3 class="text-lg font-semibold text-slate-700 border-b pb-2">Personal Factors</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="test_anxiety" class="block font-medium text-gray-700 mb-1">Test Anxiety
+                                    Level</label>
+                                <select id="test_anxiety" name="test_anxiety" required
+                                    class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Select</option>
+                                    <option value="5">5 - Very High</option>
+                                    <option value="4">4 - High</option>
+                                    <option value="3">3 - Moderate</option>
+                                    <option value="2">2 - Low</option>
+                                    <option value="1">1 - Very Low</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="confidence" class="block font-medium text-gray-700 mb-1">Confidence
+                                    Level</label>
+                                <select id="confidence" name="confidence" required
+                                    class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Select</option>
+                                    <option value="5">5 - Extremely Confident</option>
+                                    <option value="4">4 - Very Confident</option>
+                                    <option value="3">3 - Moderately Confident</option>
+                                    <option value="2">2 - Slightly Confident</option>
+                                    <option value="1">1 - Not Confident</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="study_hours" class="block font-medium text-gray-700 mb-1">Study Hours per
+                                    Day</label>
+                                <input type="number" min="0" max="24" id="study_hours" name="study_hours" required
+                                    class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="sleeping_hours" class="block font-medium text-gray-700 mb-1">Sleeping Hours
+                                    per Day</label>
+                                <input type="number" min="0" max="24" id="sleeping_hours" name="sleeping_hours" required
+                                    class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Socioeconomic Factors -->
+                    <div class="space-y-6 p-6 bg-gray-50 rounded-lg">
+                        <h3 class="text-lg font-semibold text-slate-700 border-b pb-2">Socioeconomic Factors</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="income_level" class="block font-medium text-gray-700 mb-1">Personal Income
+                                    Level</label>
+                                <select id="income_level" name="income_level" required
+                                    class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Select</option>
+                                    <option value="high">High</option>
+                                    <option value="middle">Middle</option>
+                                    <option value="low">Low</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="employment_status" class="block font-medium text-gray-700 mb-1">Employment
+                                    Status</label>
+                                <select id="employment_status" name="employment_status" required
+                                    class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Select</option>
+                                    <option value="professional">Professional</option>
+                                    <option value="skilled">Skilled</option>
+                                    <option value="unskilled">Unskilled</option>
+                                    <option value="unemployed">Unemployed</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="employment_type" class="block font-medium text-gray-700 mb-1">Employment
+                                    Type</label>
+                                <select id="employment_type" name="employment_type" required
+                                    class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Select</option>
+                                    <option value="regular">Regular</option>
+                                    <option value="contractual">Contractual</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="parent_occup" class="block font-medium text-gray-700 mb-1">Parent's
+                                    Occupation</label>
+                                <select id="parent_occup" name="parent_occup" required
+                                    class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Select</option>
+                                    <option value="professional">Professional</option>
+                                    <option value="skilled">Skilled</option>
+                                    <option value="unskilled">Unskilled</option>
+                                    <option value="unemployed">Unemployed</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="parent_income" class="block font-medium text-gray-700 mb-1">Parent's Income
+                                    Level</label>
+                                <select id="parent_income" name="parent_income" required
+                                    class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Select</option>
+                                    <option value="high">High</option>
+                                    <option value="middle">Middle</option>
+                                    <option value="low">Low</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit"
+                        class="w-full bg-blue-600 text-white py-4 rounded-lg font-bold hover:bg-blue-700 transition shadow-lg">
+                        Generate Prediction
+                    </button>
+                </form>
+            </main>
+        </div>
+    </div>
+    <!-- Font Awesome CDN for icons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/js/all.min.js"></script>
+</body>
+
+</html>
