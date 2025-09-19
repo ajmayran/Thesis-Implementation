@@ -1,0 +1,378 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Work Licensure Exam Predictor - Dashboard</title>
+    <link rel="stylesheet" href="{% static 'dashboard.css' %}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Social Work Licensure Exam Predictor</h1>
+            <p>Machine Learning Dashboard for Exam Success Prediction</p>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <h3>Total Predictions</h3>
+                <div class="value" id="totalPredictions">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Average Likelihood</h3>
+                <div class="value" id="avgLikelihood">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>Model Accuracy</h3>
+                <div class="value" id="modelAccuracy">-</div>
+            </div>
+            <div class="stat-card">
+                <h3>At Risk Students</h3>
+                <div class="value" id="atRiskStudents">-</div>
+            </div>
+        </div>
+
+        <!-- Model Performance Section -->
+        <div class="models-section">
+            <h2>Model Performance Comparison</h2>
+            <div class="model-results" id="modelResults">
+                <!-- Model cards will be populated dynamically -->
+            </div>
+        </div>
+
+        <!-- Prediction Form -->
+        <div class="prediction-form">
+            <h2>Make a Prediction</h2>
+            <form id="predictionForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="age">Age:</label>
+                        <input type="number" id="age" name="age" min="18" max="65" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gender">Gender:</label>
+                        <select id="gender" name="gender" required>
+                            <option value="">Select Gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="gpa">GPA:</label>
+                        <select id="gpa" name="gpa" required>
+                            <option value="">Select GPA</option>
+                            <option value="E">Excellent (E)</option>
+                            <option value="VG">Very Good (VG)</option>
+                            <option value="G">Good (G)</option>
+                            <option value="S">Satisfactory (S)</option>
+                            <option value="F">Fail (F)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="major_subjects">Major Subjects:</label>
+                        <select id="major_subjects" name="major_subjects" required>
+                            <option value="">Select Grade</option>
+                            <option value="E">Excellent (E)</option>
+                            <option value="VG">Very Good (VG)</option>
+                            <option value="G">Good (G)</option>
+                            <option value="S">Satisfactory (S)</option>
+                            <option value="F">Fail (F)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="study_hours">Study Hours per Day:</label>
+                        <input type="number" id="study_hours" name="study_hours" min="1" max="24" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="mock_exam_score">Mock Exam Score (1-5):</label>
+                        <input type="number" id="mock_exam_score" name="mock_exam_score" min="1" max="5" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="review_center">Review Center:</label>
+                        <select id="review_center" name="review_center" required>
+                            <option value="">Select Option</option>
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="confidence">Confidence Level (1-5):</label>
+                        <input type="number" id="confidence" name="confidence" min="1" max="5" required>
+                    </div>
+                </div>
+                <button type="submit" class="predict-btn" id="predictBtn">
+                    Make Prediction
+                </button>
+            </form>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-section" id="resultsSection">
+            <h2>Prediction Results</h2>
+            <div class="prediction-results" id="predictionResults">
+                <!-- Results will be populated dynamically -->
+            </div>
+            
+            <div class="feature-importance" id="featureImportance">
+                <h3>Feature Importance</h3>
+                <!-- Feature importance bars will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API URLs - these should match your Django URLs
+        const API_URLS = {
+            dashboardStats: '/api/dashboard/stats/',
+            prediction: '/api/prediction/predict/',
+            modelStatus: '/api/prediction/model-status/'
+        };
+
+        // Global variables
+        let dashboardData = null;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardStats();
+            loadModelStatus();
+            setupPredictionForm();
+        });
+
+        // Load dashboard statistics
+        async function loadDashboardStats() {
+            try {
+                const response = await fetch(API_URLS.dashboardStats);
+                const data = await response.json();
+                dashboardData = data;
+                updateStatsCards(data);
+                updateFeatureImportance(data.feature_importance);
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+                showError('Failed to load dashboard statistics');
+            }
+        }
+
+        // Load model status and performance
+        async function loadModelStatus() {
+            try {
+                const response = await fetch(API_URLS.modelStatus);
+                const data = await response.json();
+                updateModelResults(data);
+            } catch (error) {
+                console.error('Error loading model status:', error);
+            }
+        }
+
+        // Update statistics cards
+        function updateStatsCards(data) {
+            if (data.kpi_metrics) {
+                document.getElementById('totalPredictions').textContent = 
+                    data.kpi_metrics.total_predictions.toLocaleString();
+                document.getElementById('avgLikelihood').textContent = 
+                    data.kpi_metrics.average_likelihood.toFixed(1) + '%';
+                document.getElementById('atRiskStudents').textContent = 
+                    data.kpi_metrics.at_risk_students.toLocaleString();
+            }
+            
+            if (data.model_performance) {
+                document.getElementById('modelAccuracy').textContent = 
+                    data.model_performance.accuracy + '%';
+            }
+        }
+
+        // Update model results
+        function updateModelResults(data) {
+            const container = document.getElementById('modelResults');
+            
+            if (data.models) {
+                container.innerHTML = '';
+                
+                Object.entries(data.models).forEach(([modelName, performance]) => {
+                    const modelCard = document.createElement('div');
+                    modelCard.className = 'model-card';
+                    modelCard.innerHTML = `
+                        <h3>${modelName.toUpperCase()}</h3>
+                        <p><strong>Accuracy:</strong> ${(performance.accuracy * 100).toFixed(1)}%</p>
+                        <p><strong>CV Score:</strong> ${(performance.cv_mean * 100).toFixed(1)}%</p>
+                        <p><strong>Status:</strong> ${performance.trained ? 'Trained' : 'Not Trained'}</p>
+                    `;
+                    container.appendChild(modelCard);
+                });
+            } else {
+                container.innerHTML = '<p>No model data available. Please train models first.</p>';
+            }
+        }
+
+        // Update feature importance
+        function updateFeatureImportance(featureData) {
+            if (!featureData) return;
+            
+            const container = document.getElementById('featureImportance');
+            const featuresHtml = Object.entries(featureData)
+                .sort(([,a], [,b]) => b - a)
+                .map(([feature, importance]) => `
+                    <div class="feature-bar">
+                        <div class="feature-name">${feature}</div>
+                        <div class="feature-progress">
+                            <div class="feature-fill" style="width: ${(importance * 100).toFixed(1)}%"></div>
+                        </div>
+                        <div class="feature-value">${(importance * 100).toFixed(1)}%</div>
+                    </div>
+                `).join('');
+            
+            container.innerHTML = '<h3>Feature Importance</h3>' + featuresHtml;
+        }
+
+        // Setup prediction form
+        function setupPredictionForm() {
+            const form = document.getElementById('predictionForm');
+            form.addEventListener('submit', handlePrediction);
+        }
+
+        // Handle prediction form submission
+        async function handlePrediction(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Convert numeric fields
+            ['age', 'study_hours', 'mock_exam_score', 'confidence'].forEach(field => {
+                if (data[field]) {
+                    data[field] = parseInt(data[field]);
+                }
+            });
+            
+            // Add missing fields with default values
+            const defaultData = {
+                internship_grade: data.major_subjects,
+                scholarship: 'no',
+                test_anxiety: 3,
+                sleeping_hours: 7,
+                income_level: 'middle',
+                employment_status: 'unemployed',
+                employment_type: 'regular',
+                parent_occup: 'skilled',
+                parent_income: 'middle'
+            };
+            
+            const completeData = { ...defaultData, ...data };
+            
+            try {
+                showLoading();
+                const response = await fetch(API_URLS.prediction, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    },
+                    body: JSON.stringify(completeData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                displayPredictionResults(result);
+                
+            } catch (error) {
+                console.error('Prediction error:', error);
+                showError('Failed to make prediction. Please try again.');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Display prediction results
+        function displayPredictionResults(data) {
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsContainer = document.getElementById('predictionResults');
+            
+            if (data.error) {
+                showError(data.error);
+                return;
+            }
+            
+            let resultsHtml = '';
+            
+            // Base model results
+            if (data.base_models) {
+                Object.entries(data.base_models).forEach(([modelName, result]) => {
+                    const percentage = result.probability ? 
+                        (result.probability[1] * 100).toFixed(1) : 
+                        (result.prediction * 100).toFixed(0);
+                    
+                    resultsHtml += `
+                        <div class="result-card base-model">
+                            <h4>${modelName.toUpperCase()}</h4>
+                            <div class="result-percentage">${percentage}%</div>
+                            <small>Base Model</small>
+                        </div>
+                    `;
+                });
+            }
+            
+            // Ensemble model results
+            if (data.ensemble_models) {
+                Object.entries(data.ensemble_models).forEach(([modelName, result]) => {
+                    const percentage = result.probability ? 
+                        (result.probability[1] * 100).toFixed(1) : 
+                        (result.prediction * 100).toFixed(0);
+                    
+                    resultsHtml += `
+                        <div class="result-card ensemble-model">
+                            <h4>${modelName.toUpperCase()}</h4>
+                            <div class="result-percentage">${percentage}%</div>
+                            <small>Ensemble Model</small>
+                        </div>
+                    `;
+                });
+            }
+            
+            resultsContainer.innerHTML = resultsHtml;
+            resultsSection.classList.add('show');
+            
+            // Scroll to results
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Utility functions
+        function showLoading() {
+            const btn = document.getElementById('predictBtn');
+            btn.disabled = true;
+            btn.textContent = 'Predicting...';
+        }
+
+        function hideLoading() {
+            const btn = document.getElementById('predictBtn');
+            btn.disabled = false;
+            btn.textContent = 'Make Prediction';
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            
+            const container = document.querySelector('.container');
+            container.insertBefore(errorDiv, container.firstChild);
+            
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
+
+        function getCsrfToken() {
+            return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+        }
+
+        // Auto-refresh dashboard stats every 30 seconds
+        setInterval(loadDashboardStats, 30000);
+    </script>
+</body>
+</html>

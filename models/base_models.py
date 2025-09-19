@@ -4,10 +4,11 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, BaggingClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 import joblib
 import os
+import json
 
 class SocialWorkPredictorModels:
     def __init__(self):
@@ -15,23 +16,54 @@ class SocialWorkPredictorModels:
         self.label_encoders = {}
         self.scaler = StandardScaler()
         self.models = {}
-        self.ensemble_model = None
         self.feature_names = []
+        self.X_train = None
+        self.X_test = None
+        self.y_train = None
+        self.y_test = None
         
-    def load_and_preprocess_data(self, csv_file_path):
+    def load_data_from_excel(self, file_path):
+        """Load data from Excel file"""
+        try:
+            df = pd.read_excel(file_path)
+            print(f"Data loaded from Excel successfully. Shape: {df.shape}")
+            return df
+        except Exception as e:
+            print(f"Error loading Excel file: {e}")
+            return None
+    
+    def load_data_from_json(self, file_path):
+        """Load data from JSON file"""
+        try:
+            with open(file_path, 'r') as f:
+                data = json.load(f)
+            df = pd.DataFrame(data)
+            print(f"Data loaded from JSON successfully. Shape: {df.shape}")
+            return df
+        except Exception as e:
+            print(f"Error loading JSON file: {e}")
+            return None
+    
+    def load_data_from_csv(self, file_path):
+        """Load data from CSV file"""
+        try:
+            df = pd.read_csv(file_path)
+            print(f"Data loaded from CSV successfully. Shape: {df.shape}")
+            return df
+        except Exception as e:
+            print(f"Error loading CSV file: {e}")
+            return None
+    
+    def preprocess_data(self, df):
         """
-        Load and preprocess the CSV data
-        Expected columns based on your form:
+        Preprocess the loaded data
+        Expected columns:
         - age, gender, gpa, major_subjects, internship_grade, scholarship
         - review_center, mock_exam_score, test_anxiety, confidence
         - study_hours, sleeping_hours, income_level, employment_status
         - employment_type, parent_occup, parent_income, result (target)
         """
         try:
-            # Load data
-            df = pd.read_csv(csv_file_path)
-            print(f"Data loaded successfully. Shape: {df.shape}")
-            
             # Define categorical and numerical columns
             categorical_columns = [
                 'gender', 'gpa', 'major_subjects', 'internship_grade', 'scholarship',
@@ -46,6 +78,7 @@ class SocialWorkPredictorModels:
             
             # Handle missing values
             df = df.dropna()
+            print(f"After removing missing values. Shape: {df.shape}")
             
             # Encode categorical variables
             for col in categorical_columns:
@@ -59,7 +92,7 @@ class SocialWorkPredictorModels:
             self.feature_names = [col for col in feature_columns if col in df.columns]
             
             X = df[self.feature_names]
-            y = df['result'] if 'result' in df.columns else df['passed']  # Assuming target column
+            y = df['result'] if 'result' in df.columns else df['passed']
             
             # Encode target variable if it's categorical
             if y.dtype == 'object':
@@ -71,21 +104,34 @@ class SocialWorkPredictorModels:
             X_scaled = X.copy()
             if numerical_columns:
                 num_cols_present = [col for col in numerical_columns if col in X.columns]
-                X_scaled[num_cols_present] = self.scaler.fit_transform(X[num_cols_present])
+                if num_cols_present:
+                    X_scaled[num_cols_present] = self.scaler.fit_transform(X[num_cols_present])
             
             return X_scaled, y
             
         except Exception as e:
-            print(f"Error loading data: {e}")
+            print(f"Error preprocessing data: {e}")
             return None, None
     
-    def train_base_models(self, X, y, test_size=0.2, random_state=42):
-        """Train the three base models: KNN, Decision Tree, Random Forest"""
-        
-        # Split the data
-        X_train, X_test, y_train, y_test = train_test_split(
+    def split_data(self, X, y, test_size=0.2, random_state=42):
+        """Split data into train and test sets"""
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
             X, y, test_size=test_size, random_state=random_state, stratify=y
         )
+        
+        print(f"Training set size: {len(self.X_train)}")
+        print(f"Test set size: {len(self.X_test)}")
+        print(f"Training target distribution: {pd.Series(self.y_train).value_counts().to_dict()}")
+        print(f"Test target distribution: {pd.Series(self.y_test).value_counts().to_dict()}")
+        
+        return self.X_train, self.X_test, self.y_train, self.y_test
+    
+    def train_base_models(self, random_state=42):
+        """Train the three base models: KNN, Decision Tree, Random Forest"""
+        
+        if self.X_train is None or self.y_train is None:
+            print("No training data available. Please split data first.")
+            return None
         
         # Initialize models
         self.models = {
@@ -119,103 +165,33 @@ class SocialWorkPredictorModels:
             print(f"\nTraining {name.upper()}...")
             
             # Train the model
-            model.fit(X_train, y_train)
+            model.fit(self.X_train, self.y_train)
             
             # Make predictions
-            y_pred = model.predict(X_test)
+            y_pred = model.predict(self.X_test)
             
             # Calculate metrics
-            accuracy = accuracy_score(y_test, y_pred)
+            accuracy = accuracy_score(self.y_test, y_pred)
             
             # Cross-validation score
-            cv_scores = cross_val_score(model, X_train, y_train, cv=5)
+            cv_scores = cross_val_score(model, self.X_train, self.y_train, cv=5)
             
             results[name] = {
                 'accuracy': accuracy,
                 'cv_mean': cv_scores.mean(),
                 'cv_std': cv_scores.std(),
-                'classification_report': classification_report(y_test, y_pred),
-                'confusion_matrix': confusion_matrix(y_test, y_pred)
+                'classification_report': classification_report(self.y_test, y_pred),
+                'confusion_matrix': confusion_matrix(self.y_test, y_pred)
             }
             
             print(f"{name.upper()} - Accuracy: {accuracy:.4f}")
             print(f"{name.upper()} - CV Score: {cv_scores.mean():.4f} (+/- {cv_scores.std() * 2:.4f})")
         
-        # Store test data for ensemble training
-        self.X_test = X_test
-        self.y_test = y_test
-        
         return results
-    
-    def create_ensemble_model(self, X, y, n_estimators=10, random_state=42):
-        """Create ensemble model using Bagging with the three base models"""
-        
-        print("\nCreating Ensemble Model with Bagging...")
-        
-        # Split data again for ensemble training
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=random_state, stratify=y
-        )
-        
-        # Create bagging ensembles for each base model
-        ensemble_models = {
-            'bagging_knn': BaggingClassifier(
-                base_estimator=KNeighborsClassifier(n_neighbors=5),
-                n_estimators=n_estimators,
-                random_state=random_state
-            ),
-            'bagging_dt': BaggingClassifier(
-                base_estimator=DecisionTreeClassifier(max_depth=10, random_state=random_state),
-                n_estimators=n_estimators,
-                random_state=random_state
-            ),
-            'bagging_rf': BaggingClassifier(
-                base_estimator=RandomForestClassifier(n_estimators=50, random_state=random_state),
-                n_estimators=n_estimators,
-                random_state=random_state
-            )
-        }
-        
-        # Train ensemble models
-        ensemble_results = {}
-        
-        for name, model in ensemble_models.items():
-            print(f"Training {name}...")
-            
-            # Train the ensemble model
-            model.fit(X_train, y_train)
-            
-            # Make predictions
-            y_pred = model.predict(X_test)
-            
-            # Calculate metrics
-            accuracy = accuracy_score(y_test, y_pred)
-            cv_scores = cross_val_score(model, X_train, y_train, cv=5)
-            
-            ensemble_results[name] = {
-                'accuracy': accuracy,
-                'cv_mean': cv_scores.mean(),
-                'cv_std': cv_scores.std(),
-                'classification_report': classification_report(y_test, y_pred),
-                'confusion_matrix': confusion_matrix(y_test, y_pred)
-            }
-            
-            print(f"{name} - Accuracy: {accuracy:.4f}")
-            print(f"{name} - CV Score: {cv_scores.mean():.4f} (+/- {cv_scores.std() * 2:.4f})")
-        
-        # Select best ensemble model
-        best_model_name = max(ensemble_results.keys(), 
-                            key=lambda x: ensemble_results[x]['accuracy'])
-        self.ensemble_model = ensemble_models[best_model_name]
-        
-        print(f"\nBest ensemble model: {best_model_name}")
-        print(f"Best accuracy: {ensemble_results[best_model_name]['accuracy']:.4f}")
-        
-        return ensemble_results, best_model_name
     
     def predict_single(self, input_data):
         """
-        Make prediction for a single instance
+        Make prediction for a single instance using all three base models
         input_data should be a dictionary with keys matching form fields
         """
         try:
@@ -254,25 +230,15 @@ class SocialWorkPredictorModels:
             if num_cols_present:
                 df_input[num_cols_present] = self.scaler.transform(df_input[num_cols_present])
             
-            # Make predictions using all models
+            # Make predictions using all three base models
             predictions = {}
             
-            # Base models predictions
             for name, model in self.models.items():
                 pred = model.predict(df_input)[0]
                 prob = model.predict_proba(df_input)[0] if hasattr(model, 'predict_proba') else None
                 predictions[name] = {
                     'prediction': int(pred),
                     'probability': prob.tolist() if prob is not None else None
-                }
-            
-            # Ensemble model prediction
-            if self.ensemble_model:
-                pred = self.ensemble_model.predict(df_input)[0]
-                prob = self.ensemble_model.predict_proba(df_input)[0]
-                predictions['ensemble'] = {
-                    'prediction': int(pred),
-                    'probability': prob.tolist()
                 }
             
             return predictions
@@ -308,16 +274,12 @@ class SocialWorkPredictorModels:
         for name, model in self.models.items():
             joblib.dump(model, f'{models_dir}/{name}_model.joblib')
         
-        # Save ensemble model
-        if self.ensemble_model:
-            joblib.dump(self.ensemble_model, f'{models_dir}/ensemble_model.joblib')
-        
         # Save preprocessors
         joblib.dump(self.label_encoders, f'{models_dir}/label_encoders.joblib')
         joblib.dump(self.scaler, f'{models_dir}/scaler.joblib')
         joblib.dump(self.feature_names, f'{models_dir}/feature_names.joblib')
         
-        print(f"Models saved to {models_dir}/")
+        print(f"Base models saved to {models_dir}/")
     
     def load_models(self, models_dir='saved_models'):
         """Load saved models and preprocessors"""
@@ -330,109 +292,231 @@ class SocialWorkPredictorModels:
                 if os.path.exists(f'{models_dir}/{file}'):
                     self.models[name] = joblib.load(f'{models_dir}/{file}')
             
-            # Load ensemble model
-            if os.path.exists(f'{models_dir}/ensemble_model.joblib'):
-                self.ensemble_model = joblib.load(f'{models_dir}/ensemble_model.joblib')
-            
             # Load preprocessors
-            self.label_encoders = joblib.load(f'{models_dir}/label_encoders.joblib')
-            self.scaler = joblib.load(f'{models_dir}/scaler.joblib')
-            self.feature_names = joblib.load(f'{models_dir}/feature_names.joblib')
+            if os.path.exists(f'{models_dir}/label_encoders.joblib'):
+                self.label_encoders = joblib.load(f'{models_dir}/label_encoders.joblib')
+            if os.path.exists(f'{models_dir}/scaler.joblib'):
+                self.scaler = joblib.load(f'{models_dir}/scaler.joblib')
+            if os.path.exists(f'{models_dir}/feature_names.joblib'):
+                self.feature_names = joblib.load(f'{models_dir}/feature_names.joblib')
             
-            print(f"Models loaded from {models_dir}/")
+            print(f"Base models loaded from {models_dir}/")
             return True
             
         except Exception as e:
             print(f"Error loading models: {e}")
             return False
 
-# Example usage and training script
-if __name__ == "__main__":
-    # Initialize the predictor
-    predictor = SocialWorkPredictorModels()
+def create_sample_dataset(n_samples=250, filename='sample_social_work_data'):
+    """Create sample dataset for training with 250 samples"""
     
-    # Example of how to use with your CSV data
-    # Replace 'your_data.csv' with your actual CSV file path
-    csv_file = 'your_data.csv'  # Update this path
+    np.random.seed(42)  # For reproducible results
     
-    if os.path.exists(csv_file):
-        # Load and preprocess data
-        X, y = predictor.load_and_preprocess_data(csv_file)
+    # Define possible values for categorical variables
+    genders = ['male', 'female']
+    gpas = ['E', 'VG', 'G', 'S', 'F']  # Excellent, Very Good, Good, Satisfactory, Fail
+    major_subjects = ['E', 'VG', 'G', 'S', 'F']
+    internship_grades = ['E', 'VG', 'G', 'S', 'F']
+    scholarships = ['yes', 'no']
+    review_centers = ['yes', 'no']
+    income_levels = ['low', 'middle', 'high']
+    employment_statuses = ['unemployed', 'skilled', 'professional']
+    employment_types = ['regular', 'contractual', 'part-time']
+    parent_occupations = ['unskilled', 'skilled', 'professional']
+    parent_incomes = ['low', 'middle', 'high']
+    
+    # Generate sample data
+    data = []
+    
+    for i in range(n_samples):
+        # Generate realistic correlations
+        gpa = np.random.choice(gpas, p=[0.1, 0.25, 0.35, 0.25, 0.05])  # More likely to have good grades
         
-        if X is not None and y is not None:
-            print(f"Data preprocessing completed. Features shape: {X.shape}")
-            
-            # Train base models
-            base_results = predictor.train_base_models(X, y)
-            
-            # Create ensemble model
-            ensemble_results, best_ensemble = predictor.create_ensemble_model(X, y)
-            
-            # Save models
-            predictor.save_models()
-            
-            # Example prediction
-            sample_input = {
-                'age': 25,
-                'gender': 'female',
-                'gpa': 'VG',
-                'major_subjects': 'G',
-                'internship_grade': 'G',
-                'scholarship': 'no',
-                'review_center': 'yes',
-                'mock_exam_score': 4,
-                'test_anxiety': 3,
-                'confidence': 4,
-                'study_hours': 8,
-                'sleeping_hours': 7,
-                'income_level': 'middle',
-                'employment_status': 'unemployed',
-                'employment_type': 'regular',
-                'parent_occup': 'skilled',
-                'parent_income': 'middle'
-            }
-            
-            predictions = predictor.predict_single(sample_input)
-            if predictions:
-                print("\nSample Prediction Results:")
-                for model_name, result in predictions.items():
-                    print(f"{model_name}: {result}")
-            
-            # Get feature importance
-            importance = predictor.get_feature_importance()
-            print("\nFeature Importance:")
-            for model_name, features in importance.items():
-                print(f"\n{model_name}:")
-                sorted_features = sorted(features.items(), key=lambda x: x[1], reverse=True)
-                for feature, score in sorted_features[:5]:  # Top 5 features
-                    print(f"  {feature}: {score:.4f}")
-    
-    else:
-        print(f"CSV file '{csv_file}' not found. Please update the file path.")
-        print("Creating sample data structure...")
+        # Age between 21-30, most likely around 23-25
+        age = np.random.normal(24, 2)
+        age = max(21, min(30, int(age)))
         
-        # Create sample DataFrame structure for reference
-        sample_data = {
-            'age': [25, 24, 26, 23, 27],
-            'gender': ['female', 'male', 'female', 'male', 'female'],
-            'gpa': ['VG', 'G', 'E', 'S', 'G'],
-            'major_subjects': ['G', 'VG', 'E', 'G', 'VG'],
-            'internship_grade': ['G', 'G', 'VG', 'S', 'G'],
-            'scholarship': ['no', 'yes', 'no', 'no', 'yes'],
-            'review_center': ['yes', 'yes', 'no', 'yes', 'yes'],
-            'mock_exam_score': [4, 3, 5, 3, 4],
-            'test_anxiety': [3, 4, 2, 5, 3],
-            'confidence': [4, 3, 5, 2, 4],
-            'study_hours': [8, 6, 10, 5, 7],
-            'sleeping_hours': [7, 6, 8, 5, 7],
-            'income_level': ['middle', 'low', 'high', 'low', 'middle'],
-            'employment_status': ['unemployed', 'skilled', 'professional', 'unemployed', 'skilled'],
-            'employment_type': ['regular', 'contractual', 'regular', 'regular', 'contractual'],
-            'parent_occup': ['skilled', 'professional', 'skilled', 'unskilled', 'professional'],
-            'parent_income': ['middle', 'high', 'middle', 'low', 'high'],
-            'result': [1, 0, 1, 0, 1]  # 1 = Pass, 0 = Fail
+        # Mock exam score (1-5) - correlated with GPA
+        gpa_to_score = {'E': [4, 5], 'VG': [3, 4, 5], 'G': [2, 3, 4], 'S': [1, 2, 3], 'F': [1, 2]}
+        mock_exam_score = np.random.choice(gpa_to_score[gpa])
+        
+        # Study hours (4-16) - higher for better students
+        if gpa in ['E', 'VG']:
+            study_hours = np.random.randint(8, 16)
+        elif gpa == 'G':
+            study_hours = np.random.randint(6, 12)
+        else:
+            study_hours = np.random.randint(4, 10)
+        
+        # Sleeping hours (5-9)
+        sleeping_hours = np.random.randint(5, 10)
+        
+        # Test anxiety (1-5) - inversely correlated with confidence
+        test_anxiety = np.random.randint(1, 6)
+        
+        # Confidence (1-5) - somewhat inversely correlated with anxiety
+        if test_anxiety <= 2:
+            confidence = np.random.choice([3, 4, 5], p=[0.2, 0.4, 0.4])
+        elif test_anxiety >= 4:
+            confidence = np.random.choice([1, 2, 3], p=[0.4, 0.4, 0.2])
+        else:
+            confidence = np.random.choice([2, 3, 4], p=[0.3, 0.4, 0.3])
+        
+        # Review center attendance - better students more likely to attend
+        if gpa in ['E', 'VG']:
+            review_center = np.random.choice(review_centers, p=[0.8, 0.2])
+        else:
+            review_center = np.random.choice(review_centers, p=[0.6, 0.4])
+        
+        # Result - higher probability of passing for better students
+        pass_probability = 0.2  # Base probability
+        
+        # Adjust based on GPA
+        if gpa == 'E': pass_probability += 0.6
+        elif gpa == 'VG': pass_probability += 0.4
+        elif gpa == 'G': pass_probability += 0.2
+        elif gpa == 'S': pass_probability += 0.1
+        
+        # Adjust based on mock exam score
+        pass_probability += (mock_exam_score - 1) * 0.1
+        
+        # Adjust based on study hours
+        pass_probability += (study_hours - 8) * 0.02
+        
+        # Adjust based on review center
+        if review_center == 'yes':
+            pass_probability += 0.15
+        
+        # Adjust based on confidence and anxiety
+        pass_probability += (confidence - 3) * 0.05
+        pass_probability -= (test_anxiety - 3) * 0.03
+        
+        # Ensure probability is between 0 and 1
+        pass_probability = max(0, min(1, pass_probability))
+        
+        result = 1 if np.random.random() < pass_probability else 0
+        
+        # Create record
+        record = {
+            'age': age,
+            'gender': np.random.choice(genders),
+            'gpa': gpa,
+            'major_subjects': np.random.choice(major_subjects),
+            'internship_grade': np.random.choice(internship_grades),
+            'scholarship': np.random.choice(scholarships, p=[0.3, 0.7]),
+            'review_center': review_center,
+            'mock_exam_score': mock_exam_score,
+            'test_anxiety': test_anxiety,
+            'confidence': confidence,
+            'study_hours': study_hours,
+            'sleeping_hours': sleeping_hours,
+            'income_level': np.random.choice(income_levels, p=[0.3, 0.5, 0.2]),
+            'employment_status': np.random.choice(employment_statuses, p=[0.6, 0.3, 0.1]),
+            'employment_type': np.random.choice(employment_types, p=[0.6, 0.3, 0.1]),
+            'parent_occup': np.random.choice(parent_occupations, p=[0.2, 0.5, 0.3]),
+            'parent_income': np.random.choice(parent_incomes, p=[0.3, 0.5, 0.2]),
+            'result': result
         }
         
-        sample_df = pd.DataFrame(sample_data)
-        sample_df.to_csv('sample_social_work_data.csv', index=False)
-        print("Sample CSV file 'sample_social_work_data.csv' created for reference.")
+        data.append(record)
+    
+    # Create DataFrame
+    df = pd.DataFrame(data)
+    
+    # Save as different formats
+    df.to_csv(f'{filename}.csv', index=False)
+    df.to_excel(f'{filename}.xlsx', index=False)
+    df.to_json(f'{filename}.json', orient='records', indent=2)
+    
+    print(f"Sample dataset created with {n_samples} records:")
+    print(f"- CSV: {filename}.csv")
+    print(f"- Excel: {filename}.xlsx") 
+    print(f"- JSON: {filename}.json")
+    print(f"\nTarget distribution: {df['result'].value_counts().to_dict()}")
+    print(f"Pass rate: {df['result'].mean():.2%}")
+    
+    return df
+
+# Example usage
+if __name__ == "__main__":
+    # Create sample dataset
+    print("Creating sample dataset...")
+    df = create_sample_dataset(250, 'social_work_sample_250')
+    
+    # Initialize predictor
+    predictor = SocialWorkPredictorModels()
+    
+    # Load data (you can use CSV, Excel, or JSON)
+    # df = predictor.load_data_from_csv('social_work_sample_250.csv')
+    # df = predictor.load_data_from_excel('social_work_sample_250.xlsx')
+    # df = predictor.load_data_from_json('social_work_sample_250.json')
+    
+    # Preprocess data
+    X, y = predictor.preprocess_data(df)
+    
+    if X is not None and y is not None:
+        # Split data (80% train, 20% test)
+        X_train, X_test, y_train, y_test = predictor.split_data(X, y, test_size=0.2)
+        
+        # Train base models
+        results = predictor.train_base_models()
+        
+        print("\n" + "="*50)
+        print("BASE MODEL COMPARISON RESULTS")
+        print("="*50)
+        
+        for name, result in results.items():
+            print(f"\n{name.upper()}:")
+            print(f"  Accuracy: {result['accuracy']:.4f}")
+            print(f"  CV Score: {result['cv_mean']:.4f} (+/- {result['cv_std']*2:.4f})")
+        
+        # Get feature importance
+        importance = predictor.get_feature_importance()
+        print("\n" + "="*50)
+        print("FEATURE IMPORTANCE")
+        print("="*50)
+        
+        for model_name, features in importance.items():
+            print(f"\n{model_name.upper()}:")
+            sorted_features = sorted(features.items(), key=lambda x: x[1], reverse=True)
+            for feature, score in sorted_features[:8]:  # Top 8 features
+                print(f"  {feature}: {score:.4f}")
+        
+        # Test prediction
+        print("\n" + "="*50)
+        print("SAMPLE PREDICTION TEST")
+        print("="*50)
+        
+        sample_input = {
+            'age': 25,
+            'gender': 'female',
+            'gpa': 'VG',
+            'major_subjects': 'G',
+            'internship_grade': 'G',
+            'scholarship': 'no',
+            'review_center': 'yes',
+            'mock_exam_score': 4,
+            'test_anxiety': 3,
+            'confidence': 4,
+            'study_hours': 8,
+            'sleeping_hours': 7,
+            'income_level': 'middle',
+            'employment_status': 'unemployed',
+            'employment_type': 'regular',
+            'parent_occup': 'skilled',
+            'parent_income': 'middle'
+        }
+        
+        predictions = predictor.predict_single(sample_input)
+        if predictions:
+            print("\nThree Model Predictions:")
+            for model_name, result in predictions.items():
+                if result['probability']:
+                    pass_prob = result['probability'][1] * 100
+                    print(f"{model_name.upper()}: {pass_prob:.1f}% chance of passing")
+                else:
+                    print(f"{model_name.upper()}: {'Pass' if result['prediction'] else 'Fail'}")
+        
+        # Save models
+        predictor.save_models('saved_base_models')
+        print(f"\nModels saved successfully!")

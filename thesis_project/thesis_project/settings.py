@@ -55,7 +55,8 @@ MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
+WHITENOISE_ALLOW_ALL_ORIGINS = True
+
 ROOT_URLCONF = 'thesis_project.urls'
 
 TEMPLATES = [
@@ -106,22 +107,31 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.Argon2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
+    "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
+]
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
-
+TIME_ZONE = "Asia/Manila"
 USE_I18N = True
-
 USE_TZ = True
-
+APPEND_SLASH = False
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+
+STATICFILES_DIRS = [
+    BASE_DIR / "thesis_project/dashboard/static",
+    BASE_DIR / "thesis_project/prediction/static",
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

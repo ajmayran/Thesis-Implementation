@@ -17,27 +17,54 @@ def main():
     predictor = SocialWorkPredictorModels()
     
     # Ask for CSV file path
-    csv_file = input("Enter the path to your CSV file: ").strip()
+    csv_file = input("Enter the path to your CSV file (or press Enter to use sample data): ").strip()
     
-    if not os.path.exists(csv_file):
-        print(f"Error: File '{csv_file}' not found.")
+    if not csv_file:
+        # Use sample data
+        print("Creating sample dataset...")
+        from base_models import create_sample_dataset
+        df = create_sample_dataset(250, 'social_work_sample_250')
+        print("Using generated sample data...")
+    else:
+        if not os.path.exists(csv_file):
+            print(f"Error: File '{csv_file}' not found.")
+            return
+        
+        print(f"Loading data from {csv_file}...")
+        
+        # Load data based on file extension
+        if csv_file.endswith('.csv'):
+            df = predictor.load_data_from_csv(csv_file)
+        elif csv_file.endswith('.xlsx') or csv_file.endswith('.xls'):
+            df = predictor.load_data_from_excel(csv_file)
+        elif csv_file.endswith('.json'):
+            df = predictor.load_data_from_json(csv_file)
+        else:
+            print("Unsupported file format. Please use CSV, Excel, or JSON.")
+            return
+    
+    if df is None:
+        print("Failed to load data.")
         return
     
-    print(f"Loading data from {csv_file}...")
-    
-    # Load and preprocess data
-    X, y = predictor.load_and_preprocess_data(csv_file)
+    # Preprocess data
+    print("Preprocessing data...")
+    X, y = predictor.preprocess_data(df)
     
     if X is None or y is None:
-        print("Failed to load and preprocess data.")
+        print("Failed to preprocess data.")
         return
     
-    print(f"Data loaded successfully. Shape: {X.shape}")
+    print(f"Data processed successfully. Shape: {X.shape}")
     print(f"Target distribution: {pd.Series(y).value_counts().to_dict()}")
     
+    # Split data
+    print("Splitting data into train/test sets...")
+    X_train, X_test, y_train, y_test = predictor.split_data(X, y, test_size=0.2)
+    
     # Train base models
-    print("\nTraining base models...")
-    base_results = predictor.train_base_models(X, y)
+    print("\nTraining base models (KNN, Decision Tree, Random Forest)...")
+    base_results = predictor.train_base_models()
     
     print("\nBase Model Results:")
     print("-" * 40)
@@ -47,28 +74,14 @@ def main():
         print(f"  CV Score: {results['cv_mean']:.4f} (+/- {results['cv_std'] * 2:.4f})")
         print()
     
-    # Create ensemble model
-    print("Creating ensemble models...")
-    ensemble_results, best_ensemble = predictor.create_ensemble_model(X, y)
-    
-    print("\nEnsemble Model Results:")
-    print("-" * 40)
-    for name, results in ensemble_results.items():
-        print(f"{name.upper()}:")
-        print(f"  Accuracy: {results['accuracy']:.4f}")
-        print(f"  CV Score: {results['cv_mean']:.4f} (+/- {results['cv_std'] * 2:.4f})")
-        print()
-    
-    print(f"Best ensemble model: {best_ensemble}")
-    
     # Get feature importance
-    print("\nFeature Importance:")
+    print("Feature Importance Analysis:")
     print("-" * 40)
     importance = predictor.get_feature_importance()
     for model_name, features in importance.items():
         print(f"\n{model_name.upper()}:")
         sorted_features = sorted(features.items(), key=lambda x: x[1], reverse=True)
-        for feature, score in sorted_features:
+        for feature, score in sorted_features[:8]:  # Top 8 features
             print(f"  {feature}: {score:.4f}")
     
     # Save models
@@ -77,7 +90,7 @@ def main():
         models_dir = 'saved_models'
     
     predictor.save_models(models_dir)
-    print(f"Models saved to {models_dir}/")
+    print(f"Base models saved to {models_dir}/")
     
     # Test prediction
     print("\nTesting prediction with sample data...")
@@ -107,11 +120,12 @@ def main():
         for model_name, result in predictions.items():
             if result['probability']:
                 pass_prob = result['probability'][1] * 100
-                print(f"{model_name}: {pass_prob:.1f}% chance of passing")
+                print(f"{model_name.upper()}: {pass_prob:.1f}% chance of passing")
             else:
-                print(f"{model_name}: {'Pass' if result['prediction'] else 'Fail'}")
+                print(f"{model_name.upper()}: {'Pass' if result['prediction'] else 'Fail'}")
     
-    print("\nTraining completed successfully!")
+    print("\nBase model training completed successfully!")
+    print("Next step: Run ensemble training using ensembles.py")
 
 if __name__ == "__main__":
     main()
