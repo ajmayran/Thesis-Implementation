@@ -1,0 +1,18 @@
+[
+  "Age",
+  "StudyHours",
+  "SleepHours",
+  "Confidence",
+  "MockExamScore",
+  "GPA",
+  "Scholarship",
+  "InternshipGrade",
+  "ExamResultPercent",
+  "ReviewCenter",
+  "Gender_Male",
+  "IncomeLevel_Low",
+  "IncomeLevel_Middle",
+  "EmploymentStatus_Skilled",
+  "EmploymentStatus_Unemployed",
+  "EmploymentStatus_Unskilled"
+]

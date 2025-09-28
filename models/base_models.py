@@ -1,49 +1,26 @@
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 import joblib
-import os
 import json
+import os
 
 class SocialWorkPredictorModels:
     def __init__(self):
-        """Initialize the prediction models for Social Work Licensure Exam"""
-        self.label_encoders = {}
-        self.scaler = StandardScaler()
         self.models = {}
+        self.preprocessor = None
         self.feature_names = []
-        self.X_train = None
-        self.X_test = None
-        self.y_train = None
-        self.y_test = None
         
-    def load_data_from_excel(self, file_path):
-        """Load data from Excel file"""
-        try:
-            df = pd.read_excel(file_path)
-            print(f"Data loaded from Excel successfully. Shape: {df.shape}")
-            return df
-        except Exception as e:
-            print(f"Error loading Excel file: {e}")
-            return None
-    
-    def load_data_from_json(self, file_path):
-        """Load data from JSON file"""
-        try:
-            with open(file_path, 'r') as f:
-                data = json.load(f)
-            df = pd.DataFrame(data)
-            print(f"Data loaded from JSON successfully. Shape: {df.shape}")
-            return df
-        except Exception as e:
-            print(f"Error loading JSON file: {e}")
-            return None
-    
     def load_data_from_csv(self, file_path):
         """Load data from CSV file"""
         try:
@@ -56,189 +33,236 @@ class SocialWorkPredictorModels:
     
     def preprocess_data(self, df):
         """
-        Preprocess the loaded data
-        Expected columns:
-        - age, gender, gpa, major_subjects, internship_grade, scholarship
-        - review_center, mock_exam_score, test_anxiety, confidence
-        - study_hours, sleeping_hours, income_level, employment_status
-        - employment_type, parent_occup, parent_income, result (target)
+        Preprocess the loaded data using OneHotEncoder for categorical variables
         """
         try:
-            # Define categorical and numerical columns
-            categorical_columns = [
-                'gender', 'gpa', 'major_subjects', 'internship_grade', 'scholarship',
-                'review_center', 'income_level', 'employment_status', 'employment_type',
-                'parent_occup', 'parent_income'
-            ]
-            
-            numerical_columns = [
-                'age', 'mock_exam_score', 'test_anxiety', 'confidence',
-                'study_hours', 'sleeping_hours'
-            ]
+            # Make a copy to avoid modifying original data
+            df = df.copy()
             
             # Handle missing values
             df = df.dropna()
             print(f"After removing missing values. Shape: {df.shape}")
             
-            # Encode categorical variables
-            for col in categorical_columns:
-                if col in df.columns:
-                    le = LabelEncoder()
-                    df[col] = le.fit_transform(df[col].astype(str))
-                    self.label_encoders[col] = le
+            # Define categorical and numerical columns based on your CSV
+            categorical_columns = ['Gender', 'IncomeLevel', 'EmploymentStatus']
+            numerical_columns = ['Age', 'StudyHours', 'SleepHours', 'Confidence', 
+                               'MockExamScore', 'GPA', 'Scholarship', 'InternshipGrade', 
+                               'ExamResultPercent']
             
-            # Prepare features and target
-            feature_columns = categorical_columns + numerical_columns
-            self.feature_names = [col for col in feature_columns if col in df.columns]
+            # Handle ReviewCenter separately (it's binary: 0/1)
+            binary_columns = ['ReviewCenter']
             
-            X = df[self.feature_names]
-            y = df['result'] if 'result' in df.columns else df['passed']
+            # Prepare features (X) and target (y)
+            all_feature_columns = categorical_columns + numerical_columns + binary_columns
+            X = df[all_feature_columns].copy()
+            y = df['Passed'].values
             
-            # Encode target variable if it's categorical
-            if y.dtype == 'object':
-                le_target = LabelEncoder()
-                y = le_target.fit_transform(y)
-                self.label_encoders['target'] = le_target
+            # Create preprocessor using ColumnTransformer
+            self.preprocessor = ColumnTransformer(
+                transformers=[
+                    ('num', StandardScaler(), numerical_columns + binary_columns),
+                    ('cat', OneHotEncoder(drop='first', sparse_output=False), categorical_columns)
+                ],
+                remainder='passthrough'
+            )
             
-            # Scale numerical features
-            X_scaled = X.copy()
-            if numerical_columns:
-                num_cols_present = [col for col in numerical_columns if col in X.columns]
-                if num_cols_present:
-                    X_scaled[num_cols_present] = self.scaler.fit_transform(X[num_cols_present])
+            # Fit and transform the data
+            X_processed = self.preprocessor.fit_transform(X)
             
-            return X_scaled, y
+            # Get feature names for the transformed data
+            # Numerical feature names
+            num_feature_names = numerical_columns + binary_columns
+            
+            # Categorical feature names (after one-hot encoding)
+            cat_feature_names = []
+            for i, col in enumerate(categorical_columns):
+                # Get categories for this column (excluding the first one due to drop='first')
+                categories = self.preprocessor.named_transformers_['cat'].categories_[i][1:]
+                cat_feature_names.extend([f"{col}_{cat}" for cat in categories])
+            
+            self.feature_names = num_feature_names + cat_feature_names
+            
+            print(f"Features processed. Shape: {X_processed.shape}")
+            print(f"Feature names: {self.feature_names}")
+            print(f"Target distribution: {pd.Series(y).value_counts().to_dict()}")
+            
+            return X_processed, y
             
         except Exception as e:
             print(f"Error preprocessing data: {e}")
             return None, None
     
     def split_data(self, X, y, test_size=0.2, random_state=42):
-        """Split data into train and test sets"""
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
-            X, y, test_size=test_size, random_state=random_state, stratify=y
-        )
-        
-        print(f"Training set size: {len(self.X_train)}")
-        print(f"Test set size: {len(self.X_test)}")
-        print(f"Training target distribution: {pd.Series(self.y_train).value_counts().to_dict()}")
-        print(f"Test target distribution: {pd.Series(self.y_test).value_counts().to_dict()}")
-        
-        return self.X_train, self.X_test, self.y_train, self.y_test
+        """Split data into training and testing sets"""
+        return train_test_split(X, y, test_size=test_size, random_state=random_state, stratify=y)
     
-    def train_base_models(self, random_state=42):
-        """Train the three base models: KNN, Decision Tree, Random Forest"""
-        
-        if self.X_train is None or self.y_train is None:
-            print("No training data available. Please split data first.")
+    def train_base_models(self):
+        """Train base models with hyperparameter tuning"""
+        if not hasattr(self, 'X_train') or self.X_train is None:
+            print("Please load and preprocess data first")
             return None
-        
-        # Initialize models
-        self.models = {
-            'knn': KNeighborsClassifier(
-                n_neighbors=5,
-                weights='uniform',
-                algorithm='auto',
-                metric='minkowski'
-            ),
-            'decision_tree': DecisionTreeClassifier(
-                criterion='gini',
-                max_depth=10,
-                min_samples_split=5,
-                min_samples_leaf=2,
-                random_state=random_state
-            ),
-            'random_forest': RandomForestClassifier(
-                n_estimators=100,
-                criterion='gini',
-                max_depth=10,
-                min_samples_split=5,
-                min_samples_leaf=2,
-                random_state=random_state
-            )
-        }
-        
-        # Train and evaluate each model
+            
         results = {}
         
-        for name, model in self.models.items():
-            print(f"\nTraining {name.upper()}...")
+        # Define models with hyperparameters for tuning
+        model_configs = {
+            'knn': {
+                'model': KNeighborsClassifier(),
+                'params': {
+                    'n_neighbors': [3, 5, 7, 9, 11],
+                    'weights': ['uniform', 'distance'],
+                    'metric': ['euclidean', 'manhattan']
+                }
+            },
+            'decision_tree': {
+                'model': DecisionTreeClassifier(random_state=42),
+                'params': {
+                    'max_depth': [3, 5, 7, 10, None],
+                    'min_samples_split': [2, 5, 10],
+                    'min_samples_leaf': [1, 2, 4]
+                }
+            },
+            'random_forest': {
+                'model': RandomForestClassifier(random_state=42),
+                'params': {
+                    'n_estimators': [50, 100, 200],
+                    'max_depth': [5, 10, 15, None],
+                    'min_samples_split': [2, 5, 10]
+                }
+            },
+            'logistic_regression': {
+                'model': LogisticRegression(random_state=42, max_iter=1000),
+                'params': {
+                    'C': [0.1, 1, 10, 100],
+                    'penalty': ['l1', 'l2'],
+                    'solver': ['liblinear']
+                }
+            },
+            'svm': {
+                'model': SVC(random_state=42, probability=True),
+                'params': {
+                    'C': [0.1, 1, 10],
+                    'kernel': ['linear', 'rbf'],
+                    'gamma': ['scale', 'auto']
+                }
+            },
+            'naive_bayes': {
+                'model': GaussianNB(),
+                'params': {
+                    'var_smoothing': [1e-9, 1e-8, 1e-7, 1e-6]
+                }
+            }
+        }
+        
+        for name, config in model_configs.items():
+            print(f"\nTraining {name}...")
             
-            # Train the model
-            model.fit(self.X_train, self.y_train)
+            # Grid search with cross-validation
+            grid_search = GridSearchCV(
+                config['model'], 
+                config['params'], 
+                cv=5, 
+                scoring='accuracy',
+                n_jobs=-1
+            )
             
-            # Make predictions
-            y_pred = model.predict(self.X_test)
+            grid_search.fit(self.X_train, self.y_train)
+            
+            # Best model
+            best_model = grid_search.best_estimator_
+            
+            # Predictions
+            y_pred = best_model.predict(self.X_test)
             
             # Calculate metrics
             accuracy = accuracy_score(self.y_test, y_pred)
+            cv_scores = cross_val_score(best_model, self.X_train, self.y_train, cv=5)
             
-            # Cross-validation score
-            cv_scores = cross_val_score(model, self.X_train, self.y_train, cv=5)
-            
+            # Store model and results
+            self.models[name] = best_model
             results[name] = {
                 'accuracy': accuracy,
                 'cv_mean': cv_scores.mean(),
                 'cv_std': cv_scores.std(),
-                'classification_report': classification_report(self.y_test, y_pred),
-                'confusion_matrix': confusion_matrix(self.y_test, y_pred)
+                'best_params': grid_search.best_params_,
+                'classification_report': classification_report(self.y_test, y_pred, output_dict=True)
             }
             
-            print(f"{name.upper()} - Accuracy: {accuracy:.4f}")
-            print(f"{name.upper()} - CV Score: {cv_scores.mean():.4f} (+/- {cv_scores.std() * 2:.4f})")
+            print(f"{name} - Accuracy: {accuracy:.4f} (+/- {cv_scores.std() * 2:.4f})")
+            print(f"Best parameters: {grid_search.best_params_}")
         
         return results
     
+    def get_feature_importance(self, model_name='random_forest'):
+        """Get feature importance for tree-based models"""
+        if model_name not in self.models:
+            return None
+            
+        model = self.models[model_name]
+        
+        if hasattr(model, 'feature_importances_'):
+            importance = model.feature_importances_
+            feature_importance = dict(zip(self.feature_names, importance))
+            # Sort by importance
+            return dict(sorted(feature_importance.items(), key=lambda x: x[1], reverse=True))
+        else:
+            return None
+    
     def predict_single(self, input_data):
-        """
-        Make prediction for a single instance using all three base models
-        input_data should be a dictionary with keys matching form fields
-        """
+        """Make prediction for a single input"""
         try:
             # Convert input to DataFrame
-            df_input = pd.DataFrame([input_data])
+            if isinstance(input_data, dict):
+                # Map input keys to match CSV column names
+                column_mapping = {
+                    'age': 'Age',
+                    'gender': 'Gender', 
+                    'study_hours': 'StudyHours',
+                    'sleep_hours': 'SleepHours',
+                    'review_center': 'ReviewCenter',
+                    'confidence': 'Confidence',
+                    'mock_exam_score': 'MockExamScore',
+                    'gpa': 'GPA',
+                    'scholarship': 'Scholarship',
+                    'internship_grade': 'InternshipGrade',
+                    'income_level': 'IncomeLevel',
+                    'employment_status': 'EmploymentStatus',
+                    'exam_result_percent': 'ExamResultPercent'
+                }
+                
+                mapped_data = {}
+                for key, value in input_data.items():
+                    if key in column_mapping:
+                        mapped_data[column_mapping[key]] = value
+                    else:
+                        mapped_data[key] = value
+                
+                df_input = pd.DataFrame([mapped_data])
+            else:
+                df_input = pd.DataFrame([input_data])
             
-            # Encode categorical variables using saved encoders
-            categorical_columns = [
-                'gender', 'gpa', 'major_subjects', 'internship_grade', 'scholarship',
-                'review_center', 'income_level', 'employment_status', 'employment_type',
-                'parent_occup', 'parent_income'
-            ]
+            # Prepare features in the same order as training
+            categorical_columns = ['Gender', 'IncomeLevel', 'EmploymentStatus']
+            numerical_columns = ['Age', 'StudyHours', 'SleepHours', 'Confidence', 
+                               'MockExamScore', 'GPA', 'Scholarship', 'InternshipGrade', 
+                               'ExamResultPercent']
+            binary_columns = ['ReviewCenter']
             
-            for col in categorical_columns:
-                if col in df_input.columns and col in self.label_encoders:
-                    # Handle unseen categories
-                    try:
-                        df_input[col] = self.label_encoders[col].transform(df_input[col].astype(str))
-                    except ValueError:
-                        # If category not seen during training, use most frequent category
-                        df_input[col] = 0
+            all_feature_columns = categorical_columns + numerical_columns + binary_columns
+            X_input = df_input[all_feature_columns].copy()
             
-            # Ensure all required features are present
-            for feature in self.feature_names:
-                if feature not in df_input.columns:
-                    df_input[feature] = 0
+            # Apply same preprocessing using the fitted preprocessor
+            X_input_processed = self.preprocessor.transform(X_input)
             
-            # Reorder columns to match training data
-            df_input = df_input[self.feature_names]
-            
-            # Scale numerical features
-            numerical_columns = ['age', 'mock_exam_score', 'test_anxiety', 'confidence', 
-                               'study_hours', 'sleeping_hours']
-            num_cols_present = [col for col in numerical_columns if col in df_input.columns]
-            
-            if num_cols_present:
-                df_input[num_cols_present] = self.scaler.transform(df_input[num_cols_present])
-            
-            # Make predictions using all three base models
+            # Make predictions with all models
             predictions = {}
-            
             for name, model in self.models.items():
-                pred = model.predict(df_input)[0]
-                prob = model.predict_proba(df_input)[0] if hasattr(model, 'predict_proba') else None
+                pred = model.predict(X_input_processed)[0]
+                pred_proba = model.predict_proba(X_input_processed)[0] if hasattr(model, 'predict_proba') else None
+                
                 predictions[name] = {
                     'prediction': int(pred),
-                    'probability': prob.tolist() if prob is not None else None
+                    'probability': pred_proba.tolist() if pred_proba is not None else None
                 }
             
             return predictions
@@ -247,276 +271,155 @@ class SocialWorkPredictorModels:
             print(f"Error making prediction: {e}")
             return None
     
-    def get_feature_importance(self):
-        """Get feature importance from tree-based models"""
-        importance_data = {}
+    def save_models(self, directory='saved_models'):
+        """Save trained models and preprocessor"""
+        if not os.path.exists(directory):
+            os.makedirs(directory)
         
-        if 'decision_tree' in self.models:
-            importance_data['decision_tree'] = dict(zip(
-                self.feature_names, 
-                self.models['decision_tree'].feature_importances_
-            ))
-        
-        if 'random_forest' in self.models:
-            importance_data['random_forest'] = dict(zip(
-                self.feature_names, 
-                self.models['random_forest'].feature_importances_
-            ))
-        
-        return importance_data
-    
-    def save_models(self, models_dir='saved_models'):
-        """Save all trained models and preprocessors"""
-        if not os.path.exists(models_dir):
-            os.makedirs(models_dir)
-        
-        # Save base models
+        # Save models
         for name, model in self.models.items():
-            joblib.dump(model, f'{models_dir}/{name}_model.joblib')
+            joblib.dump(model, os.path.join(directory, f'{name}_model.pkl'))
         
-        # Save preprocessors
-        joblib.dump(self.label_encoders, f'{models_dir}/label_encoders.joblib')
-        joblib.dump(self.scaler, f'{models_dir}/scaler.joblib')
-        joblib.dump(self.feature_names, f'{models_dir}/feature_names.joblib')
+        # Save preprocessor (contains OneHotEncoder and StandardScaler)
+        joblib.dump(self.preprocessor, os.path.join(directory, 'preprocessor.pkl'))
         
-        print(f"Base models saved to {models_dir}/")
+        # Save feature names
+        joblib.dump(self.feature_names, os.path.join(directory, 'feature_names.pkl'))
+        
+        print(f"Models saved to {directory}")
     
-    def load_models(self, models_dir='saved_models'):
-        """Load saved models and preprocessors"""
+    def load_models(self, directory='saved_models'):
+        """Load trained models and preprocessor"""
         try:
-            # Load base models
-            model_files = ['knn_model.joblib', 'decision_tree_model.joblib', 'random_forest_model.joblib']
-            model_names = ['knn', 'decision_tree', 'random_forest']
+            # Load models
+            model_files = ['knn_model.pkl', 'decision_tree_model.pkl', 'random_forest_model.pkl',
+                          'logistic_regression_model.pkl', 'svm_model.pkl', 'naive_bayes_model.pkl']
             
-            for name, file in zip(model_names, model_files):
-                if os.path.exists(f'{models_dir}/{file}'):
-                    self.models[name] = joblib.load(f'{models_dir}/{file}')
+            for file in model_files:
+                model_path = os.path.join(directory, file)
+                if os.path.exists(model_path):
+                    model_name = file.replace('_model.pkl', '')
+                    self.models[model_name] = joblib.load(model_path)
             
-            # Load preprocessors
-            if os.path.exists(f'{models_dir}/label_encoders.joblib'):
-                self.label_encoders = joblib.load(f'{models_dir}/label_encoders.joblib')
-            if os.path.exists(f'{models_dir}/scaler.joblib'):
-                self.scaler = joblib.load(f'{models_dir}/scaler.joblib')
-            if os.path.exists(f'{models_dir}/feature_names.joblib'):
-                self.feature_names = joblib.load(f'{models_dir}/feature_names.joblib')
+            # Load preprocessor
+            self.preprocessor = joblib.load(os.path.join(directory, 'preprocessor.pkl'))
+            self.feature_names = joblib.load(os.path.join(directory, 'feature_names.pkl'))
             
-            print(f"Base models loaded from {models_dir}/")
+            print(f"Models loaded from {directory}")
             return True
             
         except Exception as e:
             print(f"Error loading models: {e}")
             return False
 
-def create_sample_dataset(n_samples=250, filename='sample_social_work_data'):
-    """Create sample dataset for training with 250 samples"""
-    
-    np.random.seed(42)  # For reproducible results
-    
-    # Define possible values for categorical variables
-    genders = ['male', 'female']
-    gpas = ['E', 'VG', 'G', 'S', 'F']  # Excellent, Very Good, Good, Satisfactory, Fail
-    major_subjects = ['E', 'VG', 'G', 'S', 'F']
-    internship_grades = ['E', 'VG', 'G', 'S', 'F']
-    scholarships = ['yes', 'no']
-    review_centers = ['yes', 'no']
-    income_levels = ['low', 'middle', 'high']
-    employment_statuses = ['unemployed', 'skilled', 'professional']
-    employment_types = ['regular', 'contractual', 'part-time']
-    parent_occupations = ['unskilled', 'skilled', 'professional']
-    parent_incomes = ['low', 'middle', 'high']
-    
-    # Generate sample data
-    data = []
-    
-    for i in range(n_samples):
-        # Generate realistic correlations
-        gpa = np.random.choice(gpas, p=[0.1, 0.25, 0.35, 0.25, 0.05])  # More likely to have good grades
-        
-        # Age between 21-30, most likely around 23-25
-        age = np.random.normal(24, 2)
-        age = max(21, min(30, int(age)))
-        
-        # Mock exam score (1-5) - correlated with GPA
-        gpa_to_score = {'E': [4, 5], 'VG': [3, 4, 5], 'G': [2, 3, 4], 'S': [1, 2, 3], 'F': [1, 2]}
-        mock_exam_score = np.random.choice(gpa_to_score[gpa])
-        
-        # Study hours (4-16) - higher for better students
-        if gpa in ['E', 'VG']:
-            study_hours = np.random.randint(8, 16)
-        elif gpa == 'G':
-            study_hours = np.random.randint(6, 12)
-        else:
-            study_hours = np.random.randint(4, 10)
-        
-        # Sleeping hours (5-9)
-        sleeping_hours = np.random.randint(5, 10)
-        
-        # Test anxiety (1-5) - inversely correlated with confidence
-        test_anxiety = np.random.randint(1, 6)
-        
-        # Confidence (1-5) - somewhat inversely correlated with anxiety
-        if test_anxiety <= 2:
-            confidence = np.random.choice([3, 4, 5], p=[0.2, 0.4, 0.4])
-        elif test_anxiety >= 4:
-            confidence = np.random.choice([1, 2, 3], p=[0.4, 0.4, 0.2])
-        else:
-            confidence = np.random.choice([2, 3, 4], p=[0.3, 0.4, 0.3])
-        
-        # Review center attendance - better students more likely to attend
-        if gpa in ['E', 'VG']:
-            review_center = np.random.choice(review_centers, p=[0.8, 0.2])
-        else:
-            review_center = np.random.choice(review_centers, p=[0.6, 0.4])
-        
-        # Result - higher probability of passing for better students
-        pass_probability = 0.2  # Base probability
-        
-        # Adjust based on GPA
-        if gpa == 'E': pass_probability += 0.6
-        elif gpa == 'VG': pass_probability += 0.4
-        elif gpa == 'G': pass_probability += 0.2
-        elif gpa == 'S': pass_probability += 0.1
-        
-        # Adjust based on mock exam score
-        pass_probability += (mock_exam_score - 1) * 0.1
-        
-        # Adjust based on study hours
-        pass_probability += (study_hours - 8) * 0.02
-        
-        # Adjust based on review center
-        if review_center == 'yes':
-            pass_probability += 0.15
-        
-        # Adjust based on confidence and anxiety
-        pass_probability += (confidence - 3) * 0.05
-        pass_probability -= (test_anxiety - 3) * 0.03
-        
-        # Ensure probability is between 0 and 1
-        pass_probability = max(0, min(1, pass_probability))
-        
-        result = 1 if np.random.random() < pass_probability else 0
-        
-        # Create record
-        record = {
-            'age': age,
-            'gender': np.random.choice(genders),
-            'gpa': gpa,
-            'major_subjects': np.random.choice(major_subjects),
-            'internship_grade': np.random.choice(internship_grades),
-            'scholarship': np.random.choice(scholarships, p=[0.3, 0.7]),
-            'review_center': review_center,
-            'mock_exam_score': mock_exam_score,
-            'test_anxiety': test_anxiety,
-            'confidence': confidence,
-            'study_hours': study_hours,
-            'sleeping_hours': sleeping_hours,
-            'income_level': np.random.choice(income_levels, p=[0.3, 0.5, 0.2]),
-            'employment_status': np.random.choice(employment_statuses, p=[0.6, 0.3, 0.1]),
-            'employment_type': np.random.choice(employment_types, p=[0.6, 0.3, 0.1]),
-            'parent_occup': np.random.choice(parent_occupations, p=[0.2, 0.5, 0.3]),
-            'parent_income': np.random.choice(parent_incomes, p=[0.3, 0.5, 0.2]),
-            'result': result
-        }
-        
-        data.append(record)
-    
-    # Create DataFrame
-    df = pd.DataFrame(data)
-    
-    # Save as different formats
-    df.to_csv(f'{filename}.csv', index=False)
-    df.to_excel(f'{filename}.xlsx', index=False)
-    df.to_json(f'{filename}.json', orient='records', indent=2)
-    
-    print(f"Sample dataset created with {n_samples} records:")
-    print(f"- CSV: {filename}.csv")
-    print(f"- Excel: {filename}.xlsx") 
-    print(f"- JSON: {filename}.json")
-    print(f"\nTarget distribution: {df['result'].value_counts().to_dict()}")
-    print(f"Pass rate: {df['result'].mean():.2%}")
-    
-    return df
-
-# Example usage
-if __name__ == "__main__":
-    # Create sample dataset
-    print("Creating sample dataset...")
-    df = create_sample_dataset(250, 'social_work_sample_250')
-    
-    # Initialize predictor
+def main():
+    """Main training function using your existing CSV"""
     predictor = SocialWorkPredictorModels()
     
-    # Load data (you can use CSV, Excel, or JSON)
-    # df = predictor.load_data_from_csv('social_work_sample_250.csv')
-    # df = predictor.load_data_from_excel('social_work_sample_250.xlsx')
-    # df = predictor.load_data_from_json('social_work_sample_250.json')
+    # Load your existing CSV file
+    csv_file = 'social_work_exam_dataset.csv'
     
-    # Preprocess data
+    print("Loading data...")
+    df = predictor.load_data_from_csv(csv_file)
+    
+    if df is None:
+        print("Failed to load data.")
+        return
+    
+    # Display basic info about the dataset
+    print(f"\nDataset Info:")
+    print(f"Shape: {df.shape}")
+    print(f"Columns: {df.columns.tolist()}")
+    print(f"\nCategorical columns unique values:")
+    categorical_cols = ['Gender', 'IncomeLevel', 'EmploymentStatus']
+    for col in categorical_cols:
+        print(f"{col}: {df[col].unique()}")
+    
+    print(f"\nTarget distribution:")
+    print(df['Passed'].value_counts())
+    print(f"Pass rate: {df['Passed'].mean():.2%}")
+    
+    # Preprocess data with OneHotEncoder
+    print("\nPreprocessing data with OneHotEncoder...")
     X, y = predictor.preprocess_data(df)
     
-    if X is not None and y is not None:
-        # Split data (80% train, 20% test)
-        X_train, X_test, y_train, y_test = predictor.split_data(X, y, test_size=0.2)
-        
-        # Train base models
-        results = predictor.train_base_models()
-        
+    if X is None or y is None:
+        print("Failed to preprocess data.")
+        return
+    
+    print(f"Data processed successfully. Shape: {X.shape}")
+    
+    # Split data
+    print("\nSplitting data into train/test sets...")
+    predictor.X_train, predictor.X_test, predictor.y_train, predictor.y_test = predictor.split_data(X, y, test_size=0.2)
+    
+    # Train base models
+    print("\nTraining models with hyperparameter tuning...")
+    results = predictor.train_base_models()
+    
+    if results:
         print("\n" + "="*50)
-        print("BASE MODEL COMPARISON RESULTS")
+        print("TRAINING RESULTS SUMMARY")
         print("="*50)
         
-        for name, result in results.items():
-            print(f"\n{name.upper()}:")
-            print(f"  Accuracy: {result['accuracy']:.4f}")
-            print(f"  CV Score: {result['cv_mean']:.4f} (+/- {result['cv_std']*2:.4f})")
+        # Sort results by accuracy
+        sorted_results = sorted(results.items(), key=lambda x: x[1]['accuracy'], reverse=True)
         
-        # Get feature importance
-        importance = predictor.get_feature_importance()
-        print("\n" + "="*50)
-        print("FEATURE IMPORTANCE")
-        print("="*50)
-        
-        for model_name, features in importance.items():
+        for model_name, metrics in sorted_results:
             print(f"\n{model_name.upper()}:")
-            sorted_features = sorted(features.items(), key=lambda x: x[1], reverse=True)
-            for feature, score in sorted_features[:8]:  # Top 8 features
-                print(f"  {feature}: {score:.4f}")
+            print(f"  Test Accuracy: {metrics['accuracy']:.4f}")
+            print(f"  CV Mean: {metrics['cv_mean']:.4f} (+/- {metrics['cv_std']*2:.4f})")
+            print(f"  Best Parameters: {metrics['best_params']}")
         
-        # Test prediction
+        # Show feature importance
         print("\n" + "="*50)
-        print("SAMPLE PREDICTION TEST")
+        print("FEATURE IMPORTANCE (Random Forest)")
         print("="*50)
         
-        sample_input = {
-            'age': 25,
-            'gender': 'female',
-            'gpa': 'VG',
-            'major_subjects': 'G',
-            'internship_grade': 'G',
-            'scholarship': 'no',
-            'review_center': 'yes',
-            'mock_exam_score': 4,
-            'test_anxiety': 3,
-            'confidence': 4,
-            'study_hours': 8,
-            'sleeping_hours': 7,
-            'income_level': 'middle',
-            'employment_status': 'unemployed',
-            'employment_type': 'regular',
-            'parent_occup': 'skilled',
-            'parent_income': 'middle'
-        }
-        
-        predictions = predictor.predict_single(sample_input)
-        if predictions:
-            print("\nThree Model Predictions:")
-            for model_name, result in predictions.items():
-                if result['probability']:
-                    pass_prob = result['probability'][1] * 100
-                    print(f"{model_name.upper()}: {pass_prob:.1f}% chance of passing")
-                else:
-                    print(f"{model_name.upper()}: {'Pass' if result['prediction'] else 'Fail'}")
+        feature_importance = predictor.get_feature_importance('random_forest')
+        if feature_importance:
+            for i, (feature, importance) in enumerate(list(feature_importance.items())[:15], 1):
+                print(f"{i:2d}. {feature:<30}: {importance:.4f}")
         
         # Save models
-        predictor.save_models('saved_base_models')
-        print(f"\nModels saved successfully!")
+        print("\nSaving models...")
+        predictor.save_models()
+        
+        # Example prediction
+        print("\n" + "="*50)
+        print("EXAMPLE PREDICTION")
+        print("="*50)
+        
+        # Use data from your CSV for example
+        sample_data = {
+            'age': 25,
+            'gender': 'Female',
+            'study_hours': 6,
+            'sleep_hours': 7,
+            'review_center': 1,
+            'confidence': 4,
+            'mock_exam_score': 85,
+            'gpa': 1.5,
+            'scholarship': 1,
+            'internship_grade': 90,
+            'income_level': 'Middle',
+            'employment_status': 'Unemployed',
+            'exam_result_percent': 85
+        }
+        
+        prediction = predictor.predict_single(sample_data)
+        
+        if prediction:
+            print(f"Input: {sample_data}")
+            print("\nPredictions:")
+            for model_name, result in prediction.items():
+                prob_text = ""
+                if result['probability']:
+                    prob_text = f" (Probability: {result['probability'][1]:.3f})"
+                pass_fail = "PASS" if result['prediction'] == 1 else "FAIL"
+                print(f"  {model_name:20s}: {pass_fail}{prob_text}")
+        
+        print("\nTraining completed successfully!")
+
+if __name__ == "__main__":
+    main()
