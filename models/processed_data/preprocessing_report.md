@@ -3,7 +3,7 @@
 ## Dataset Overview
 
 - **Original Shape:** (500, 14)
-- **Features:** 13
+- **Features:** 12
 - **Target:** Passed
 - **Pass Rate:** 50.00%
 
@@ -11,35 +11,35 @@
 
 **Categorical Features (3):** Gender, IncomeLevel, EmploymentStatus
 
-**Numerical Features (9):** Age, StudyHours, SleepHours, Confidence, MockExamScore, GPA, Scholarship, InternshipGrade, ExamResultPercent
+**Numerical Features (8):** Age, StudyHours, SleepHours, Confidence, MockExamScore, GPA, Scholarship, InternshipGrade
 
 **Binary Features (1):** ReviewCenter
 
 ## Preprocessing Approaches
 
 ### Approach 1: OneHot Encoding + Standard Scaling
-- **Final Shape:** 16 features
+- **Final Shape:** 15 features
 - **Training Samples:** 400
 - **Test Samples:** 100
 
 ### Approach 2: Label Encoding + Standard Scaling
-- **Final Shape:** 13 features
+- **Final Shape:** 12 features
 - **Training Samples:** 400
 - **Test Samples:** 100
 
 ## Feature Importance Analysis
 
 ### ANOVA F-test Results
-- ExamResultPercent: 1758.9955
 - Age: 13.8633
 - Gender: 3.2077
 - StudyHours: 2.0764
-- EmploymentStatus: 1.6666
-- Scholarship: 1.5667
-- MockExamScore: 1.5597
-- GPA: 1.4552
+- GPA: 1.4949
 - ReviewCenter: 1.3551
+- MockExamScore: 1.2161
 - Confidence: 1.1838
+- SleepHours: 0.8548
+- EmploymentStatus: 0.8168
+- InternshipGrade: 0.4784
 
 ## Data Quality Checks
 

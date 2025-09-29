@@ -18,8 +18,7 @@ class SocialWorkDataPreprocessor:
         self.feature_names = []
         self.categorical_columns = ['Gender', 'IncomeLevel', 'EmploymentStatus']
         self.numerical_columns = ['Age', 'StudyHours', 'SleepHours', 'Confidence', 
-                                'MockExamScore', 'GPA', 'Scholarship', 'InternshipGrade', 
-                                'ExamResultPercent']
+                                'MockExamScore', 'GPA', 'Scholarship', 'InternshipGrade']
         self.binary_columns = ['ReviewCenter']
         self.target_column = 'Passed'
         
@@ -151,71 +150,6 @@ class SocialWorkDataPreprocessor:
         
         return correlation_matrix
     
-    def feature_importance_analysis(self, df):
-        """Analyze feature importance using different methods"""
-        print("\n" + "="*60)
-        print("[IMPORTANCE] FEATURE IMPORTANCE ANALYSIS")
-        print("="*60)
-        
-        # Prepare features and target
-        feature_columns = self.categorical_columns + self.numerical_columns + self.binary_columns
-        available_features = [col for col in feature_columns if col in df.columns]
-        
-        X = df[available_features].copy()
-        y = df[self.target_column].values
-        
-        # Encode categorical variables
-        le = LabelEncoder()
-        for col in self.categorical_columns:
-            if col in X.columns:
-                X[col] = le.fit_transform(X[col].astype(str))
-        
-        # Method 1: ANOVA F-test
-        try:
-            selector_f = SelectKBest(score_func=f_classif, k='all')
-            selector_f.fit(X, y)
-            f_scores = dict(zip(X.columns, selector_f.scores_))
-            self.feature_importance_scores['anova_f_test'] = f_scores
-            
-            print("\n[ANOVA] ANOVA F-test scores:")
-            for feature, score in sorted(f_scores.items(), key=lambda x: x[1], reverse=True):
-                print(f"   {feature}: {score:.4f}")
-        except Exception as e:
-            print(f"[ERROR] ANOVA F-test failed: {e}")
-        
-        # Method 2: Mutual Information
-        try:
-            selector_mi = SelectKBest(score_func=mutual_info_classif, k='all')
-            selector_mi.fit(X, y)
-            mi_scores = dict(zip(X.columns, selector_mi.scores_))
-            self.feature_importance_scores['mutual_info'] = mi_scores
-            
-            print("\n[MUTUAL INFO] Mutual Information scores:")
-            for feature, score in sorted(mi_scores.items(), key=lambda x: x[1], reverse=True):
-                print(f"   {feature}: {score:.4f}")
-        except Exception as e:
-            print(f"[ERROR] Mutual Information failed: {e}")
-        
-        # Method 3: Chi-square test for categorical variables
-        print("\n[CHI-SQUARE] Chi-square tests (categorical vs target):")
-        for col in self.categorical_columns:
-            if col in df.columns:
-                try:
-                    contingency_table = pd.crosstab(df[col], df[self.target_column])
-                    chi2, p_value, dof, expected = chi2_contingency(contingency_table)
-                    print(f"   {col}: chi2={chi2:.4f}, p-value={p_value:.4f}")
-                    
-                    if 'chi_square' not in self.feature_importance_scores:
-                        self.feature_importance_scores['chi_square'] = {}
-                    self.feature_importance_scores['chi_square'][col] = {
-                        'chi2': chi2,
-                        'p_value': p_value
-                    }
-                except Exception as e:
-                    print(f"   {col}: Failed ({e})")
-        
-        return self.feature_importance_scores
-    
     def handle_missing_values(self, df):
         """Handle missing values in the dataset"""
         print("\n[CLEANING] Handling missing values...")
@@ -258,6 +192,121 @@ class SocialWorkDataPreprocessor:
         print(f"   [SUCCESS] Missing values: {missing_before} -> {missing_after}")
         
         return df_clean
+    
+    def feature_importance_analysis(self, df):
+        """Analyze feature importance using different methods"""
+        print("\n" + "="*60)
+        print("[IMPORTANCE] FEATURE IMPORTANCE ANALYSIS")
+        print("="*60)
+        
+        # Prepare features and target
+        feature_columns = self.categorical_columns + self.numerical_columns + self.binary_columns
+        available_features = [col for col in feature_columns if col in df.columns]
+        
+        X = df[available_features].copy()
+        y = df[self.target_column].values
+        
+        # Handle missing values in feature importance analysis
+        print("\n[PREPROCESSING] Handling missing values for feature importance analysis...")
+        
+        # Fill missing values using the same strategy as handle_missing_values
+        for col in self.numerical_columns:
+            if col in X.columns and X[col].isnull().sum() > 0:
+                median_val = X[col].median()
+                X[col].fillna(median_val, inplace=True)
+                print(f"   [FILL] Filled {col} missing values with median: {median_val}")
+        
+        for col in self.categorical_columns:
+            if col in X.columns and X[col].isnull().sum() > 0:
+                mode_val = X[col].mode()[0]
+                X[col].fillna(mode_val, inplace=True)
+                print(f"   [FILL] Filled {col} missing values with mode: {mode_val}")
+        
+        for col in self.binary_columns:
+            if col in X.columns and X[col].isnull().sum() > 0:
+                mode_val = X[col].mode()[0]
+                X[col].fillna(mode_val, inplace=True)
+                print(f"   [FILL] Filled {col} missing values with mode: {mode_val}")
+        
+        # Check for remaining missing values
+        missing_count = X.isnull().sum().sum()
+        if missing_count > 0:
+            print(f"[WARNING] Still have {missing_count} missing values, dropping affected rows...")
+            # Get indices where any feature is missing
+            missing_indices = X.isnull().any(axis=1)
+            X = X[~missing_indices]
+            y = y[~missing_indices]
+            print(f"[INFO] Remaining samples after dropping: {len(X)}")
+        
+        # Encode categorical variables
+        print("\n[ENCODING] Encoding categorical variables...")
+        le = LabelEncoder()
+        for col in self.categorical_columns:
+            if col in X.columns:
+                X[col] = le.fit_transform(X[col].astype(str))
+                print(f"   [ENCODED] {col}")
+        
+        # Final check: Verify no NaN values remain
+        if X.isnull().sum().sum() > 0 or np.isnan(X.values).any():
+            print("[ERROR] Still have NaN values after preprocessing!")
+            print("Missing values by column:")
+            print(X.isnull().sum())
+            return self.feature_importance_scores
+        
+        print(f"[SUCCESS] Data ready for feature importance analysis. Shape: {X.shape}")
+        
+        # Method 1: ANOVA F-test
+        try:
+            print("\n[ANOVA] Running ANOVA F-test...")
+            selector_f = SelectKBest(score_func=f_classif, k='all')
+            selector_f.fit(X, y)
+            f_scores = dict(zip(X.columns, selector_f.scores_))
+            self.feature_importance_scores['anova_f_test'] = f_scores
+            
+            print("\n[ANOVA] ANOVA F-test scores:")
+            for feature, score in sorted(f_scores.items(), key=lambda x: x[1], reverse=True):
+                print(f"   {feature}: {score:.4f}")
+        except Exception as e:
+            print(f"[ERROR] ANOVA F-test failed: {e}")
+            print(f"[DEBUG] X shape: {X.shape}, y shape: {y.shape}")
+            print(f"[DEBUG] X dtypes: {X.dtypes}")
+            print(f"[DEBUG] Any NaN in X: {X.isnull().sum().sum()}")
+            print(f"[DEBUG] Any NaN in y: {np.isnan(y).sum()}")
+        
+        # Method 2: Mutual Information
+        try:
+            print("\n[MUTUAL INFO] Running Mutual Information...")
+            selector_mi = SelectKBest(score_func=mutual_info_classif, k='all')
+            selector_mi.fit(X, y)
+            mi_scores = dict(zip(X.columns, selector_mi.scores_))
+            self.feature_importance_scores['mutual_info'] = mi_scores
+            
+            print("\n[MUTUAL INFO] Mutual Information scores:")
+            for feature, score in sorted(mi_scores.items(), key=lambda x: x[1], reverse=True):
+                print(f"   {feature}: {score:.4f}")
+        except Exception as e:
+            print(f"[ERROR] Mutual Information failed: {e}")
+        
+        # Method 3: Chi-square test for categorical variables
+        print("\n[CHI-SQUARE] Chi-square tests (categorical vs target):")
+        for col in self.categorical_columns:
+            if col in df.columns:
+                try:
+                    # Use original data (before encoding) for chi-square test
+                    contingency_table = pd.crosstab(df[col], df[self.target_column])
+                    chi2, p_value, dof, expected = chi2_contingency(contingency_table)
+                    print(f"   {col}: chi2={chi2:.4f}, p-value={p_value:.4f}")
+                    
+                    if 'chi_square' not in self.feature_importance_scores:
+                        self.feature_importance_scores['chi_square'] = {}
+                    self.feature_importance_scores['chi_square'][col] = {
+                        'chi2': chi2,
+                        'p_value': p_value
+                    }
+                except Exception as e:
+                    print(f"   {col}: Failed ({e})")
+        
+        return self.feature_importance_scores
     
     def detect_outliers(self, df):
         """Detect outliers in numerical columns"""
@@ -511,14 +560,25 @@ def main():
     # Initialize preprocessor
     preprocessor = SocialWorkDataPreprocessor()
     
-    # Load data
-    csv_file = 'social_work_exam_dataset.csv'
-    if not os.path.exists(csv_file):
-        print(f"[ERROR] Error: {csv_file} not found!")
-        return
+    # Load data - Try different locations
+    csv_files_to_try = [
+        'social_work_exam_dataset.csv',  # Current directory
+        '../social_work_exam_dataset.csv',  # Parent directory
+        os.path.join('..', 'social_work_exam_dataset.csv')  # Alternative parent
+    ]
     
-    df = preprocessor.load_data(csv_file)
+    df = None
+    for csv_file in csv_files_to_try:
+        if os.path.exists(csv_file):
+            print(f"[FILE] Found CSV at: {csv_file}")
+            df = preprocessor.load_data(csv_file)
+            break
+    
     if df is None:
+        print(f"[ERROR] CSV file not found in any of these locations:")
+        for loc in csv_files_to_try:
+            print(f"   - {loc}")
+        print(f"[INFO] Current working directory: {os.getcwd()}")
         return
     
     # Step 1: Data Exploration
@@ -527,27 +587,34 @@ def main():
     # Step 2: Correlation Analysis
     preprocessor.correlation_analysis(df)
     
-    # Step 3: Feature Importance Analysis
-    preprocessor.feature_importance_analysis(df)
-    
-    # Step 4: Handle Missing Values
+    # Step 3: Handle Missing Values FIRST (before feature importance analysis)
     df_clean = preprocessor.handle_missing_values(df)
+    
+    # Step 4: Feature Importance Analysis (now with clean data)
+    preprocessor.feature_importance_analysis(df_clean)
     
     # Step 5: Outlier Detection
     preprocessor.detect_outliers(df_clean)
     
     # Step 6: Create Training-Ready Datasets
-    preprocessed_data = preprocessor.preprocess_for_training(df_clean)
+    processed_data = preprocessor.preprocess_for_training(df_clean)
     
     # Step 7: Save Processed Data
-    output_dir = preprocessor.save_processed_data(preprocessed_data)
+    output_dir = preprocessor.save_processed_data(processed_data)
     
     # Step 8: Generate Report
-    preprocessor.generate_preprocessing_report(df_clean, preprocessed_data, output_dir)
-
+    preprocessor.generate_preprocessing_report(df_clean, processed_data, output_dir)
+    
     print(f"\n[COMPLETE] Preprocessing completed successfully!")
     print(f"[OUTPUT] Output directory: {output_dir}")
-    print(f"[READY] Ready for training with {preprocessed_data['onehot']['X_train'].shape[0]} training samples")
+    print(f"[READY] Ready for training with {processed_data['onehot']['X_train'].shape[0]} training samples")
+    
+    # Summary of ANOVA results
+    if 'anova_f_test' in preprocessor.feature_importance_scores:
+        print(f"\n[SUMMARY] Top 5 Most Important Features (ANOVA F-test):")
+        f_scores = preprocessor.feature_importance_scores['anova_f_test']
+        for i, (feature, score) in enumerate(sorted(f_scores.items(), key=lambda x: x[1], reverse=True)[:5], 1):
+            print(f"   {i}. {feature}: {score:.4f}")
 
 if __name__ == "__main__":
     main()
