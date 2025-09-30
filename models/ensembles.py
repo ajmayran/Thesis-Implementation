@@ -1,16 +1,22 @@
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, StackingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import cross_val_score
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, roc_curve, auc
 import joblib
 import os
+import warnings
+warnings.filterwarnings('ignore')
 
 class EnsembleModels:
     def __init__(self, base_models_dict):
         """Initialize with trained base models from base_models.py"""
         self.base_models = base_models_dict
         self.ensemble_models = {}
+        self.y_test = None
         
     def create_bagging_ensemble(self):
         """Create bagging ensemble using Random Forest"""
@@ -55,6 +61,7 @@ class EnsembleModels:
         print("[ENSEMBLE] TRAINING 3 ENSEMBLE MODELS")
         print("="*60)
         
+        self.y_test = y_test  # Store for later use in visualizations
         results = {}
         
         # Create ensemble models
@@ -92,6 +99,441 @@ class EnsembleModels:
             print(f"      {name}: {accuracy:.4f} (+/- {cv_scores.std() * 2:.4f})")
         
         return results
+    
+    def compare_ensemble_visualization(self, results, output_dir='ensemble_comparison'):
+        """Create comprehensive visualizations comparing the 3 ensemble models"""
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        
+        # Set style
+        sns.set_style("whitegrid")
+        
+        # 1. Main Dashboard - 2x2 grid
+        fig, axes = plt.subplots(2, 2, figsize=(16, 12))
+        
+        # Plot 1: Accuracy Comparison
+        model_names = list(results.keys())
+        accuracies = [results[name]['accuracy'] for name in model_names]
+        cv_means = [results[name]['cv_mean'] for name in model_names]
+        
+        x_pos = np.arange(len(model_names))
+        
+        axes[0, 0].bar(x_pos, accuracies, alpha=0.8, color='#f59e0b', label='Test Accuracy')
+        axes[0, 0].bar(x_pos + 0.35, cv_means, alpha=0.8, color='#10b981', width=0.35, label='CV Mean')
+        axes[0, 0].set_xlabel('Ensemble Models', fontsize=12, fontweight='bold')
+        axes[0, 0].set_ylabel('Accuracy', fontsize=12, fontweight='bold')
+        axes[0, 0].set_title('Ensemble Model Accuracy Comparison', fontsize=14, fontweight='bold')
+        axes[0, 0].set_xticks(x_pos + 0.175)
+        axes[0, 0].set_xticklabels([name.replace('_', ' ').upper() for name in model_names], rotation=15, ha='right')
+        axes[0, 0].legend()
+        axes[0, 0].grid(axis='y', alpha=0.3)
+        
+        # Plot 2: Precision, Recall, F1-Score
+        metrics_data = []
+        for name in model_names:
+            report = results[name]['classification_report']
+            metrics_data.append({
+                'Model': name,
+                'Precision': report['1']['precision'],
+                'Recall': report['1']['recall'],
+                'F1-Score': report['1']['f1-score']
+            })
+        
+        metrics_df = pd.DataFrame(metrics_data)
+        x = np.arange(len(model_names))
+        width = 0.25
+        
+        axes[0, 1].bar(x - width, metrics_df['Precision'], width, label='Precision', color='#8b5cf6')
+        axes[0, 1].bar(x, metrics_df['Recall'], width, label='Recall', color='#f59e0b')
+        axes[0, 1].bar(x + width, metrics_df['F1-Score'], width, label='F1-Score', color='#10b981')
+        axes[0, 1].set_xlabel('Ensemble Models', fontsize=12, fontweight='bold')
+        axes[0, 1].set_ylabel('Score', fontsize=12, fontweight='bold')
+        axes[0, 1].set_title('Precision, Recall, F1-Score Comparison', fontsize=14, fontweight='bold')
+        axes[0, 1].set_xticks(x)
+        axes[0, 1].set_xticklabels([name.replace('_', ' ').upper() for name in model_names], rotation=15, ha='right')
+        axes[0, 1].legend()
+        axes[0, 1].grid(axis='y', alpha=0.3)
+        
+        # Plot 3: ROC Curves
+        for name in model_names:
+            if results[name]['y_pred_proba'] is not None:
+                fpr, tpr, _ = roc_curve(self.y_test, results[name]['y_pred_proba'])
+                roc_auc = auc(fpr, tpr)
+                axes[1, 0].plot(fpr, tpr, label=f'{name.replace("_", " ").upper()} (AUC = {roc_auc:.3f})', linewidth=2)
+        
+        axes[1, 0].plot([0, 1], [0, 1], 'k--', linewidth=2, label='Random Classifier')
+        axes[1, 0].set_xlabel('False Positive Rate', fontsize=12, fontweight='bold')
+        axes[1, 0].set_ylabel('True Positive Rate', fontsize=12, fontweight='bold')
+        axes[1, 0].set_title('ROC Curves Comparison', fontsize=14, fontweight='bold')
+        axes[1, 0].legend(loc='lower right', fontsize=8)
+        axes[1, 0].grid(alpha=0.3)
+        
+        # Plot 4: Cross-Validation Score Distribution
+        cv_data = []
+        for name in model_names:
+            cv_data.append({
+                'Model': name.replace('_', ' ').upper(),
+                'CV Mean': results[name]['cv_mean'],
+                'CV Std': results[name]['cv_std']
+            })
+        
+        cv_df = pd.DataFrame(cv_data)
+        axes[1, 1].bar(cv_df['Model'], cv_df['CV Mean'], yerr=cv_df['CV Std'], 
+                       capsize=5, color='#f59e0b', alpha=0.7)
+        axes[1, 1].set_xlabel('Ensemble Models', fontsize=12, fontweight='bold')
+        axes[1, 1].set_ylabel('Cross-Validation Score', fontsize=12, fontweight='bold')
+        axes[1, 1].set_title('Cross-Validation Performance', fontsize=14, fontweight='bold')
+        axes[1, 1].set_xticklabels(cv_df['Model'], rotation=15, ha='right')
+        axes[1, 1].grid(axis='y', alpha=0.3)
+        
+        plt.tight_layout()
+        plt.savefig(f'{output_dir}/ensemble_comparison_dashboard.png', dpi=300, bbox_inches='tight')
+        print(f"[SAVED] Ensemble comparison dashboard: {output_dir}/ensemble_comparison_dashboard.png")
+        plt.close()
+        
+        # 2. Confusion Matrices (1x3 layout)
+        fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+        
+        for idx, name in enumerate(model_names):
+            cm = np.array(results[name]['confusion_matrix'])
+            sns.heatmap(cm, annot=True, fmt='d', cmap='Oranges', ax=axes[idx],
+                       xticklabels=['Fail', 'Pass'], yticklabels=['Fail', 'Pass'])
+            axes[idx].set_title(f'{name.replace("_", " ").upper()}\nAccuracy: {results[name]["accuracy"]:.3f}', 
+                               fontsize=12, fontweight='bold')
+            axes[idx].set_ylabel('True Label', fontsize=10)
+            axes[idx].set_xlabel('Predicted Label', fontsize=10)
+        
+        plt.tight_layout()
+        plt.savefig(f'{output_dir}/ensemble_confusion_matrices.png', dpi=300, bbox_inches='tight')
+        print(f"[SAVED] Ensemble confusion matrices: {output_dir}/ensemble_confusion_matrices.png")
+        plt.close()
+        
+        # 3. Performance Summary Table
+        summary_data = []
+        for name in model_names:
+            summary_data.append({
+                'Model': name.replace('_', ' ').upper(),
+                'Accuracy': f"{results[name]['accuracy']:.4f}",
+                'CV Mean': f"{results[name]['cv_mean']:.4f}",
+                'CV Std': f"{results[name]['cv_std']:.4f}",
+                'Precision': f"{results[name]['classification_report']['1']['precision']:.4f}",
+                'Recall': f"{results[name]['classification_report']['1']['recall']:.4f}",
+                'F1-Score': f"{results[name]['classification_report']['1']['f1-score']:.4f}"
+            })
+        
+        summary_df = pd.DataFrame(summary_data)
+        summary_df.to_csv(f'{output_dir}/ensemble_performance_summary.csv', index=False)
+        print(f"[SAVED] Ensemble performance summary: {output_dir}/ensemble_performance_summary.csv")
+        
+        return summary_df
+    
+    def create_ensemble_accuracy_comparison(self, results, output_dir='ensemble_comparison'):
+        """Create focused accuracy comparison for ensemble models"""
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        
+        model_names = list(results.keys())
+        
+        # Create figure with 3 subplots
+        fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+        
+        # Plot 1: Accuracy Bar Chart
+        accuracies = [results[name]['accuracy'] for name in model_names]
+        cv_means = [results[name]['cv_mean'] for name in model_names]
+        
+        colors = ['#f59e0b', '#10b981', '#8b5cf6']  # Orange, Green, Purple
+        
+        x = np.arange(len(model_names))
+        width = 0.35
+        
+        bars1 = axes[0].bar(x - width/2, accuracies, width, label='Test Accuracy', color=colors, alpha=0.8)
+        bars2 = axes[0].bar(x + width/2, cv_means, width, label='CV Mean', color=colors, alpha=0.5)
+        
+        # Add value labels
+        for bar in bars1:
+            height = bar.get_height()
+            axes[0].text(bar.get_x() + bar.get_width()/2., height,
+                        f'{height:.3f}', ha='center', va='bottom', fontweight='bold')
+        
+        axes[0].set_xlabel('Ensemble Models', fontsize=12, fontweight='bold')
+        axes[0].set_ylabel('Accuracy', fontsize=12, fontweight='bold')
+        axes[0].set_title('Ensemble Accuracy Comparison', fontsize=14, fontweight='bold')
+        axes[0].set_xticks(x)
+        axes[0].set_xticklabels([name.replace('_', ' ').upper() for name in model_names], rotation=15, ha='right')
+        axes[0].legend()
+        axes[0].grid(axis='y', alpha=0.3)
+        axes[0].set_ylim([0, 1.0])
+        
+        # Plot 2: Accuracy with Error Bars
+        cv_stds = [results[name]['cv_std'] for name in model_names]
+        
+        axes[1].bar([name.replace('_', ' ').upper() for name in model_names], accuracies, yerr=cv_stds, 
+                   capsize=10, color=colors, alpha=0.8, ecolor='black', linewidth=2)
+        
+        # Add value labels
+        for i, (acc, std) in enumerate(zip(accuracies, cv_stds)):
+            axes[1].text(i, acc + std + 0.02, f'{acc:.3f}\n±{std:.3f}', 
+                        ha='center', va='bottom', fontweight='bold')
+        
+        axes[1].set_xlabel('Ensemble Models', fontsize=12, fontweight='bold')
+        axes[1].set_ylabel('Accuracy', fontsize=12, fontweight='bold')
+        axes[1].set_title('Accuracy with Standard Deviation', fontsize=14, fontweight='bold')
+        axes[1].set_xticklabels([name.replace('_', ' ').upper() for name in model_names], rotation=15, ha='right')
+        axes[1].grid(axis='y', alpha=0.3)
+        axes[1].set_ylim([0, 1.0])
+        
+        # Plot 3: Metrics Radar Chart
+        from math import pi
+        
+        categories = ['Accuracy', 'Precision', 'Recall', 'F1-Score']
+        N = len(categories)
+        
+        angles = [n / float(N) * 2 * pi for n in range(N)]
+        angles += angles[:1]
+        
+        ax = plt.subplot(133, projection='polar')
+        
+        for idx, (name, result) in enumerate(results.items()):
+            report = result['classification_report']['1']
+            values = [
+                result['accuracy'],
+                report['precision'],
+                report['recall'],
+                report['f1-score']
+            ]
+            values += values[:1]
+            
+            ax.plot(angles, values, 'o-', linewidth=2, 
+                   label=name.replace('_', ' ').upper(), color=colors[idx])
+            ax.fill(angles, values, alpha=0.15, color=colors[idx])
+        
+        ax.set_xticks(angles[:-1])
+        ax.set_xticklabels(categories, size=10, fontweight='bold')
+        ax.set_ylim(0, 1)
+        ax.set_title('Performance Metrics Comparison', size=14, fontweight='bold', pad=20)
+        ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1), fontsize=8)
+        ax.grid(True)
+        
+        plt.tight_layout()
+        plt.savefig(f'{output_dir}/ensemble_accuracy_comparison.png', dpi=300, bbox_inches='tight')
+        print(f"[SAVED] Ensemble accuracy comparison: {output_dir}/ensemble_accuracy_comparison.png")
+        plt.close()
+        
+        # Detailed comparison table
+        print(f"\n{'='*70}")
+        print(f"3 ENSEMBLE MODELS - DETAILED ACCURACY COMPARISON")
+        print(f"{'='*70}")
+        print(f"\n{'Rank':<5} {'Model':<30} {'Test Acc':<12} {'CV Mean':<12} {'CV Std':<10} {'F1-Score':<10}")
+        print(f"{'-'*70}")
+        
+        sorted_results = sorted(results.items(), key=lambda x: x[1]['accuracy'], reverse=True)
+        
+        for rank, (name, result) in enumerate(sorted_results, 1):
+            f1 = result['classification_report']['1']['f1-score']
+            print(f"{rank:<5} {name.replace('_', ' ').upper():<30} {result['accuracy']:<12.4f} "
+                  f"{result['cv_mean']:<12.4f} {result['cv_std']:<10.4f} {f1:<10.4f}")
+        
+        # Statistical comparison
+        print(f"\n{'='*70}")
+        print(f"STATISTICAL COMPARISON")
+        print(f"{'='*70}")
+        
+        winner = sorted_results[0]
+        runner_up = sorted_results[1] if len(sorted_results) > 1 else None
+        third = sorted_results[2] if len(sorted_results) > 2 else None
+        
+        print(f"\n🏆 1st Place: {winner[0].replace('_', ' ').upper()}")
+        print(f"   Accuracy: {winner[1]['accuracy']:.4f}")
+        
+        if runner_up:
+            acc_diff_1_2 = winner[1]['accuracy'] - runner_up[1]['accuracy']
+            print(f"\n🥈 2nd Place: {runner_up[0].replace('_', ' ').upper()}")
+            print(f"   Accuracy: {runner_up[1]['accuracy']:.4f}")
+            print(f"   Difference from 1st: {acc_diff_1_2:.4f} ({acc_diff_1_2*100:.2f}%)")
+        
+        if third:
+            acc_diff_1_3 = winner[1]['accuracy'] - third[1]['accuracy']
+            print(f"\n🥉 3rd Place: {third[0].replace('_', ' ').upper()}")
+            print(f"   Accuracy: {third[1]['accuracy']:.4f}")
+            print(f"   Difference from 1st: {acc_diff_1_3:.4f} ({acc_diff_1_3*100:.2f}%)")
+        
+        return results
+    
+    def evaluate_ensemble_predictions(self, results, output_dir='ensemble_comparison'):
+        """Detailed evaluation of ensemble predictions"""
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        
+        print("\n" + "="*60)
+        print("[EVALUATION] DETAILED ENSEMBLE PREDICTIONS ANALYSIS")
+        print("="*60)
+        
+        for model_name, result in results.items():
+            y_pred = result['y_pred']
+            
+            # Create detailed prediction DataFrame
+            prediction_details = pd.DataFrame({
+                'Actual': self.y_test,
+                'Predicted': y_pred,
+                'Correct': self.y_test == y_pred,
+                'Actual_Label': ['Pass' if y == 1 else 'Fail' for y in self.y_test],
+                'Predicted_Label': ['Pass' if y == 1 else 'Fail' for y in y_pred]
+            })
+            
+            # Add probability if available
+            if result['y_pred_proba'] is not None:
+                prediction_details['Pass_Probability'] = result['y_pred_proba']
+            
+            # Summary statistics
+            total_samples = len(self.y_test)
+            correct_predictions = (self.y_test == y_pred).sum()
+            incorrect_predictions = total_samples - correct_predictions
+            
+            print(f"\n[MODEL] {model_name.replace('_', ' ').upper()}")
+            print(f"   Total Test Samples: {total_samples}")
+            print(f"   Correct Predictions: {correct_predictions} ({correct_predictions/total_samples*100:.2f}%)")
+            print(f"   Incorrect Predictions: {incorrect_predictions} ({incorrect_predictions/total_samples*100:.2f}%)")
+            
+            # Breakdown by class
+            cm = confusion_matrix(self.y_test, y_pred)
+            tn, fp, fn, tp = cm.ravel()
+            
+            print(f"\n   [BREAKDOWN]")
+            print(f"   True Positives (Predicted Pass, Actually Pass): {tp}")
+            print(f"   True Negatives (Predicted Fail, Actually Fail): {tn}")
+            print(f"   False Positives (Predicted Pass, Actually Fail): {fp}")
+            print(f"   False Negatives (Predicted Fail, Actually Pass): {fn}")
+            
+            # Save detailed predictions to CSV
+            csv_file = f'{output_dir}/{model_name}_test_predictions.csv'
+            prediction_details.to_csv(csv_file, index=True)
+            print(f"\n   [SAVED] Detailed predictions: {csv_file}")
+            
+            # Show some examples
+            print(f"\n   [EXAMPLES] First 10 predictions:")
+            print(prediction_details.head(10).to_string(index=True))
+            
+            # Show incorrect predictions
+            incorrect = prediction_details[~prediction_details['Correct']]
+            if len(incorrect) > 0:
+                print(f"\n   [ERRORS] First 5 incorrect predictions:")
+                print(incorrect.head(5).to_string(index=True))
+    
+    def create_ensemble_prediction_comparison(self, results, output_dir='ensemble_comparison'):
+        """Visualize ensemble prediction accuracy"""
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        
+        fig, axes = plt.subplots(1, 3, figsize=(20, 6))
+        
+        for idx, (model_name, result) in enumerate(results.items()):
+            y_pred = result['y_pred']
+            
+            # Create comparison plot
+            comparison_df = pd.DataFrame({
+                'Index': range(len(self.y_test)),
+                'Actual': self.y_test,
+                'Predicted': y_pred
+            })
+            
+            # Plot actual vs predicted
+            axes[idx].scatter(comparison_df['Index'], comparison_df['Actual'], 
+                            alpha=0.6, label='Actual', color='blue', s=50)
+            axes[idx].scatter(comparison_df['Index'], comparison_df['Predicted'], 
+                            alpha=0.6, label='Predicted', color='orange', s=30, marker='x')
+            
+            # Highlight incorrect predictions
+            incorrect_mask = self.y_test != y_pred
+            if incorrect_mask.sum() > 0:
+                axes[idx].scatter(comparison_df[incorrect_mask]['Index'], 
+                                comparison_df[incorrect_mask]['Actual'],
+                                color='red', s=100, marker='o', 
+                                facecolors='none', linewidths=2, 
+                                label='Incorrect')
+            
+            axes[idx].set_xlabel('Test Sample Index', fontsize=10)
+            axes[idx].set_ylabel('Class (0=Fail, 1=Pass)', fontsize=10)
+            axes[idx].set_title(f'{model_name.replace("_", " ").upper()}\nAccuracy: {result["accuracy"]:.3f}', 
+                              fontsize=12, fontweight='bold')
+            axes[idx].legend(loc='upper right')
+            axes[idx].grid(alpha=0.3)
+            axes[idx].set_ylim(-0.2, 1.2)
+        
+        plt.tight_layout()
+        plt.savefig(f'{output_dir}/ensemble_prediction_comparison.png', dpi=300, bbox_inches='tight')
+        print(f"\n[SAVED] Ensemble prediction comparison: {output_dir}/ensemble_prediction_comparison.png")
+        plt.close()
+    
+    def generate_ensemble_report(self, results, output_dir='ensemble_comparison'):
+        """Generate comprehensive ensemble test report"""
+        report_path = f'{output_dir}/ensemble_evaluation_report.md'
+        
+        with open(report_path, 'w', encoding='utf-8') as f:
+            f.write("# Ensemble Models Testing and Evaluation Report\n\n")
+            f.write(f"## Test Dataset Information\n\n")
+            f.write(f"- **Total Test Samples:** {len(self.y_test)}\n")
+            f.write(f"- **Actual Pass Count:** {(self.y_test == 1).sum()}\n")
+            f.write(f"- **Actual Fail Count:** {(self.y_test == 0).sum()}\n")
+            f.write(f"- **Pass Rate:** {(self.y_test == 1).mean():.2%}\n\n")
+            
+            f.write("## Ensemble Model Performance on Test Data\n\n")
+            
+            for model_name, result in sorted(results.items(), 
+                                           key=lambda x: x[1]['accuracy'], reverse=True):
+                y_pred = result['y_pred']
+                cm = confusion_matrix(self.y_test, y_pred)
+                tn, fp, fn, tp = cm.ravel()
+                
+                f.write(f"### {model_name.replace('_', ' ').upper()}\n\n")
+                f.write(f"**Overall Accuracy:** {result['accuracy']:.4f}\n\n")
+                
+                f.write("**Confusion Matrix:**\n\n")
+                f.write("```\n")
+                f.write(f"                Predicted Fail    Predicted Pass\n")
+                f.write(f"Actual Fail          {tn:4d}              {fp:4d}\n")
+                f.write(f"Actual Pass          {fn:4d}              {tp:4d}\n")
+                f.write("```\n\n")
+                
+                f.write("**Detailed Metrics:**\n\n")
+                f.write(f"- **True Positives (Correctly predicted Pass):** {tp} ({tp/len(self.y_test)*100:.1f}%)\n")
+                f.write(f"- **True Negatives (Correctly predicted Fail):** {tn} ({tn/len(self.y_test)*100:.1f}%)\n")
+                f.write(f"- **False Positives (Wrongly predicted Pass):** {fp} ({fp/len(self.y_test)*100:.1f}%)\n")
+                f.write(f"- **False Negatives (Wrongly predicted Fail):** {fn} ({fn/len(self.y_test)*100:.1f}%)\n\n")
+                
+                report = result['classification_report']
+                f.write("**Classification Report:**\n\n")
+                f.write(f"- **Precision (Pass class):** {report['1']['precision']:.4f}\n")
+                f.write(f"- **Recall (Pass class):** {report['1']['recall']:.4f}\n")
+                f.write(f"- **F1-Score (Pass class):** {report['1']['f1-score']:.4f}\n\n")
+                f.write("---\n\n")
+            
+            f.write("## Ensemble Techniques Used\n\n")
+            f.write("### 1. Bagging (Random Forest)\n")
+            f.write("- Multiple decision trees trained on bootstrap samples\n")
+            f.write("- Reduces variance and prevents overfitting\n\n")
+            
+            f.write("### 2. Boosting (Gradient Boosting)\n")
+            f.write("- Sequential training where each model corrects previous errors\n")
+            f.write("- Reduces bias and improves accuracy\n\n")
+            
+            f.write("### 3. Stacking (with Logistic Regression)\n")
+            f.write("- Combines predictions from 3 base models (KNN, Decision Tree, Random Forest)\n")
+            f.write("- Meta-learner (Logistic Regression) learns optimal combination\n\n")
+            
+            f.write("## How to Interpret Results\n\n")
+            f.write("- **True Positive:** Model correctly predicted student will PASS\n")
+            f.write("- **True Negative:** Model correctly predicted student will FAIL\n")
+            f.write("- **False Positive:** Model predicted PASS but student actually FAILED (Type I Error)\n")
+            f.write("- **False Negative:** Model predicted FAIL but student actually PASSED (Type II Error)\n\n")
+            
+            f.write("## Testing Process\n\n")
+            f.write("1. Ensemble models were trained on 80% of data (training set)\n")
+            f.write("2. Models make predictions on unseen 20% (test set)\n")
+            f.write("3. Predictions are compared with actual results\n")
+            f.write("4. Accuracy and other metrics are calculated\n")
+        
+        print(f"[SAVED] Ensemble evaluation report: {report_path}")
+        return report_path
     
     def predict_with_ensembles(self, X):
         """Make predictions with all ensemble models"""
@@ -179,13 +621,38 @@ def main():
     print("-" * 65)
     for i, (model_name, metrics) in enumerate(sorted_results, 1):
         cv_info = f"{metrics['cv_mean']:.4f}±{metrics['cv_std']:.3f}"
-        print(f"{i:<5} {model_name.upper():<30} {metrics['accuracy']:<12.4f} {cv_info:<15}")
+        print(f"{i:<5} {model_name.replace('_', ' ').upper():<30} {metrics['accuracy']:<12.4f} {cv_info:<15}")
+    
+    # Detailed evaluation
+    ensemble.evaluate_ensemble_predictions(ensemble_results)
+    
+    # Create visualizations
+    print(f"\n[VISUALIZATION] Creating ensemble comparison graphs...")
+    summary_df = ensemble.compare_ensemble_visualization(ensemble_results)
+    
+    # Create accuracy comparison
+    ensemble.create_ensemble_accuracy_comparison(ensemble_results)
+    
+    # Create prediction comparison plot
+    ensemble.create_ensemble_prediction_comparison(ensemble_results)
+    
+    # Generate report
+    ensemble.generate_ensemble_report(ensemble_results)
+    
+    print(f"\n[SUMMARY] Performance Summary Table:")
+    print(summary_df.to_string(index=False))
     
     # Save ensemble models
     ensemble.save_ensemble_models()
     
     print(f"\n[COMPLETE] Ensemble training completed!")
-    print(f"[OUTPUT] 3 ensemble models saved to saved_ensemble_models/")
+    print(f"[OUTPUT] Files generated:")
+    print(f"   - ensemble_comparison/ensemble_comparison_dashboard.png")
+    print(f"   - ensemble_comparison/ensemble_confusion_matrices.png")
+    print(f"   - ensemble_comparison/ensemble_accuracy_comparison.png")
+    print(f"   - ensemble_comparison/ensemble_prediction_comparison.png")
+    print(f"   - ensemble_comparison/ensemble_evaluation_report.md")
+    print(f"   - ensemble_comparison/*_test_predictions.csv (for each ensemble)")
 
 if __name__ == "__main__":
     main()
