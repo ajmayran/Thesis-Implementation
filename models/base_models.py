@@ -5,7 +5,7 @@ import joblib
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
+from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV, StratifiedKFold
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.neighbors import KNeighborsClassifier
@@ -125,15 +125,25 @@ class SocialWorkPredictorModels:
         return train_test_split(X, y, test_size=test_size, random_state=random_state, stratify=y)
     
     def train_base_models(self):
-        """Train 3 base models: KNN, Decision Tree, Random Forest"""
+        """Train 3 base models with 10-fold cross-validation"""
         if not hasattr(self, 'X_train') or self.X_train is None:
             print("[ERROR] Please load and preprocess data first")
             return None
-            
-        print(f"\n[TRAINING] Training 3 base models with {self.X_train.shape[1]} features...")
+        
+        print(f"\n[TRAINING] Training 3 base models with 10-FOLD CROSS-VALIDATION")
+        print(f"[INFO] Using {self.X_train.shape[1]} features")
+        print("="*70)
+        
         results = {}
         
-        # Only 3 base models
+        # Combine train and test for 10-fold CV
+        X_full = np.vstack([self.X_train, self.X_test])
+        y_full = np.concatenate([self.y_train, self.y_test])
+        
+        # 10-fold stratified cross-validation
+        cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
+        
+        # Model configurations (3 base models only)
         model_configs = {
             'knn': {
                 'model': KNeighborsClassifier(),
@@ -159,29 +169,52 @@ class SocialWorkPredictorModels:
         }
         
         for name, config in model_configs.items():
-            print(f"   Training {name}...")
+            print(f"\n[MODEL] Training {name.upper()} with 10-fold CV...")
             
+            # Grid search with 10-fold CV
             grid_search = GridSearchCV(
                 config['model'], 
                 config['params'], 
-                cv=5, 
+                cv=cv,  # 10-fold stratified CV
                 scoring='accuracy',
-                n_jobs=-1
+                n_jobs=-1,
+                return_train_score=True
             )
             
-            grid_search.fit(self.X_train, self.y_train)
+            # Fit on full dataset
+            grid_search.fit(X_full, y_full)
             best_model = grid_search.best_estimator_
             
+            # Get 10-fold CV results
+            cv_results = grid_search.cv_results_
+            best_index = grid_search.best_index_
+            
+            # Store all 10 fold scores
+            fold_scores = []
+            for fold_idx in range(10):
+                fold_key = f'split{fold_idx}_test_score'
+                fold_scores.append(cv_results[fold_key][best_index])
+            
+            # Calculate detailed statistics
+            cv_mean = np.mean(fold_scores)
+            cv_std = np.std(fold_scores)
+            cv_min = np.min(fold_scores)
+            cv_max = np.max(fold_scores)
+            
+            # For final evaluation, use the original test set
             y_pred = best_model.predict(self.X_test)
             y_pred_proba = best_model.predict_proba(self.X_test)[:, 1] if hasattr(best_model, 'predict_proba') else None
-            accuracy = accuracy_score(self.y_test, y_pred)
-            cv_scores = cross_val_score(best_model, self.X_train, self.y_train, cv=5)
+            test_accuracy = accuracy_score(self.y_test, y_pred)
             
+            # Store results
             self.models[name] = best_model
             results[name] = {
-                'accuracy': accuracy,
-                'cv_mean': cv_scores.mean(),
-                'cv_std': cv_scores.std(),
+                'accuracy': test_accuracy,
+                'cv_10fold_mean': cv_mean,
+                'cv_10fold_std': cv_std,
+                'cv_10fold_min': cv_min,
+                'cv_10fold_max': cv_max,
+                'cv_10fold_scores': fold_scores,
                 'best_params': grid_search.best_params_,
                 'classification_report': classification_report(self.y_test, y_pred, output_dict=True),
                 'y_pred': y_pred,
@@ -189,9 +222,170 @@ class SocialWorkPredictorModels:
                 'confusion_matrix': confusion_matrix(self.y_test, y_pred).tolist()
             }
             
-            print(f"      {name}: {accuracy:.4f} (+/- {cv_scores.std() * 2:.4f})")
+            print(f"   [RESULTS] {name.upper()}")
+            print(f"      10-Fold CV Mean: {cv_mean:.4f}")
+            print(f"      10-Fold CV Std:  {cv_std:.4f}")
+            print(f"      10-Fold Range:   [{cv_min:.4f}, {cv_max:.4f}]")
+            print(f"      Test Accuracy:   {test_accuracy:.4f}")
+            print(f"      Best Params:     {grid_search.best_params_}")
         
         return results
+    
+    def visualize_10fold_results(self, results, output_dir='model_comparison'):
+        """Create visualizations for 10-fold cross-validation results"""
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        
+        # Set style
+        sns.set_style("whitegrid")
+        
+        # Create figure with 2x2 subplots
+        fig, axes = plt.subplots(2, 2, figsize=(16, 12))
+        
+        model_names = list(results.keys())
+        colors = ['#2ecc71', '#3498db', '#e74c3c']
+        
+        # Plot 1: Box plot of 10-fold scores
+        fold_data = []
+        for name in model_names:
+            for fold_idx, score in enumerate(results[name]['cv_10fold_scores'], 1):
+                fold_data.append({
+                    'Model': name.upper(),
+                    'Fold': fold_idx,
+                    'Accuracy': score
+                })
+        
+        fold_df = pd.DataFrame(fold_data)
+        
+        box_positions = []
+        for idx, name in enumerate(model_names):
+            model_data = fold_df[fold_df['Model'] == name.upper()]['Accuracy']
+            bp = axes[0, 0].boxplot([model_data], positions=[idx], widths=0.6,
+                                    patch_artist=True, 
+                                    boxprops=dict(facecolor=colors[idx], alpha=0.7),
+                                    medianprops=dict(color='black', linewidth=2))
+            box_positions.append(idx)
+        
+        axes[0, 0].set_xticks(box_positions)
+        axes[0, 0].set_xticklabels([name.upper() for name in model_names])
+        axes[0, 0].set_ylabel('Accuracy', fontsize=12, fontweight='bold')
+        axes[0, 0].set_title('10-Fold Cross-Validation Score Distribution', fontsize=14, fontweight='bold')
+        axes[0, 0].grid(axis='y', alpha=0.3)
+        axes[0, 0].set_ylim([0.0, 1.0])
+        
+        # Plot 2: Line plot showing each fold's performance
+        for idx, name in enumerate(model_names):
+            fold_scores = results[name]['cv_10fold_scores']
+            axes[0, 1].plot(range(1, 11), fold_scores, marker='o', linewidth=2, 
+                          label=name.upper(), color=colors[idx])
+        
+        axes[0, 1].set_xlabel('Fold Number', fontsize=12, fontweight='bold')
+        axes[0, 1].set_ylabel('Accuracy', fontsize=12, fontweight='bold')
+        axes[0, 1].set_title('Accuracy Across 10 Folds', fontsize=14, fontweight='bold')
+        axes[0, 1].legend()
+        axes[0, 1].grid(alpha=0.3)
+        axes[0, 1].set_xticks(range(1, 11))
+        axes[0, 1].set_ylim([0.0, 1.0])
+        
+        # Plot 3: CV Mean vs Test Accuracy comparison
+        x = np.arange(len(model_names))
+        width = 0.35
+        
+        cv_means = [results[name]['cv_10fold_mean'] for name in model_names]
+        test_accs = [results[name]['accuracy'] for name in model_names]
+        
+        bars1 = axes[1, 0].bar(x - width/2, cv_means, width, label='10-Fold CV Mean', 
+                              color=colors, alpha=0.8)
+        bars2 = axes[1, 0].bar(x + width/2, test_accs, width, label='Test Accuracy', 
+                              color=colors, alpha=0.5)
+        
+        # Add value labels
+        for bars in [bars1, bars2]:
+            for bar in bars:
+                height = bar.get_height()
+                axes[1, 0].text(bar.get_x() + bar.get_width()/2., height,
+                              f'{height:.3f}', ha='center', va='bottom', fontsize=9)
+        
+        axes[1, 0].set_xlabel('Models', fontsize=12, fontweight='bold')
+        axes[1, 0].set_ylabel('Accuracy', fontsize=12, fontweight='bold')
+        axes[1, 0].set_title('10-Fold CV Mean vs Test Accuracy', fontsize=14, fontweight='bold')
+        axes[1, 0].set_xticks(x)
+        axes[1, 0].set_xticklabels([name.upper() for name in model_names])
+        axes[1, 0].legend()
+        axes[1, 0].grid(axis='y', alpha=0.3)
+        axes[1, 0].set_ylim([0.0, 1.0])
+        
+        # Plot 4: Standard deviation comparison
+        cv_stds = [results[name]['cv_10fold_std'] for name in model_names]
+        
+        bars = axes[1, 1].bar([name.upper() for name in model_names], cv_stds, 
+                             color=colors, alpha=0.8)
+        
+        for bar in bars:
+            height = bar.get_height()
+            axes[1, 1].text(bar.get_x() + bar.get_width()/2., height,
+                          f'{height:.4f}', ha='center', va='bottom', fontsize=10)
+        
+        axes[1, 1].set_xlabel('Models', fontsize=12, fontweight='bold')
+        axes[1, 1].set_ylabel('Standard Deviation', fontsize=12, fontweight='bold')
+        axes[1, 1].set_title('10-Fold CV Standard Deviation (Lower is Better)', 
+                           fontsize=14, fontweight='bold')
+        axes[1, 1].grid(axis='y', alpha=0.3)
+        
+        plt.tight_layout()
+        plt.savefig(f'{output_dir}/10fold_cv_analysis.png', dpi=300, bbox_inches='tight')
+        print(f"[SAVED] 10-fold CV analysis: {output_dir}/10fold_cv_analysis.png")
+        plt.close()
+        
+        # Save detailed 10-fold results to CSV
+        detailed_fold_data = []
+        for name in model_names:
+            for fold_idx, score in enumerate(results[name]['cv_10fold_scores'], 1):
+                detailed_fold_data.append({
+                    'Model': name.upper(),
+                    'Fold': fold_idx,
+                    'Accuracy': score
+                })
+        
+        detailed_df = pd.DataFrame(detailed_fold_data)
+        detailed_df.to_csv(f'{output_dir}/10fold_detailed_scores.csv', index=False)
+        print(f"[SAVED] 10-fold detailed scores: {output_dir}/10fold_detailed_scores.csv")
+    
+    def print_10fold_summary(self, results):
+        """Print detailed 10-fold cross-validation summary"""
+        print("\n" + "="*80)
+        print("10-FOLD CROSS-VALIDATION SUMMARY")
+        print("="*80)
+        
+        print(f"\n{'Model':<20} {'CV Mean':<12} {'CV Std':<12} {'CV Min':<12} {'CV Max':<12} {'Test Acc':<12}")
+        print("-"*80)
+        
+        sorted_results = sorted(results.items(), key=lambda x: x[1]['cv_10fold_mean'], reverse=True)
+        
+        for name, result in sorted_results:
+            print(f"{name.upper():<20} "
+                  f"{result['cv_10fold_mean']:<12.4f} "
+                  f"{result['cv_10fold_std']:<12.4f} "
+                  f"{result['cv_10fold_min']:<12.4f} "
+                  f"{result['cv_10fold_max']:<12.4f} "
+                  f"{result['accuracy']:<12.4f}")
+        
+        print("\n" + "="*80)
+        print("INTERPRETATION")
+        print("="*80)
+        print("• CV Mean: Average accuracy across 10 folds (higher is better)")
+        print("• CV Std:  Consistency across folds (lower is better)")
+        print("• CV Min:  Worst-case performance")
+        print("• CV Max:  Best-case performance")
+        print("• Test Acc: Performance on held-out test set")
+        
+        # Find most consistent model
+        most_consistent = min(results.items(), key=lambda x: x[1]['cv_10fold_std'])
+        print(f"\n🎯 Most Consistent Model: {most_consistent[0].upper()} (Std: {most_consistent[1]['cv_10fold_std']:.4f})")
+        
+        # Find best average performance
+        best_avg = max(results.items(), key=lambda x: x[1]['cv_10fold_mean'])
+        print(f"🏆 Best Average Performance: {best_avg[0].upper()} (CV Mean: {best_avg[1]['cv_10fold_mean']:.4f})")
     
     def compare_models_visualization(self, results, output_dir='model_comparison'):
         """Create comprehensive visualizations comparing the 3 models"""
@@ -207,7 +401,7 @@ class SocialWorkPredictorModels:
         # Plot 1: Accuracy Comparison
         model_names = list(results.keys())
         accuracies = [results[name]['accuracy'] for name in model_names]
-        cv_means = [results[name]['cv_mean'] for name in model_names]
+        cv_means = [results[name].get('cv_10fold_mean', results[name].get('cv_mean', 0)) for name in model_names]
         
         x_pos = np.arange(len(model_names))
         
@@ -266,8 +460,8 @@ class SocialWorkPredictorModels:
         for name in model_names:
             cv_data.append({
                 'Model': name,
-                'CV Mean': results[name]['cv_mean'],
-                'CV Std': results[name]['cv_std']
+                'CV Mean': results[name].get('cv_10fold_mean', results[name].get('cv_mean', 0)),
+                'CV Std': results[name].get('cv_10fold_std', results[name].get('cv_std', 0))
             })
         
         cv_df = pd.DataFrame(cv_data)
@@ -307,8 +501,8 @@ class SocialWorkPredictorModels:
             summary_data.append({
                 'Model': name.upper(),
                 'Accuracy': f"{results[name]['accuracy']:.4f}",
-                'CV Mean': f"{results[name]['cv_mean']:.4f}",
-                'CV Std': f"{results[name]['cv_std']:.4f}",
+                'CV Mean': f"{results[name].get('cv_10fold_mean', results[name].get('cv_mean', 0)):.4f}",
+                'CV Std': f"{results[name].get('cv_10fold_std', results[name].get('cv_std', 0)):.4f}",
                 'Precision': f"{results[name]['classification_report']['1']['precision']:.4f}",
                 'Recall': f"{results[name]['classification_report']['1']['recall']:.4f}",
                 'F1-Score': f"{results[name]['classification_report']['1']['f1-score']:.4f}"
@@ -333,7 +527,7 @@ class SocialWorkPredictorModels:
         
         # Plot 1: Accuracy Bar Chart
         accuracies = [results[name]['accuracy'] for name in model_names]
-        cv_means = [results[name]['cv_mean'] for name in model_names]
+        cv_means = [results[name].get('cv_10fold_mean', results[name].get('cv_mean', 0)) for name in model_names]
         
         colors = ['#2ecc71', '#3498db', '#e74c3c']  # Green, Blue, Red
         
@@ -341,7 +535,7 @@ class SocialWorkPredictorModels:
         width = 0.35
         
         bars1 = axes[0].bar(x - width/2, accuracies, width, label='Test Accuracy', color=colors, alpha=0.8)
-        bars2 = axes[0].bar(x + width/2, cv_means, width, label='CV Mean', color=colors, alpha=0.5)
+        bars2 = axes[0].bar(x + width/2, cv_means, width, label='10-Fold CV Mean', color=colors, alpha=0.5)
         
         # Add value labels on bars
         for bar in bars1:
@@ -359,7 +553,7 @@ class SocialWorkPredictorModels:
         axes[0].set_ylim([0, 1.0])
         
         # Plot 2: Accuracy with Error Bars (CV Std)
-        cv_stds = [results[name]['cv_std'] for name in model_names]
+        cv_stds = [results[name].get('cv_10fold_std', results[name].get('cv_std', 0)) for name in model_names]
         
         axes[1].bar(model_names, accuracies, yerr=cv_stds, capsize=10, 
                    color=colors, alpha=0.8, ecolor='black', linewidth=2)
@@ -414,7 +608,7 @@ class SocialWorkPredictorModels:
         
         # Create a detailed comparison table
         print(f"\n{'='*70}")
-        print(f"3 BASE MODELS - DETAILED ACCURACY COMPARISON")
+        print(f"3 BASE MODELS - DETAILED ACCURACY COMPARISON (10-FOLD CV)")
         print(f"{'='*70}")
         print(f"\n{'Rank':<5} {'Model':<20} {'Test Acc':<12} {'CV Mean':<12} {'CV Std':<10} {'F1-Score':<10}")
         print(f"{'-'*70}")
@@ -423,32 +617,10 @@ class SocialWorkPredictorModels:
         
         for rank, (name, result) in enumerate(sorted_results, 1):
             f1 = result['classification_report']['1']['f1-score']
+            cv_mean = result.get('cv_10fold_mean', result.get('cv_mean', 0))
+            cv_std = result.get('cv_10fold_std', result.get('cv_std', 0))
             print(f"{rank:<5} {name.upper():<20} {result['accuracy']:<12.4f} "
-                  f"{result['cv_mean']:<12.4f} {result['cv_std']:<10.4f} {f1:<10.4f}")
-        
-        # Statistical comparison
-        print(f"\n{'='*70}")
-        print(f"STATISTICAL COMPARISON")
-        print(f"{'='*70}")
-        
-        winner = sorted_results[0]
-        runner_up = sorted_results[1] if len(sorted_results) > 1 else None
-        third = sorted_results[2] if len(sorted_results) > 2 else None
-        
-        print(f"\n🏆 1st Place: {winner[0].upper()}")
-        print(f"   Accuracy: {winner[1]['accuracy']:.4f}")
-        
-        if runner_up:
-            acc_diff_1_2 = winner[1]['accuracy'] - runner_up[1]['accuracy']
-            print(f"\n🥈 2nd Place: {runner_up[0].upper()}")
-            print(f"   Accuracy: {runner_up[1]['accuracy']:.4f}")
-            print(f"   Difference from 1st: {acc_diff_1_2:.4f} ({acc_diff_1_2*100:.2f}%)")
-        
-        if third:
-            acc_diff_1_3 = winner[1]['accuracy'] - third[1]['accuracy']
-            print(f"\n🥉 3rd Place: {third[0].upper()}")
-            print(f"   Accuracy: {third[1]['accuracy']:.4f}")
-            print(f"   Difference from 1st: {acc_diff_1_3:.4f} ({acc_diff_1_3*100:.2f}%)")
+                  f"{cv_mean:<12.4f} {cv_std:<10.4f} {f1:<10.4f}")
         
         return results
     
@@ -617,7 +789,7 @@ class SocialWorkPredictorModels:
         report_path = f'{output_dir}/test_evaluation_report.md'
         
         with open(report_path, 'w', encoding='utf-8') as f:
-            f.write("# Model Testing and Evaluation Report\n\n")
+            f.write("# Model Testing and Evaluation Report (10-Fold Cross-Validation)\n\n")
             f.write(f"## Test Dataset Information\n\n")
             f.write(f"- **Total Test Samples:** {len(self.y_test)}\n")
             f.write(f"- **Actual Pass Count:** {(self.y_test == 1).sum()}\n")
@@ -634,6 +806,13 @@ class SocialWorkPredictorModels:
                 
                 f.write(f"### {model_name.upper()}\n\n")
                 f.write(f"**Overall Accuracy:** {result['accuracy']:.4f}\n\n")
+                
+                if 'cv_10fold_mean' in result:
+                    f.write(f"**10-Fold Cross-Validation:**\n\n")
+                    f.write(f"- **CV Mean:** {result['cv_10fold_mean']:.4f}\n")
+                    f.write(f"- **CV Std:** {result['cv_10fold_std']:.4f}\n")
+                    f.write(f"- **CV Min:** {result['cv_10fold_min']:.4f}\n")
+                    f.write(f"- **CV Max:** {result['cv_10fold_max']:.4f}\n\n")
                 
                 f.write("**Confusion Matrix:**\n\n")
                 f.write("```\n")
@@ -657,6 +836,15 @@ class SocialWorkPredictorModels:
                 f.write(f"**Best Hyperparameters:** {result['best_params']}\n\n")
                 f.write("---\n\n")
             
+            f.write("## 10-Fold Cross-Validation Explained\n\n")
+            f.write("10-fold cross-validation provides a robust estimate of model performance by:\n\n")
+            f.write("1. Splitting the dataset into 10 equal parts (folds)\n")
+            f.write("2. Training on 9 folds and testing on 1 fold\n")
+            f.write("3. Repeating this process 10 times (each fold serves as test set once)\n")
+            f.write("4. Averaging the results for final performance metrics\n\n")
+            
+            f.write("This approach reduces variance and provides more reliable performance estimates.\n\n")
+            
             f.write("## How to Interpret Results\n\n")
             f.write("- **True Positive:** Model correctly predicted student will PASS\n")
             f.write("- **True Negative:** Model correctly predicted student will FAIL\n")
@@ -664,10 +852,10 @@ class SocialWorkPredictorModels:
             f.write("- **False Negative:** Model predicted FAIL but student actually PASSED (Type II Error)\n\n")
             
             f.write("## Testing Process\n\n")
-            f.write("1. Model was trained on 80% of data (training set)\n")
-            f.write("2. Model makes predictions on unseen 20% (test set)\n")
-            f.write("3. Predictions are compared with actual results\n")
-            f.write("4. Accuracy and other metrics are calculated\n")
+            f.write("1. Models were trained using 10-fold cross-validation\n")
+            f.write("2. Best hyperparameters were selected based on CV performance\n")
+            f.write("3. Final models make predictions on held-out test set\n")
+            f.write("4. Performance metrics are calculated and compared\n")
         
         print(f"[SAVED] Test evaluation report: {report_path}")
         return report_path
@@ -719,11 +907,11 @@ class SocialWorkPredictorModels:
             return False
 
 def main():
-    """Main training function using preprocessed data"""
+    """Main training function using preprocessed data with 10-fold CV"""
     predictor = SocialWorkPredictorModels()
     
     print("="*60)
-    print("[START] TRAINING 3 BASE MODELS WITH PREPROCESSED DATA")
+    print("[START] TRAINING 3 BASE MODELS WITH 10-FOLD CROSS-VALIDATION")
     print("="*60)
     
     # Load preprocessed data
@@ -740,34 +928,25 @@ def main():
     predictor.y_train = data['y_train']
     predictor.y_test = data['y_test']
     
-    # Train 3 base models
+    # Train 3 base models with 10-fold CV
     results = predictor.train_base_models()
     
     if results:
-        print(f"\n[RESULTS] 3 Base Models Performance Summary:")
-        print("-" * 60)
-        sorted_results = sorted(results.items(), key=lambda x: x[1]['accuracy'], reverse=True)
+        # Print 10-fold summary
+        predictor.print_10fold_summary(results)
         
-        print(f"{'Rank':<5} {'Model':<20} {'Accuracy':<12} {'CV Score':<15}")
-        print("-" * 60)
-        for rank, (model_name, metrics) in enumerate(sorted_results, 1):
-            cv_info = f"{metrics['cv_mean']:.4f}±{metrics['cv_std']:.3f}"
-            print(f"{rank:<5} {model_name.upper():<20} {metrics['accuracy']:<12.4f} {cv_info:<15}")
+        # Create 10-fold visualizations
+        print(f"\n[VISUALIZATION] Creating 10-fold CV analysis...")
+        predictor.visualize_10fold_results(results)
         
-        # Detailed test evaluation
-        predictor.evaluate_test_predictions(results)
-        
-        # Create visualizations
+        # Original visualizations
         print(f"\n[VISUALIZATION] Creating model comparison graphs...")
         summary_df = predictor.compare_models_visualization(results)
-        
-        # Create 3-model comparison plot
         predictor.create_top3_accuracy_comparison(results)
         
-        # Create prediction comparison plot
+        # Detailed evaluation
+        predictor.evaluate_test_predictions(results)
         predictor.create_prediction_comparison_plot(results)
-        
-        # Generate test report
         predictor.generate_test_report(results)
         
         print(f"\n[SUMMARY] Performance Summary Table:")
@@ -785,12 +964,13 @@ def main():
         
         print(f"\n[COMPLETE] Training completed successfully!")
         print(f"[OUTPUT] Files generated:")
+        print(f"   - model_comparison/10fold_cv_analysis.png")
+        print(f"   - model_comparison/10fold_detailed_scores.csv")
         print(f"   - model_comparison/model_comparison_dashboard.png")
         print(f"   - model_comparison/confusion_matrices.png")
         print(f"   - model_comparison/top3_accuracy_comparison.png")
         print(f"   - model_comparison/prediction_comparison.png")
         print(f"   - model_comparison/test_evaluation_report.md")
-        print(f"   - model_comparison/*_test_predictions.csv (for each model)")
 
 if __name__ == "__main__":
     main()
