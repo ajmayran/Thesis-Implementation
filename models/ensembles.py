@@ -1,25 +1,25 @@
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, BaggingClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, StackingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import cross_val_score
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 import joblib
 import os
 
 class EnsembleModels:
     def __init__(self, base_models_dict):
+        """Initialize with trained base models from base_models.py"""
         self.base_models = base_models_dict
         self.ensemble_models = {}
         
     def create_bagging_ensemble(self):
         """Create bagging ensemble using Random Forest"""
-        # Random Forest is already a bagging ensemble of decision trees
         rf_bagging = RandomForestClassifier(
             n_estimators=100,
             max_depth=10,
             min_samples_split=5,
             random_state=42,
-            bootstrap=True  # This makes it bagging
+            bootstrap=True
         )
         self.ensemble_models['bagging_random_forest'] = rf_bagging
         return rf_bagging
@@ -36,46 +36,46 @@ class EnsembleModels:
         return gb_boosting
     
     def create_stacking_ensemble(self):
-        """Create stacking ensemble with Logistic Regression as meta-learner"""
-        from sklearn.ensemble import StackingClassifier
-        
-        # Use your base models as level-0 estimators
+        """Create stacking ensemble with base models + Logistic Regression meta-learner"""
+        # Use the 3 base models as level-0 estimators
         estimators = [(name, model) for name, model in self.base_models.items()]
         
-        # Logistic Regression as meta-learner (level-1)
         stacking_clf = StackingClassifier(
             estimators=estimators,
             final_estimator=LogisticRegression(random_state=42, max_iter=1000),
-            cv=5,  # 5-fold cross-validation for training meta-learner
+            cv=5,
             random_state=42
         )
         self.ensemble_models['stacking_logistic'] = stacking_clf
         return stacking_clf
     
     def train_ensemble_models(self, X_train, y_train, X_test, y_test):
-        """Train all ensemble models"""
+        """Train all 3 ensemble models"""
+        print("\n" + "="*60)
+        print("[ENSEMBLE] TRAINING 3 ENSEMBLE MODELS")
+        print("="*60)
+        
         results = {}
         
         # Create ensemble models
-        print("Creating ensemble models...")
+        print("\n[CREATE] Creating ensemble models...")
         self.create_bagging_ensemble()
         self.create_boosting_ensemble()
         self.create_stacking_ensemble()
         
         # Train and evaluate each ensemble
         for name, model in self.ensemble_models.items():
-            print(f"\nTraining {name}...")
+            print(f"\n   Training {name}...")
             
             # Train model
             model.fit(X_train, y_train)
             
             # Make predictions
             y_pred = model.predict(X_test)
+            y_pred_proba = model.predict_proba(X_test)[:, 1] if hasattr(model, 'predict_proba') else None
             
-            # Calculate accuracy
+            # Calculate metrics
             accuracy = accuracy_score(y_test, y_pred)
-            
-            # Cross validation
             cv_scores = cross_val_score(model, X_train, y_train, cv=5)
             
             # Store results
@@ -83,10 +83,13 @@ class EnsembleModels:
                 'accuracy': accuracy,
                 'cv_mean': cv_scores.mean(),
                 'cv_std': cv_scores.std(),
-                'classification_report': classification_report(y_test, y_pred, output_dict=True)
+                'classification_report': classification_report(y_test, y_pred, output_dict=True),
+                'y_pred': y_pred,
+                'y_pred_proba': y_pred_proba,
+                'confusion_matrix': confusion_matrix(y_test, y_pred).tolist()
             }
             
-            print(f"{name} - Accuracy: {accuracy:.4f} (+/- {cv_scores.std() * 2:.4f})")
+            print(f"      {name}: {accuracy:.4f} (+/- {cv_scores.std() * 2:.4f})")
         
         return results
     
@@ -105,7 +108,7 @@ class EnsembleModels:
         
         return predictions
     
-    def save_ensemble_models(self, directory='saved_models'):
+    def save_ensemble_models(self, directory='saved_ensemble_models'):
         """Save ensemble models"""
         if not os.path.exists(directory):
             os.makedirs(directory)
@@ -113,9 +116,9 @@ class EnsembleModels:
         for name, model in self.ensemble_models.items():
             joblib.dump(model, os.path.join(directory, f'{name}_ensemble.pkl'))
         
-        print(f"Ensemble models saved to {directory}")
+        print(f"\n[SAVE] Ensemble models saved to {directory}/")
     
-    def load_ensemble_models(self, directory='saved_models'):
+    def load_ensemble_models(self, directory='saved_ensemble_models'):
         """Load ensemble models"""
         try:
             ensemble_files = [f for f in os.listdir(directory) if f.endswith('_ensemble.pkl')]
@@ -125,78 +128,64 @@ class EnsembleModels:
                 model_path = os.path.join(directory, file)
                 self.ensemble_models[model_name] = joblib.load(model_path)
             
-            print(f"Ensemble models loaded from {directory}")
+            print(f"[LOAD] Loaded {len(self.ensemble_models)} ensemble models from {directory}/")
             return True
             
         except Exception as e:
-            print(f"Error loading ensemble models: {e}")
+            print(f"[ERROR] Error loading ensemble models: {e}")
             return False
 
 def main():
-    """Main function to test ensemble models"""
+    """Train ensemble models using saved base models"""
     from base_models import SocialWorkPredictorModels
     
-    # Load and train base models first
+    print("="*60)
+    print("[START] TRAINING ENSEMBLE MODELS")
+    print("="*60)
+    
+    # Load base models first
     predictor = SocialWorkPredictorModels()
     
-    print("Loading data...")
-    df = predictor.load_data_from_csv('social_work_exam_dataset.csv')
-    
-    if df is None:
-        print("Failed to load data.")
+    # Try to load saved base models
+    if not predictor.load_models('saved_base_models'):
+        print("\n[ERROR] No saved base models found!")
+        print("[INFO] Please run base_models.py first to train base models")
         return
     
-    # Preprocess data
-    print("Preprocessing data...")
-    X, y = predictor.preprocess_data(df)
+    # Load preprocessed data
+    data = predictor.load_preprocessed_data(data_dir='processed_data', approach='label')
     
-    if X is None or y is None:
-        print("Failed to preprocess data.")
+    if data is None:
+        print("\n[ERROR] Could not load preprocessed data!")
         return
     
-    # Split data
-    X_train, X_test, y_train, y_test = predictor.split_data(X, y)
-    predictor.X_train, predictor.X_test = X_train, X_test
-    predictor.y_train, predictor.y_test = y_train, y_test
+    X_train = data['X_train']
+    X_test = data['X_test']
+    y_train = data['y_train']
+    y_test = data['y_test']
     
-    # Train base models
-    print("Training base models...")
-    base_results = predictor.train_base_models()
-    
-    if not base_results:
-        print("Failed to train base models.")
-        return
-    
-    # Create and train ensemble models
-    print("\n" + "="*50)
-    print("TRAINING ENSEMBLE MODELS")
-    print("="*50)
-    
+    # Create and train ensembles
     ensemble = EnsembleModels(predictor.models)
     ensemble_results = ensemble.train_ensemble_models(X_train, y_train, X_test, y_test)
     
     # Display results
-    print("\n" + "="*50)
-    print("ENSEMBLE RESULTS SUMMARY")
-    print("="*50)
+    print("\n" + "="*60)
+    print("[RESULTS] ENSEMBLE MODEL PERFORMANCE")
+    print("="*60)
     
-    all_results = {**base_results, **ensemble_results}
+    sorted_results = sorted(ensemble_results.items(), key=lambda x: x[1]['accuracy'], reverse=True)
     
-    # Sort by accuracy
-    sorted_results = sorted(all_results.items(), key=lambda x: x[1]['accuracy'], reverse=True)
-    
-    print("\nModel Performance Ranking:")
-    print("-" * 60)
-    print(f"{'Rank':<4} {'Model':<25} {'Accuracy':<10} {'CV Score':<15}")
-    print("-" * 60)
+    print(f"\n{'Rank':<5} {'Model':<30} {'Accuracy':<12} {'CV Score':<15}")
+    print("-" * 65)
     for i, (model_name, metrics) in enumerate(sorted_results, 1):
-        print(f"{i:<4} {model_name:<25} {metrics['accuracy']:<10.4f} {metrics['cv_mean']:.4f}±{metrics['cv_std']:.3f}")
+        cv_info = f"{metrics['cv_mean']:.4f}±{metrics['cv_std']:.3f}"
+        print(f"{i:<5} {model_name.upper():<30} {metrics['accuracy']:<12.4f} {cv_info:<15}")
     
     # Save ensemble models
-    print("\nSaving ensemble models...")
     ensemble.save_ensemble_models()
     
-    print("\nEnsemble training completed successfully!")
+    print(f"\n[COMPLETE] Ensemble training completed!")
+    print(f"[OUTPUT] 3 ensemble models saved to saved_ensemble_models/")
 
 if __name__ == "__main__":
     main()

@@ -1,17 +1,19 @@
 import pandas as pd
 import numpy as np
+import json
+import joblib
+import os
+import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.model_selection import train_test_split, cross_val_score, GridSearchCV
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.svm import SVC
-from sklearn.naive_bayes import GaussianNB
-from sklearn.metrics import accuracy_score, classification_report
-import joblib
-import os
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, roc_curve, auc
+import warnings
+warnings.filterwarnings('ignore')
 
 class SocialWorkPredictorModels:
     def __init__(self):
@@ -19,7 +21,7 @@ class SocialWorkPredictorModels:
         self.preprocessor = None
         self.feature_names = []
         
-        # CORRECTED: Features available BEFORE taking the exam
+        # Features available BEFORE taking the exam
         self.categorical_columns = ['Gender', 'IncomeLevel', 'EmploymentStatus']
         self.numerical_columns = ['Age', 'StudyHours', 'SleepHours', 'Confidence', 
                                 'MockExamScore', 'GPA', 'Scholarship', 'InternshipGrade']
@@ -27,6 +29,44 @@ class SocialWorkPredictorModels:
         
         self.target_column = 'Passed'
         
+    def load_preprocessed_data(self, data_dir='processed_data', approach='label'):
+        """Load preprocessed data from preprocessing.py output"""
+        try:
+            json_file = f'{data_dir}/dataset_{approach}.json'
+            
+            if not os.path.exists(json_file):
+                print(f"[ERROR] Preprocessed data not found: {json_file}")
+                print(f"[INFO] Please run preprocessing.py first")
+                return None
+            
+            with open(json_file, 'r') as f:
+                data = json.load(f)
+            
+            X_train = np.array(data['X_train'])
+            X_test = np.array(data['X_test'])
+            y_train = np.array(data['y_train'])
+            y_test = np.array(data['y_test'])
+            feature_names = data['feature_names']
+            
+            self.feature_names = feature_names
+            
+            print(f"[SUCCESS] Loaded preprocessed data ({approach} approach)")
+            print(f"   Training samples: {X_train.shape[0]}")
+            print(f"   Test samples: {X_test.shape[0]}")
+            print(f"   Features: {X_train.shape[1]}")
+            
+            return {
+                'X_train': X_train,
+                'X_test': X_test,
+                'y_train': y_train,
+                'y_test': y_test,
+                'feature_names': feature_names
+            }
+            
+        except Exception as e:
+            print(f"[ERROR] Error loading preprocessed data: {e}")
+            return None
+    
     def load_data_from_csv(self, file_path):
         """Load data from CSV file"""
         try:
@@ -85,15 +125,15 @@ class SocialWorkPredictorModels:
         return train_test_split(X, y, test_size=test_size, random_state=random_state, stratify=y)
     
     def train_base_models(self):
-        """Train base models with hyperparameter tuning"""
+        """Train 3 base models: KNN, Decision Tree, Random Forest"""
         if not hasattr(self, 'X_train') or self.X_train is None:
             print("[ERROR] Please load and preprocess data first")
             return None
             
-        print(f"\n[TRAINING] Training base models with {self.X_train.shape[1]} features...")
+        print(f"\n[TRAINING] Training 3 base models with {self.X_train.shape[1]} features...")
         results = {}
         
-        # Model configurations
+        # Only 3 base models
         model_configs = {
             'knn': {
                 'model': KNeighborsClassifier(),
@@ -115,27 +155,6 @@ class SocialWorkPredictorModels:
                     'n_estimators': [50, 100],
                     'max_depth': [5, 10, 15]
                 }
-            },
-            'logistic_regression': {
-                'model': LogisticRegression(random_state=42, max_iter=1000),
-                'params': {
-                    'C': [0.1, 1, 10],
-                    'penalty': ['l1', 'l2'],
-                    'solver': ['liblinear']
-                }
-            },
-            'svm': {
-                'model': SVC(random_state=42, probability=True),
-                'params': {
-                    'C': [0.1, 1, 10],
-                    'kernel': ['linear', 'rbf']
-                }
-            },
-            'naive_bayes': {
-                'model': GaussianNB(),
-                'params': {
-                    'var_smoothing': [1e-9, 1e-8, 1e-7]
-                }
             }
         }
         
@@ -154,6 +173,7 @@ class SocialWorkPredictorModels:
             best_model = grid_search.best_estimator_
             
             y_pred = best_model.predict(self.X_test)
+            y_pred_proba = best_model.predict_proba(self.X_test)[:, 1] if hasattr(best_model, 'predict_proba') else None
             accuracy = accuracy_score(self.y_test, y_pred)
             cv_scores = cross_val_score(best_model, self.X_train, self.y_train, cv=5)
             
@@ -163,10 +183,272 @@ class SocialWorkPredictorModels:
                 'cv_mean': cv_scores.mean(),
                 'cv_std': cv_scores.std(),
                 'best_params': grid_search.best_params_,
-                'classification_report': classification_report(self.y_test, y_pred, output_dict=True)
+                'classification_report': classification_report(self.y_test, y_pred, output_dict=True),
+                'y_pred': y_pred,
+                'y_pred_proba': y_pred_proba,
+                'confusion_matrix': confusion_matrix(self.y_test, y_pred).tolist()
             }
             
             print(f"      {name}: {accuracy:.4f} (+/- {cv_scores.std() * 2:.4f})")
+        
+        return results
+    
+    def compare_models_visualization(self, results, output_dir='model_comparison'):
+        """Create comprehensive visualizations comparing the 3 models"""
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        
+        # Set style
+        sns.set_style("whitegrid")
+        
+        # 1. Main Dashboard - 2x2 grid
+        fig, axes = plt.subplots(2, 2, figsize=(16, 12))
+        
+        # Plot 1: Accuracy Comparison
+        model_names = list(results.keys())
+        accuracies = [results[name]['accuracy'] for name in model_names]
+        cv_means = [results[name]['cv_mean'] for name in model_names]
+        
+        x_pos = np.arange(len(model_names))
+        
+        axes[0, 0].bar(x_pos, accuracies, alpha=0.8, color='skyblue', label='Test Accuracy')
+        axes[0, 0].bar(x_pos + 0.35, cv_means, alpha=0.8, color='orange', width=0.35, label='CV Mean')
+        axes[0, 0].set_xlabel('Models', fontsize=12, fontweight='bold')
+        axes[0, 0].set_ylabel('Accuracy', fontsize=12, fontweight='bold')
+        axes[0, 0].set_title('Model Accuracy Comparison', fontsize=14, fontweight='bold')
+        axes[0, 0].set_xticks(x_pos + 0.175)
+        axes[0, 0].set_xticklabels([name.upper() for name in model_names], rotation=0)
+        axes[0, 0].legend()
+        axes[0, 0].grid(axis='y', alpha=0.3)
+        
+        # Plot 2: Precision, Recall, F1-Score
+        metrics_data = []
+        for name in model_names:
+            report = results[name]['classification_report']
+            metrics_data.append({
+                'Model': name,
+                'Precision': report['1']['precision'],
+                'Recall': report['1']['recall'],
+                'F1-Score': report['1']['f1-score']
+            })
+        
+        metrics_df = pd.DataFrame(metrics_data)
+        x = np.arange(len(model_names))
+        width = 0.25
+        
+        axes[0, 1].bar(x - width, metrics_df['Precision'], width, label='Precision', color='#3498db')
+        axes[0, 1].bar(x, metrics_df['Recall'], width, label='Recall', color='#2ecc71')
+        axes[0, 1].bar(x + width, metrics_df['F1-Score'], width, label='F1-Score', color='#e74c3c')
+        axes[0, 1].set_xlabel('Models', fontsize=12, fontweight='bold')
+        axes[0, 1].set_ylabel('Score', fontsize=12, fontweight='bold')
+        axes[0, 1].set_title('Precision, Recall, F1-Score Comparison', fontsize=14, fontweight='bold')
+        axes[0, 1].set_xticks(x)
+        axes[0, 1].set_xticklabels([name.upper() for name in model_names], rotation=0)
+        axes[0, 1].legend()
+        axes[0, 1].grid(axis='y', alpha=0.3)
+        
+        # Plot 3: ROC Curves
+        for name in model_names:
+            if results[name]['y_pred_proba'] is not None:
+                fpr, tpr, _ = roc_curve(self.y_test, results[name]['y_pred_proba'])
+                roc_auc = auc(fpr, tpr)
+                axes[1, 0].plot(fpr, tpr, label=f'{name.upper()} (AUC = {roc_auc:.3f})', linewidth=2)
+        
+        axes[1, 0].plot([0, 1], [0, 1], 'k--', linewidth=2, label='Random Classifier')
+        axes[1, 0].set_xlabel('False Positive Rate', fontsize=12, fontweight='bold')
+        axes[1, 0].set_ylabel('True Positive Rate', fontsize=12, fontweight='bold')
+        axes[1, 0].set_title('ROC Curves Comparison', fontsize=14, fontweight='bold')
+        axes[1, 0].legend(loc='lower right')
+        axes[1, 0].grid(alpha=0.3)
+        
+        # Plot 4: Cross-Validation Score Distribution
+        cv_data = []
+        for name in model_names:
+            cv_data.append({
+                'Model': name,
+                'CV Mean': results[name]['cv_mean'],
+                'CV Std': results[name]['cv_std']
+            })
+        
+        cv_df = pd.DataFrame(cv_data)
+        axes[1, 1].bar(cv_df['Model'], cv_df['CV Mean'], yerr=cv_df['CV Std'], 
+                       capsize=5, color='mediumseagreen', alpha=0.7)
+        axes[1, 1].set_xlabel('Models', fontsize=12, fontweight='bold')
+        axes[1, 1].set_ylabel('Cross-Validation Score', fontsize=12, fontweight='bold')
+        axes[1, 1].set_title('Cross-Validation Performance', fontsize=14, fontweight='bold')
+        axes[1, 1].set_xticklabels([name.upper() for name in cv_df['Model']], rotation=0)
+        axes[1, 1].grid(axis='y', alpha=0.3)
+        
+        plt.tight_layout()
+        plt.savefig(f'{output_dir}/model_comparison_dashboard.png', dpi=300, bbox_inches='tight')
+        print(f"[SAVED] Model comparison dashboard: {output_dir}/model_comparison_dashboard.png")
+        plt.close()
+        
+        # 2. Confusion Matrices (1x3 layout for 3 models)
+        fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+        
+        for idx, name in enumerate(model_names):
+            cm = np.array(results[name]['confusion_matrix'])
+            sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=axes[idx],
+                       xticklabels=['Fail', 'Pass'], yticklabels=['Fail', 'Pass'])
+            axes[idx].set_title(f'{name.upper()}\nAccuracy: {results[name]["accuracy"]:.3f}', 
+                               fontsize=12, fontweight='bold')
+            axes[idx].set_ylabel('True Label', fontsize=10)
+            axes[idx].set_xlabel('Predicted Label', fontsize=10)
+        
+        plt.tight_layout()
+        plt.savefig(f'{output_dir}/confusion_matrices.png', dpi=300, bbox_inches='tight')
+        print(f"[SAVED] Confusion matrices: {output_dir}/confusion_matrices.png")
+        plt.close()
+        
+        # 3. Performance Summary Table
+        summary_data = []
+        for name in model_names:
+            summary_data.append({
+                'Model': name.upper(),
+                'Accuracy': f"{results[name]['accuracy']:.4f}",
+                'CV Mean': f"{results[name]['cv_mean']:.4f}",
+                'CV Std': f"{results[name]['cv_std']:.4f}",
+                'Precision': f"{results[name]['classification_report']['1']['precision']:.4f}",
+                'Recall': f"{results[name]['classification_report']['1']['recall']:.4f}",
+                'F1-Score': f"{results[name]['classification_report']['1']['f1-score']:.4f}"
+            })
+        
+        summary_df = pd.DataFrame(summary_data)
+        summary_df.to_csv(f'{output_dir}/model_performance_summary.csv', index=False)
+        print(f"[SAVED] Performance summary: {output_dir}/model_performance_summary.csv")
+        
+        return summary_df
+    
+    def create_top3_accuracy_comparison(self, results, output_dir='model_comparison'):
+        """Create focused accuracy comparison for all 3 models"""
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        
+        # Get all 3 models
+        model_names = list(results.keys())
+        
+        # Create figure with 3 subplots
+        fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+        
+        # Plot 1: Accuracy Bar Chart
+        accuracies = [results[name]['accuracy'] for name in model_names]
+        cv_means = [results[name]['cv_mean'] for name in model_names]
+        
+        colors = ['#2ecc71', '#3498db', '#e74c3c']  # Green, Blue, Red
+        
+        x = np.arange(len(model_names))
+        width = 0.35
+        
+        bars1 = axes[0].bar(x - width/2, accuracies, width, label='Test Accuracy', color=colors, alpha=0.8)
+        bars2 = axes[0].bar(x + width/2, cv_means, width, label='CV Mean', color=colors, alpha=0.5)
+        
+        # Add value labels on bars
+        for bar in bars1:
+            height = bar.get_height()
+            axes[0].text(bar.get_x() + bar.get_width()/2., height,
+                        f'{height:.3f}', ha='center', va='bottom', fontweight='bold')
+        
+        axes[0].set_xlabel('Models', fontsize=12, fontweight='bold')
+        axes[0].set_ylabel('Accuracy', fontsize=12, fontweight='bold')
+        axes[0].set_title('Accuracy Comparison', fontsize=14, fontweight='bold')
+        axes[0].set_xticks(x)
+        axes[0].set_xticklabels([name.upper() for name in model_names])
+        axes[0].legend()
+        axes[0].grid(axis='y', alpha=0.3)
+        axes[0].set_ylim([0, 1.0])
+        
+        # Plot 2: Accuracy with Error Bars (CV Std)
+        cv_stds = [results[name]['cv_std'] for name in model_names]
+        
+        axes[1].bar(model_names, accuracies, yerr=cv_stds, capsize=10, 
+                   color=colors, alpha=0.8, ecolor='black', linewidth=2)
+        
+        # Add value labels
+        for i, (acc, std) in enumerate(zip(accuracies, cv_stds)):
+            axes[1].text(i, acc + std + 0.02, f'{acc:.3f}\n±{std:.3f}', 
+                        ha='center', va='bottom', fontweight='bold')
+        
+        axes[1].set_xlabel('Models', fontsize=12, fontweight='bold')
+        axes[1].set_ylabel('Accuracy', fontsize=12, fontweight='bold')
+        axes[1].set_title('Accuracy with Standard Deviation', fontsize=14, fontweight='bold')
+        axes[1].set_xticklabels([name.upper() for name in model_names])
+        axes[1].grid(axis='y', alpha=0.3)
+        axes[1].set_ylim([0, 1.0])
+        
+        # Plot 3: Metrics Radar Chart
+        from math import pi
+        
+        categories = ['Accuracy', 'Precision', 'Recall', 'F1-Score']
+        N = len(categories)
+        
+        angles = [n / float(N) * 2 * pi for n in range(N)]
+        angles += angles[:1]
+        
+        ax = plt.subplot(133, projection='polar')
+        
+        for idx, (name, result) in enumerate(results.items()):
+            report = result['classification_report']['1']
+            values = [
+                result['accuracy'],
+                report['precision'],
+                report['recall'],
+                report['f1-score']
+            ]
+            values += values[:1]
+            
+            ax.plot(angles, values, 'o-', linewidth=2, label=name.upper(), color=colors[idx])
+            ax.fill(angles, values, alpha=0.15, color=colors[idx])
+        
+        ax.set_xticks(angles[:-1])
+        ax.set_xticklabels(categories, size=10, fontweight='bold')
+        ax.set_ylim(0, 1)
+        ax.set_title('Performance Metrics Comparison', size=14, fontweight='bold', pad=20)
+        ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
+        ax.grid(True)
+        
+        plt.tight_layout()
+        plt.savefig(f'{output_dir}/top3_accuracy_comparison.png', dpi=300, bbox_inches='tight')
+        print(f"[SAVED] 3-Model accuracy comparison: {output_dir}/top3_accuracy_comparison.png")
+        plt.close()
+        
+        # Create a detailed comparison table
+        print(f"\n{'='*70}")
+        print(f"3 BASE MODELS - DETAILED ACCURACY COMPARISON")
+        print(f"{'='*70}")
+        print(f"\n{'Rank':<5} {'Model':<20} {'Test Acc':<12} {'CV Mean':<12} {'CV Std':<10} {'F1-Score':<10}")
+        print(f"{'-'*70}")
+        
+        sorted_results = sorted(results.items(), key=lambda x: x[1]['accuracy'], reverse=True)
+        
+        for rank, (name, result) in enumerate(sorted_results, 1):
+            f1 = result['classification_report']['1']['f1-score']
+            print(f"{rank:<5} {name.upper():<20} {result['accuracy']:<12.4f} "
+                  f"{result['cv_mean']:<12.4f} {result['cv_std']:<10.4f} {f1:<10.4f}")
+        
+        # Statistical comparison
+        print(f"\n{'='*70}")
+        print(f"STATISTICAL COMPARISON")
+        print(f"{'='*70}")
+        
+        winner = sorted_results[0]
+        runner_up = sorted_results[1] if len(sorted_results) > 1 else None
+        third = sorted_results[2] if len(sorted_results) > 2 else None
+        
+        print(f"\n🏆 1st Place: {winner[0].upper()}")
+        print(f"   Accuracy: {winner[1]['accuracy']:.4f}")
+        
+        if runner_up:
+            acc_diff_1_2 = winner[1]['accuracy'] - runner_up[1]['accuracy']
+            print(f"\n🥈 2nd Place: {runner_up[0].upper()}")
+            print(f"   Accuracy: {runner_up[1]['accuracy']:.4f}")
+            print(f"   Difference from 1st: {acc_diff_1_2:.4f} ({acc_diff_1_2*100:.2f}%)")
+        
+        if third:
+            acc_diff_1_3 = winner[1]['accuracy'] - third[1]['accuracy']
+            print(f"\n🥉 3rd Place: {third[0].upper()}")
+            print(f"   Accuracy: {third[1]['accuracy']:.4f}")
+            print(f"   Difference from 1st: {acc_diff_1_3:.4f} ({acc_diff_1_3*100:.2f}%)")
         
         return results
     
@@ -177,7 +459,6 @@ class SocialWorkPredictorModels:
             if isinstance(input_data, dict):
                 mapped_data = {}
                 
-                # Map common variations to standard column names
                 field_mapping = {
                     'age': 'Age',
                     'gender': 'Gender', 
@@ -225,6 +506,171 @@ class SocialWorkPredictorModels:
         except Exception as e:
             print(f"[ERROR] Error making prediction: {e}")
             return None
+        
+    def evaluate_test_predictions(self, results, output_dir='model_comparison'):
+        """Detailed evaluation of test predictions showing correct/incorrect predictions"""
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        
+        print("\n" + "="*60)
+        print("[EVALUATION] DETAILED TEST PREDICTIONS ANALYSIS")
+        print("="*60)
+        
+        for model_name, result in results.items():
+            y_pred = result['y_pred']
+            
+            # Create detailed prediction DataFrame
+            prediction_details = pd.DataFrame({
+                'Actual': self.y_test,
+                'Predicted': y_pred,
+                'Correct': self.y_test == y_pred,
+                'Actual_Label': ['Pass' if y == 1 else 'Fail' for y in self.y_test],
+                'Predicted_Label': ['Pass' if y == 1 else 'Fail' for y in y_pred]
+            })
+            
+            # Add probability if available
+            if result['y_pred_proba'] is not None:
+                prediction_details['Pass_Probability'] = result['y_pred_proba']
+            
+            # Summary statistics
+            total_samples = len(self.y_test)
+            correct_predictions = (self.y_test == y_pred).sum()
+            incorrect_predictions = total_samples - correct_predictions
+            
+            print(f"\n[MODEL] {model_name.upper()}")
+            print(f"   Total Test Samples: {total_samples}")
+            print(f"   Correct Predictions: {correct_predictions} ({correct_predictions/total_samples*100:.2f}%)")
+            print(f"   Incorrect Predictions: {incorrect_predictions} ({incorrect_predictions/total_samples*100:.2f}%)")
+            
+            # Breakdown by class
+            cm = confusion_matrix(self.y_test, y_pred)
+            tn, fp, fn, tp = cm.ravel()
+            
+            print(f"\n   [BREAKDOWN]")
+            print(f"   True Positives (Predicted Pass, Actually Pass): {tp}")
+            print(f"   True Negatives (Predicted Fail, Actually Fail): {tn}")
+            print(f"   False Positives (Predicted Pass, Actually Fail): {fp}")
+            print(f"   False Negatives (Predicted Fail, Actually Pass): {fn}")
+            
+            # Save detailed predictions to CSV
+            csv_file = f'{output_dir}/{model_name}_test_predictions.csv'
+            prediction_details.to_csv(csv_file, index=True)
+            print(f"\n   [SAVED] Detailed predictions: {csv_file}")
+            
+            # Show some examples
+            print(f"\n   [EXAMPLES] First 10 predictions:")
+            print(prediction_details.head(10).to_string(index=True))
+            
+            # Show incorrect predictions
+            incorrect = prediction_details[~prediction_details['Correct']]
+            if len(incorrect) > 0:
+                print(f"\n   [ERRORS] First 5 incorrect predictions:")
+                print(incorrect.head(5).to_string(index=True))
+    
+    def create_prediction_comparison_plot(self, results, output_dir='model_comparison'):
+        """Visualize prediction accuracy for each model"""
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        
+        fig, axes = plt.subplots(1, 3, figsize=(20, 6))
+        
+        for idx, (model_name, result) in enumerate(results.items()):
+            y_pred = result['y_pred']
+            
+            # Create comparison plot
+            comparison_df = pd.DataFrame({
+                'Index': range(len(self.y_test)),
+                'Actual': self.y_test,
+                'Predicted': y_pred
+            })
+            
+            # Plot actual vs predicted
+            axes[idx].scatter(comparison_df['Index'], comparison_df['Actual'], 
+                            alpha=0.6, label='Actual', color='blue', s=50)
+            axes[idx].scatter(comparison_df['Index'], comparison_df['Predicted'], 
+                            alpha=0.6, label='Predicted', color='red', s=30, marker='x')
+            
+            # Highlight incorrect predictions
+            incorrect_mask = self.y_test != y_pred
+            if incorrect_mask.sum() > 0:
+                axes[idx].scatter(comparison_df[incorrect_mask]['Index'], 
+                                comparison_df[incorrect_mask]['Actual'],
+                                color='orange', s=100, marker='o', 
+                                facecolors='none', linewidths=2, 
+                                label='Incorrect')
+            
+            axes[idx].set_xlabel('Test Sample Index', fontsize=10)
+            axes[idx].set_ylabel('Class (0=Fail, 1=Pass)', fontsize=10)
+            axes[idx].set_title(f'{model_name.upper()}\nAccuracy: {result["accuracy"]:.3f}', 
+                              fontsize=12, fontweight='bold')
+            axes[idx].legend(loc='upper right')
+            axes[idx].grid(alpha=0.3)
+            axes[idx].set_ylim(-0.2, 1.2)
+        
+        plt.tight_layout()
+        plt.savefig(f'{output_dir}/prediction_comparison.png', dpi=300, bbox_inches='tight')
+        print(f"\n[SAVED] Prediction comparison plot: {output_dir}/prediction_comparison.png")
+        plt.close()
+    
+    def generate_test_report(self, results, output_dir='model_comparison'):
+        """Generate comprehensive test report in markdown"""
+        report_path = f'{output_dir}/test_evaluation_report.md'
+        
+        with open(report_path, 'w', encoding='utf-8') as f:
+            f.write("# Model Testing and Evaluation Report\n\n")
+            f.write(f"## Test Dataset Information\n\n")
+            f.write(f"- **Total Test Samples:** {len(self.y_test)}\n")
+            f.write(f"- **Actual Pass Count:** {(self.y_test == 1).sum()}\n")
+            f.write(f"- **Actual Fail Count:** {(self.y_test == 0).sum()}\n")
+            f.write(f"- **Pass Rate:** {(self.y_test == 1).mean():.2%}\n\n")
+            
+            f.write("## Model Performance on Test Data\n\n")
+            
+            for model_name, result in sorted(results.items(), 
+                                           key=lambda x: x[1]['accuracy'], reverse=True):
+                y_pred = result['y_pred']
+                cm = confusion_matrix(self.y_test, y_pred)
+                tn, fp, fn, tp = cm.ravel()
+                
+                f.write(f"### {model_name.upper()}\n\n")
+                f.write(f"**Overall Accuracy:** {result['accuracy']:.4f}\n\n")
+                
+                f.write("**Confusion Matrix:**\n\n")
+                f.write("```\n")
+                f.write(f"                Predicted Fail    Predicted Pass\n")
+                f.write(f"Actual Fail          {tn:4d}              {fp:4d}\n")
+                f.write(f"Actual Pass          {fn:4d}              {tp:4d}\n")
+                f.write("```\n\n")
+                
+                f.write("**Detailed Metrics:**\n\n")
+                f.write(f"- **True Positives (Correctly predicted Pass):** {tp} ({tp/len(self.y_test)*100:.1f}%)\n")
+                f.write(f"- **True Negatives (Correctly predicted Fail):** {tn} ({tn/len(self.y_test)*100:.1f}%)\n")
+                f.write(f"- **False Positives (Wrongly predicted Pass):** {fp} ({fp/len(self.y_test)*100:.1f}%)\n")
+                f.write(f"- **False Negatives (Wrongly predicted Fail):** {fn} ({fn/len(self.y_test)*100:.1f}%)\n\n")
+                
+                report = result['classification_report']
+                f.write("**Classification Report:**\n\n")
+                f.write(f"- **Precision (Pass class):** {report['1']['precision']:.4f}\n")
+                f.write(f"- **Recall (Pass class):** {report['1']['recall']:.4f}\n")
+                f.write(f"- **F1-Score (Pass class):** {report['1']['f1-score']:.4f}\n\n")
+                
+                f.write(f"**Best Hyperparameters:** {result['best_params']}\n\n")
+                f.write("---\n\n")
+            
+            f.write("## How to Interpret Results\n\n")
+            f.write("- **True Positive:** Model correctly predicted student will PASS\n")
+            f.write("- **True Negative:** Model correctly predicted student will FAIL\n")
+            f.write("- **False Positive:** Model predicted PASS but student actually FAILED (Type I Error)\n")
+            f.write("- **False Negative:** Model predicted FAIL but student actually PASSED (Type II Error)\n\n")
+            
+            f.write("## Testing Process\n\n")
+            f.write("1. Model was trained on 80% of data (training set)\n")
+            f.write("2. Model makes predictions on unseen 20% (test set)\n")
+            f.write("3. Predictions are compared with actual results\n")
+            f.write("4. Accuracy and other metrics are calculated\n")
+        
+        print(f"[SAVED] Test evaluation report: {report_path}")
+        return report_path
     
     def get_feature_importance(self, model_name='random_forest'):
         """Get feature importance for tree-based models"""
@@ -273,87 +719,78 @@ class SocialWorkPredictorModels:
             return False
 
 def main():
-    """Main training function using correct pre-exam features"""
+    """Main training function using preprocessed data"""
     predictor = SocialWorkPredictorModels()
     
-    # Load data
-    csv_file = 'social_work_exam_dataset.csv'
     print("="*60)
-    print("[START] TRAINING SOCIAL WORK EXAM PREDICTOR")
+    print("[START] TRAINING 3 BASE MODELS WITH PREPROCESSED DATA")
     print("="*60)
     
-    df = predictor.load_data_from_csv(csv_file)
-    if df is None:
+    # Load preprocessed data
+    data = predictor.load_preprocessed_data(data_dir='processed_data', approach='label')
+    
+    if data is None:
+        print("\n[ERROR] Could not load preprocessed data!")
+        print("[INFO] Please run: python preprocessing.py")
         return
     
-    # Show what we're actually predicting
-    print(f"\n[PREDICTION GOAL]")
-    print(f"   INPUT: Pre-exam factors (study habits, background, etc.)")
-    print(f"   OUTPUT: Will the candidate PASS or FAIL the exam?")
-    print(f"   NOTE: ExamResultPercent is excluded (that's the actual exam score!)")
+    # Set data for training
+    predictor.X_train = data['X_train']
+    predictor.X_test = data['X_test']
+    predictor.y_train = data['y_train']
+    predictor.y_test = data['y_test']
     
-    # Display dataset info
-    print(f"\n[DATASET INFO]")
-    print(f"   Shape: {df.shape}")
-    print(f"   Pass Rate: {df['Passed'].mean():.2%}")
-    print(f"   Average Exam Score: {df['ExamResultPercent'].mean():.1f}%")
-    
-    # Preprocess data
-    X, y = predictor.preprocess_data(df)
-    if X is None or y is None:
-        return
-    
-    # Split data
-    predictor.X_train, predictor.X_test, predictor.y_train, predictor.y_test = predictor.split_data(X, y)
-    
-    # Train models
+    # Train 3 base models
     results = predictor.train_base_models()
     
     if results:
-        print(f"\n[RESULTS] Model Performance:")
-        print("-" * 50)
+        print(f"\n[RESULTS] 3 Base Models Performance Summary:")
+        print("-" * 60)
         sorted_results = sorted(results.items(), key=lambda x: x[1]['accuracy'], reverse=True)
         
-        for model_name, metrics in sorted_results:
-            print(f"{model_name:20s}: {metrics['accuracy']:.4f} (+/- {metrics['cv_std']*2:.4f})")
+        print(f"{'Rank':<5} {'Model':<20} {'Accuracy':<12} {'CV Score':<15}")
+        print("-" * 60)
+        for rank, (model_name, metrics) in enumerate(sorted_results, 1):
+            cv_info = f"{metrics['cv_mean']:.4f}±{metrics['cv_std']:.3f}"
+            print(f"{rank:<5} {model_name.upper():<20} {metrics['accuracy']:<12.4f} {cv_info:<15}")
+        
+        # Detailed test evaluation
+        predictor.evaluate_test_predictions(results)
+        
+        # Create visualizations
+        print(f"\n[VISUALIZATION] Creating model comparison graphs...")
+        summary_df = predictor.compare_models_visualization(results)
+        
+        # Create 3-model comparison plot
+        predictor.create_top3_accuracy_comparison(results)
+        
+        # Create prediction comparison plot
+        predictor.create_prediction_comparison_plot(results)
+        
+        # Generate test report
+        predictor.generate_test_report(results)
+        
+        print(f"\n[SUMMARY] Performance Summary Table:")
+        print(summary_df.to_string(index=False))
         
         # Feature importance
         feature_importance = predictor.get_feature_importance('random_forest')
         if feature_importance:
             print(f"\n[FEATURE IMPORTANCE] Top 10 Predictive Factors:")
             for i, (feature, importance) in enumerate(list(feature_importance.items())[:10], 1):
-                print(f"{i:2d}. {feature:<20s}: {importance:.4f}")
+                print(f"{i:2d}. {feature:<25s}: {importance:.4f}")
         
         # Save models
-        predictor.save_models()
-        
-        # Example prediction for new candidate
-        print(f"\n[EXAMPLE] Predicting for a new candidate:")
-        new_candidate = {
-            'age': 25,
-            'gender': 'Female',
-            'study_hours': 8,
-            'sleep_hours': 7,
-            'review_center': 1,
-            'confidence': 4,
-            'mock_exam_score': 85,
-            'gpa': 1.5,
-            'scholarship': 1,
-            'internship_grade': 88,
-            'income_level': 'Middle',
-            'employment_status': 'Unemployed'
-        }
-        
-        predictions = predictor.predict_single(new_candidate)
-        if predictions:
-            print(f"Input: {new_candidate}")
-            print(f"\nPredictions:")
-            for model_name, result in predictions.items():
-                pass_prob = result['pass_probability']
-                status = "LIKELY TO PASS" if pass_prob > 0.5 else "AT RISK"
-                print(f"  {model_name:20s}: {pass_prob:.1%} - {status}")
+        predictor.save_models('saved_base_models')
         
         print(f"\n[COMPLETE] Training completed successfully!")
+        print(f"[OUTPUT] Files generated:")
+        print(f"   - model_comparison/model_comparison_dashboard.png")
+        print(f"   - model_comparison/confusion_matrices.png")
+        print(f"   - model_comparison/top3_accuracy_comparison.png")
+        print(f"   - model_comparison/prediction_comparison.png")
+        print(f"   - model_comparison/test_evaluation_report.md")
+        print(f"   - model_comparison/*_test_predictions.csv (for each model)")
 
 if __name__ == "__main__":
     main()
