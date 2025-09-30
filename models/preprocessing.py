@@ -133,6 +133,28 @@ class SocialWorkDataPreprocessor:
             for feature, corr in target_corr.head(10).items():
                 print(f"   {feature}: {corr:.4f}")
         
+        # Pearson Correlation Analysis
+        print(f"\n[PEARSON] Pearson Correlation Analysis:")
+        pearson_correlations = {}
+        
+        for col in available_features:
+            if col != self.target_column and col in df_encoded.columns:
+                try:
+                    corr_coef, p_value = pearsonr(df_encoded[col].dropna(), 
+                                                  df_encoded[self.target_column].loc[df_encoded[col].dropna().index])
+                    pearson_correlations[col] = {
+                        'correlation': corr_coef,
+                        'p_value': p_value,
+                        'significant': p_value < 0.05
+                    }
+                    sig_marker = "***" if p_value < 0.001 else "**" if p_value < 0.01 else "*" if p_value < 0.05 else ""
+                    print(f"   {col}: r={corr_coef:.4f}, p={p_value:.4f} {sig_marker}")
+                except Exception as e:
+                    print(f"   {col}: Failed ({e})")
+        
+        # Store Pearson correlations
+        self.feature_importance_scores['pearson_correlation'] = pearson_correlations
+        
         # Find high inter-feature correlations
         print(f"\n[INTER-FEATURE] High inter-feature correlations (>0.5):")
         high_corr_pairs = []
@@ -432,7 +454,7 @@ class SocialWorkDataPreprocessor:
             },
             'preprocessing_objects': preprocessing_objects
         }
-    
+
     def save_processed_data(self, processed_data, output_dir='processed_data'):
         """Save processed data in multiple formats"""
         print(f"\n[SAVING] Saving processed data to {output_dir}/...")
@@ -475,17 +497,44 @@ class SocialWorkDataPreprocessor:
         import joblib
         joblib.dump(processed_data['preprocessing_objects'], f'{output_dir}/preprocessing_objects.pkl')
         
+        # Convert feature importance scores to JSON-serializable format
+        feature_importance_json = {}
+        for key, value in self.feature_importance_scores.items():
+            if key == 'pearson_correlation':
+                # Convert boolean 'significant' to int (0 or 1) or keep as bool string
+                feature_importance_json[key] = {
+                    feat: {
+                        'correlation': float(data['correlation']),
+                        'p_value': float(data['p_value']),
+                        'significant': bool(data['significant'])  # Explicit conversion
+                    }
+                    for feat, data in value.items()
+                }
+            elif key == 'chi_square':
+                feature_importance_json[key] = {
+                    feat: {
+                        'chi2': float(data['chi2']),
+                        'p_value': float(data['p_value'])
+                    }
+                    for feat, data in value.items()
+                }
+            else:
+                # For ANOVA and mutual_info (simple dict of floats)
+                feature_importance_json[key] = {
+                    feat: float(score) for feat, score in value.items()
+                }
+        
         # Save statistics and analysis results
         analysis_results = {
             'data_stats': self.data_stats,
             'correlation_matrix': self.correlation_matrix.to_dict() if self.correlation_matrix is not None else {},
-            'feature_importance': self.feature_importance_scores,
+            'feature_importance': feature_importance_json,
             'dataset_info': {
-                'onehot_shape': processed_data['onehot']['X_train'].shape,
-                'label_shape': processed_data['label']['X_train'].shape,
-                'n_samples': len(processed_data['onehot']['y_train']) + len(processed_data['onehot']['y_test']),
-                'n_features_onehot': len(processed_data['onehot']['feature_names']),
-                'n_features_label': len(processed_data['label']['feature_names'])
+                'onehot_shape': list(processed_data['onehot']['X_train'].shape),
+                'label_shape': list(processed_data['label']['X_train'].shape),
+                'n_samples': int(len(processed_data['onehot']['y_train']) + len(processed_data['onehot']['y_test'])),
+                'n_features_onehot': int(len(processed_data['onehot']['feature_names'])),
+                'n_features_label': int(len(processed_data['label']['feature_names']))
             }
         }
         
@@ -530,17 +579,31 @@ class SocialWorkDataPreprocessor:
             
             if self.feature_importance_scores:
                 f.write("## Feature Importance Analysis\n\n")
+                
+                # ANOVA F-test
                 if 'anova_f_test' in self.feature_importance_scores:
                     f.write("### ANOVA F-test Results\n")
                     for feature, score in sorted(self.feature_importance_scores['anova_f_test'].items(), 
                                                key=lambda x: x[1], reverse=True)[:10]:
                         f.write(f"- {feature}: {score:.4f}\n")
                     f.write("\n")
+                
+                # Pearson Correlation
+                if 'pearson_correlation' in self.feature_importance_scores:
+                    f.write("### Pearson Correlation with Target\n")
+                    pearson_data = self.feature_importance_scores['pearson_correlation']
+                    sorted_pearson = sorted(pearson_data.items(), 
+                                          key=lambda x: abs(x[1]['correlation']), reverse=True)
+                    for feature, data in sorted_pearson[:10]:
+                        sig = " (significant)" if data['significant'] else ""
+                        f.write(f"- {feature}: r={data['correlation']:.4f}, p={data['p_value']:.4f}{sig}\n")
+                    f.write("\n")
             
             f.write("## Data Quality Checks\n\n")
             f.write("- [OK] Missing values handled\n")
             f.write("- [OK] Outliers detected and documented\n")
             f.write("- [OK] Feature correlations analyzed\n")
+            f.write("- [OK] Pearson correlation computed\n")
             f.write("- [OK] Data split into train/test sets\n\n")
             
             f.write("## Files Generated\n\n")
@@ -584,7 +647,7 @@ def main():
     # Step 1: Data Exploration
     df = preprocessor.explore_data(df)
     
-    # Step 2: Correlation Analysis
+    # Step 2: Correlation Analysis (with Pearson correlation)
     preprocessor.correlation_analysis(df)
     
     # Step 3: Handle Missing Values FIRST (before feature importance analysis)
@@ -609,12 +672,20 @@ def main():
     print(f"[OUTPUT] Output directory: {output_dir}")
     print(f"[READY] Ready for training with {processed_data['onehot']['X_train'].shape[0]} training samples")
     
-    # Summary of ANOVA results
+    # Summary of analysis results
     if 'anova_f_test' in preprocessor.feature_importance_scores:
         print(f"\n[SUMMARY] Top 5 Most Important Features (ANOVA F-test):")
         f_scores = preprocessor.feature_importance_scores['anova_f_test']
         for i, (feature, score) in enumerate(sorted(f_scores.items(), key=lambda x: x[1], reverse=True)[:5], 1):
             print(f"   {i}. {feature}: {score:.4f}")
+    
+    if 'pearson_correlation' in preprocessor.feature_importance_scores:
+        print(f"\n[PEARSON] Top 5 Correlations with Target:")
+        pearson_data = preprocessor.feature_importance_scores['pearson_correlation']
+        sorted_pearson = sorted(pearson_data.items(), key=lambda x: abs(x[1]['correlation']), reverse=True)
+        for i, (feature, data) in enumerate(sorted_pearson[:5], 1):
+            sig = "***" if data['p_value'] < 0.001 else "**" if data['p_value'] < 0.01 else "*" if data['p_value'] < 0.05 else ""
+            print(f"   {i}. {feature}: r={data['correlation']:.4f} {sig}")
 
 if __name__ == "__main__":
     main()

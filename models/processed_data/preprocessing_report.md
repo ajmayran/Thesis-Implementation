@@ -41,11 +41,24 @@
 - EmploymentStatus: 0.8168
 - InternshipGrade: 0.4784
 
+### Pearson Correlation with Target
+- Age: r=0.1646, p=0.0002 (significant)
+- Gender: r=-0.0800, p=0.0739
+- MockExamScore: r=0.0676, p=0.2728
+- StudyHours: r=-0.0644, p=0.1502
+- GPA: r=0.0547, p=0.2220
+- ReviewCenter: r=-0.0521, p=0.2449
+- Confidence: r=-0.0487, p=0.2771
+- SleepHours: r=0.0414, p=0.3557
+- EmploymentStatus: r=-0.0405, p=0.3666
+- InternshipGrade: r=-0.0310, p=0.4895
+
 ## Data Quality Checks
 
 - [OK] Missing values handled
 - [OK] Outliers detected and documented
 - [OK] Feature correlations analyzed
+- [OK] Pearson correlation computed
 - [OK] Data split into train/test sets
 
 ## Files Generated

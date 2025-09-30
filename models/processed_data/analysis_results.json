@@ -333,6 +333,68 @@
     }
   },
   "feature_importance": {
+    "pearson_correlation": {
+      "Gender": {
+        "correlation": -0.08000000000000002,
+        "p_value": 0.07389830030927261,
+        "significant": false
+      },
+      "IncomeLevel": {
+        "correlation": 0.009970010447454797,
+        "p_value": 0.8240151564229856,
+        "significant": false
+      },
+      "EmploymentStatus": {
+        "correlation": -0.04046568661320407,
+        "p_value": 0.3665548586446653,
+        "significant": false
+      },
+      "Age": {
+        "correlation": 0.16457208517063152,
+        "p_value": 0.00021905452622082613,
+        "significant": true
+      },
+      "StudyHours": {
+        "correlation": -0.06443737271668432,
+        "p_value": 0.150220602516152,
+        "significant": false
+      },
+      "SleepHours": {
+        "correlation": 0.041393969544878756,
+        "p_value": 0.3556547329394907,
+        "significant": false
+      },
+      "Confidence": {
+        "correlation": -0.04869860106015113,
+        "p_value": 0.2771016526191622,
+        "significant": false
+      },
+      "MockExamScore": {
+        "correlation": 0.06760664382952908,
+        "p_value": 0.27281237648966966,
+        "significant": false
+      },
+      "GPA": {
+        "correlation": 0.054705918516299384,
+        "p_value": 0.22204270126804837,
+        "significant": false
+      },
+      "Scholarship": {
+        "correlation": -0.028037932945371134,
+        "p_value": 0.5316422626113206,
+        "significant": false
+      },
+      "InternshipGrade": {
+        "correlation": -0.030979839652250166,
+        "p_value": 0.48946351335532634,
+        "significant": false
+      },
+      "ReviewCenter": {
+        "correlation": -0.052093853480555966,
+        "p_value": 0.24493984233850494,
+        "significant": false
+      }
+    },
     "anova_f_test": {
       "Gender": 3.2077294685990796,
       "IncomeLevel": 0.049506672962668585,
@@ -348,15 +410,15 @@
       "ReviewCenter": 1.355134769587569
     },
     "mutual_info": {
-      "Gender": 0.02839398752875133,
-      "IncomeLevel": 0.0025150386998022967,
-      "EmploymentStatus": 0.009984473393076065,
-      "Age": 0.0341452057549696,
-      "StudyHours": 0.02912956306432668,
-      "SleepHours": 0.020749823359587083,
+      "Gender": 0.0,
+      "IncomeLevel": 0.0,
+      "EmploymentStatus": 0.01319895200871568,
+      "Age": 0.01524745546604267,
+      "StudyHours": 0.0,
+      "SleepHours": 0.0,
       "Confidence": 0.0,
-      "MockExamScore": 0.049642583583539235,
-      "GPA": 0.011405014779794165,
+      "MockExamScore": 0.0,
+      "GPA": 0.02290819554295931,
       "Scholarship": 0.0,
       "InternshipGrade": 0.0,
       "ReviewCenter": 0.0
