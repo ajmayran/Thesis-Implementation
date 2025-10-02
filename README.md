@@ -6,8 +6,6 @@ This repository contains the implementation for our thesis project, which aims t
 - [Project Overview](#project-overview)
 - [Technologies Used](#technologies-used)
 - [Installation & Setup](#installation--setup)
-- [Project Structure (Overview)](#project-structure-overview)
-- [Common Tasks](#common-tasks)
 - [Troubleshooting](#troubleshooting)
 - [Members](#members)
 - [License](#license)
