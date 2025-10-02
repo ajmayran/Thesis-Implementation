@@ -52,8 +52,8 @@ venv\Scripts\Activate.ps1
 
 Windows (CMD):
 ```cmd
-python -m venv .venv
-.\.venv\Scripts\activate.bat
+python -m venv venv
+venv\Scripts\activate.bat
 ```
 
 Confirm:
