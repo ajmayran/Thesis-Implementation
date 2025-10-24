@@ -121,4 +121,3 @@ python manage.py test
 - Gina-Lenn Bejoc
 
 ## License
-(Optionally specify a license here. For example: MIT License. Add a LICENSE file if not present.)
