@@ -1,8 +1,14 @@
 from django.urls import path
 from . import views
 
+app_name = 'prediction'
+
 urlpatterns = [
-    path('predict/', views.predict_exam_result, name='predict'),
-    path('model-status/', views.model_status, name='model_status'),
-    path('train/', views.train_models_view, name='train_models'),
+    # Web pages
+    path('', views.predict_view, name='predict'),
+    path('result/', views.result_view, name='result'),
+    
+    # API endpoints
+    path('api/predict/', views.predict_exam_result, name='api_predict'),
+    path('api/model-status/', views.model_status, name='model_status'),
 ]
