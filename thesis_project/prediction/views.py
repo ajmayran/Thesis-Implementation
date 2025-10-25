@@ -1,194 +1,216 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+from django.contrib import messages
 import json
 import sys
 import os
+import traceback
+import pandas as pd
+from .models import PredictionHistory
 
-# Add the models directory to the Python path
 models_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'models')
 sys.path.append(models_path)
+
+from .forms import PredictionForm
+from .utils import load_selected_model, prepare_input_data, generate_recommendations, get_risk_level
+
+SELECTED_MODEL_NAME = 'random_forest'  
+SELECTED_MODEL_TYPE = 'base'  
+
+def predict_view(request):
+    if request.method == 'POST':
+        form = PredictionForm(request.POST)
+        
+        if form.is_valid():
+            form_data = form.cleaned_data
+            input_data = prepare_input_data(form_data)
+            
+            model, preprocessor, error = load_selected_model(
+                model_name=SELECTED_MODEL_NAME,
+                model_type=SELECTED_MODEL_TYPE
+            )
+            
+            if error:
+                messages.error(request, error)
+                return render(request, 'pages/predict.html', {'form': form})
+            
+            try:
+                prediction_result = make_single_prediction(
+                    model=model,
+                    preprocessor=preprocessor,
+                    input_data=input_data
+                )
+                
+                if not prediction_result:
+                    messages.error(request, 'Failed to make prediction. Please try again.')
+                    return render(request, 'pages/predict.html', {'form': form})
+                
+                predicted_class = prediction_result['prediction']
+                pass_probability = prediction_result['pass_probability']
+                
+                recommendations = generate_recommendations(input_data, pass_probability)
+                risk_info = get_risk_level(pass_probability)
+                
+                PredictionHistory.objects.create(
+                    age=input_data['Age'],
+                    gender=input_data['Gender'],
+                    study_hours=input_data['StudyHours'],
+                    sleep_hours=input_data['SleepHours'],
+                    review_center=bool(input_data['ReviewCenter']),
+                    confidence=input_data['Confidence'],
+                    mock_exam_score=input_data.get('MockExamScore'),
+                    gpa=input_data['GPA'],
+                    scholarship=bool(input_data['Scholarship']),
+                    internship_grade=input_data['InternshipGrade'],
+                    income_level=input_data['IncomeLevel'],
+                    employment_status=input_data['EmploymentStatus'],
+                    avg_probability=pass_probability,
+                    risk_level=risk_info['level'],
+                    base_predictions={'selected_model': prediction_result},
+                    ensemble_predictions=None,
+                    ip_address=request.META.get('REMOTE_ADDR'),
+                    user_agent=request.META.get('HTTP_USER_AGENT')
+                )
+                
+                request.session['prediction_results'] = {
+                    'input_data': input_data,
+                    'prediction': prediction_result,
+                    'model_name': SELECTED_MODEL_NAME,
+                    'model_type': SELECTED_MODEL_TYPE,
+                    'recommendations': recommendations,
+                    'avg_probability': pass_probability * 100,
+                    'risk_info': risk_info
+                }
+                
+                return redirect('prediction:result')
+                
+            except Exception as e:
+                messages.error(request, f'Prediction error: {str(e)}')
+                traceback.print_exc()
+                return render(request, 'pages/predict.html', {'form': form})
+    else:
+        form = PredictionForm()
+    
+    return render(request, 'pages/predict.html', {'form': form})
+
+def result_view(request):
+    results = request.session.get('prediction_results')
+    
+    if not results:
+        messages.warning(request, 'No prediction results found. Please submit the form first.')
+        return redirect('prediction:predict')
+    
+    if 'avg_probability' not in results:
+        request.session.flush()
+        messages.warning(request, 'Session expired. Please submit the prediction form again.')
+        return redirect('prediction:predict')
+    
+    return render(request, 'pages/result.html', {
+        'input_data': results['input_data'],
+        'predictions': {
+            'base_models': {
+                results['model_name']: results['prediction']
+            },
+            'ensemble_models': {}
+        },
+        'model_name': results['model_name'],
+        'model_type': results['model_type'],
+        'recommendations': results['recommendations'],
+        'avg_probability': results['avg_probability'],
+        'risk_info': results['risk_info']
+    })
 
 @csrf_exempt
 @require_http_methods(["POST"])
 def predict_exam_result(request):
-    """Handle prediction requests"""
     try:
-        # Parse JSON data
         data = json.loads(request.body)
         
-        # Import and use your models
-        from models.base_models import SocialWorkPredictorModels
-        from models.ensembles import EnsembleModels
+        model, preprocessor, error = load_selected_model(
+            model_name=SELECTED_MODEL_NAME,
+            model_type=SELECTED_MODEL_TYPE
+        )
         
-        # Initialize predictor
-        predictor = SocialWorkPredictorModels()
+        if error:
+            return JsonResponse({'error': error}, status=400)
         
-        # Try to load saved models
-        models_loaded = predictor.load_models('saved_base_models')
+        prediction_result = make_single_prediction(
+            model=model,
+            preprocessor=preprocessor,
+            input_data=data
+        )
         
-        if not models_loaded or not predictor.models:
-            return JsonResponse({
-                'error': 'Models not trained. Please train models first.',
-                'suggestion': 'Go to admin panel to train models with your data.'
-            }, status=400)
+        if not prediction_result:
+            return JsonResponse({'error': 'Failed to make prediction'}, status=500)
         
-        # Make predictions with base models
-        base_predictions = predictor.predict_single(data)
+        recommendations = generate_recommendations(data, prediction_result['pass_probability'])
         
-        if not base_predictions:
-            return JsonResponse({
-                'error': 'Failed to make base model predictions'
-            }, status=500)
-        
-        # Try ensemble predictions if available
-        ensemble_predictions = {}
-        try:
-            ensemble = EnsembleModels(predictor)
-            if ensemble.load_ensembles('saved_ensemble_models'):
-                all_predictions = ensemble.predict_with_ensembles(data)
-                if all_predictions and 'ensemble_models' in all_predictions:
-                    ensemble_predictions = all_predictions['ensemble_models']
-        except Exception as e:
-            print(f"Ensemble prediction error: {e}")
-        
-        # Generate recommendations
-        recommendations = generate_recommendations(data, base_predictions)
-        
-        # Prepare response
-        response_data = {
-            'base_models': base_predictions,
-            'ensemble_models': ensemble_predictions,
+        return JsonResponse({
+            'model_name': SELECTED_MODEL_NAME,
+            'model_type': SELECTED_MODEL_TYPE,
+            'prediction': prediction_result,
             'recommendations': recommendations,
             'input_data': data
-        }
+        })
         
-        return JsonResponse(response_data)
-        
-    except json.JSONDecodeError:
-        return JsonResponse({'error': 'Invalid JSON data'}, status=400)
     except Exception as e:
         return JsonResponse({'error': f'Prediction error: {str(e)}'}, status=500)
 
-def generate_recommendations(input_data, prediction):
-    """Generate personalized recommendations based on input data and prediction"""
-    recommendations = []
-    
-    # Get average prediction score
-    scores = []
-    for model_result in prediction.values():
-        if model_result.get('probability'):
-            scores.append(model_result['probability'][1])
-        else:
-            scores.append(model_result.get('prediction', 0))
-    
-    avg_score = sum(scores) / len(scores) if scores else 0
-    
-    # Generate recommendations based on input data and score
-    if avg_score < 0.5:
-        recommendations.append("Consider enrolling in a review center to improve your chances.")
-        if int(input_data.get('study_hours', 0)) < 8:
-            recommendations.append("Increase your daily study hours to at least 8-10 hours.")
-    
-    if input_data.get('mock_exam_score', 0) < 3:
-        recommendations.append("Focus on improving mock exam scores through practice tests.")
-    
-    if input_data.get('confidence', 0) < 3:
-        recommendations.append("Work on building confidence through preparation and practice.")
-    
-    if not recommendations:
-        recommendations.append("Keep up the good work! Continue your current study routine.")
-    
-    return recommendations
-
 @require_http_methods(["GET"])
 def model_status(request):
-    """Get current model status"""
     try:
-        from models.base_models import SocialWorkPredictorModels
-        from models.ensembles import EnsembleModels
+        model, preprocessor, error = load_selected_model(
+            model_name=SELECTED_MODEL_NAME,
+            model_type=SELECTED_MODEL_TYPE
+        )
         
-        predictor = SocialWorkPredictorModels()
-        base_models_loaded = predictor.load_models('saved_base_models')
+        if error:
+            return JsonResponse({
+                'model_loaded': False,
+                'error': error
+            })
         
-        status = {
-            'base_models_trained': base_models_loaded and bool(predictor.models),
-            'models': {}
+        return JsonResponse({
+            'model_loaded': True,
+            'selected_model': SELECTED_MODEL_NAME,
+            'model_type': SELECTED_MODEL_TYPE
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+def make_single_prediction(model, preprocessor, input_data):
+    try:
+        df_input = pd.DataFrame([input_data])
+        
+        categorical_columns = ['Gender', 'IncomeLevel', 'EmploymentStatus']
+        numerical_columns = ['Age', 'StudyHours', 'SleepHours', 'Confidence', 
+                           'MockExamScore', 'GPA', 'Scholarship', 'InternshipGrade']
+        binary_columns = ['ReviewCenter']
+        
+        all_feature_columns = categorical_columns + numerical_columns + binary_columns
+        X_input = df_input[all_feature_columns].copy()
+        
+        if preprocessor is None:
+            print("[ERROR] Preprocessor is None!")
+            return None
+        
+        X_input_processed = preprocessor.transform(X_input)
+        
+        predicted_score = model.predict(X_input_processed)[0]
+        
+        PASSING_SCORE = 75.0
+        prediction_class = 1 if predicted_score >= PASSING_SCORE else 0
+        
+        return {
+            'prediction': prediction_class,
+            'predicted_score': float(predicted_score),
+            'pass_probability': float(predicted_score / 100.0),
+            'prediction_label': 'Pass' if prediction_class == 1 else 'Fail'
         }
         
-        if base_models_loaded and predictor.models:
-            # Add mock performance data for loaded models
-            for model_name in predictor.models.keys():
-                status['models'][model_name] = {
-                    'trained': True,
-                    'accuracy': 0.85,  # You can store and retrieve actual metrics
-                    'cv_mean': 0.82,
-                    'last_trained': '2024-01-01'  # You can store actual training dates
-                }
-        
-        return JsonResponse(status)
-        
     except Exception as e:
-        return JsonResponse({
-            'error': f'Model status error: {str(e)}',
-            'base_models_trained': False,
-            'models': {}
-        })
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def train_models_view(request):
-    """Train models with uploaded CSV data"""
-    try:
-        if 'csv_file' not in request.FILES:
-            return JsonResponse({'error': 'No CSV file uploaded'}, status=400)
-        
-        csv_file = request.FILES['csv_file']
-        
-        # Save uploaded file temporarily
-        import tempfile
-        with tempfile.NamedTemporaryFile(mode='wb', suffix='.csv', delete=False) as tmp_file:
-            for chunk in csv_file.chunks():
-                tmp_file.write(chunk)
-            tmp_file_path = tmp_file.name
-        
-        try:
-            from models.base_models import SocialWorkPredictorModels
-            from models.ensembles import EnsembleModels
-            
-            # Initialize and train base models
-            predictor = SocialWorkPredictorModels()
-            df = predictor.load_data_from_csv(tmp_file_path)
-            
-            if df is None:
-                return JsonResponse({'error': 'Failed to load CSV data'}, status=400)
-            
-            # Preprocess and split data
-            X, y = predictor.preprocess_data(df)
-            if X is None or y is None:
-                return JsonResponse({'error': 'Failed to preprocess data'}, status=400)
-            
-            predictor.split_data(X, y)
-            
-            # Train base models
-            base_results = predictor.train_base_models()
-            predictor.save_models('saved_base_models')
-            
-            # Train ensemble models
-            ensemble = EnsembleModels(predictor)
-            ensemble_results = ensemble.train_ensembles()
-            ensemble.save_ensembles('saved_ensemble_models')
-            
-            return JsonResponse({
-                'message': 'Models trained successfully!',
-                'base_results': {name: result['accuracy'] for name, result in base_results.items()},
-                'ensemble_results': {name: result['accuracy'] for name, result in ensemble_results.items()}
-            })
-            
-        finally:
-            # Clean up temporary file
-            os.unlink(tmp_file_path)
-            
-    except Exception as e:
-        return JsonResponse({'error': f'Training error: {str(e)}'}, status=500)
+        print(f"[ERROR] Prediction failed: {e}")
+        traceback.print_exc()
+        return None

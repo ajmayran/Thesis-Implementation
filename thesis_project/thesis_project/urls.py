@@ -19,7 +19,10 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    
+    # Dashboard app (includes both web pages and API endpoints)
     path('', include('dashboard.urls')),
-    path('api/prediction/', include('prediction.urls')),
-    path('api/dashboard/', include('dashboard.urls')),
+    
+    # Prediction app (includes both web pages and API endpoints)
+    path('prediction/', include('prediction.urls')),
 ]

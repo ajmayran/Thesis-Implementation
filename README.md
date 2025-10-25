@@ -46,14 +46,14 @@ source .venv/bin/activate
 
 Windows (PowerShell):
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+python -m venv venv
+venv\Scripts\Activate.ps1
 ```
 
 Windows (CMD):
 ```cmd
-python -m venv .venv
-.\.venv\Scripts\activate.bat
+python -m venv venv
+venv\Scripts\activate.bat
 ```
 
 Confirm:
@@ -121,4 +121,3 @@ python manage.py test
 - Gina-Lenn Bejoc
 
 ## License
-(Optionally specify a license here. For example: MIT License. Add a LICENSE file if not present.)

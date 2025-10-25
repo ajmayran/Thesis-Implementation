@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Pass Prediction - Social Work Licensure</title>
+    
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    
+    <style>
+        .form-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #374151;
+            font-size: 14px;
+        }
+        
+        .help-text {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        
+        .btn-predict {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 48px;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+        
+        .btn-predict:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-predict:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .alert {
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .alert-error {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+        }
+        
+        .alert-warning {
+            background: #fef3c7;
+            border: 1px solid #fde68a;
+            color: #92400e;
+        }
+        
+        .errorlist {
+            color: #dc2626;
+            font-size: 13px;
+            margin-top: 4px;
+            list-style: none;
+            padding: 0;
+        }
+        
+        .section-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            margin-right: 16px;
+        }
+        
+        .sidebar {
+            background: linear-gradient(180deg, #1f2937, #111827);
+        }
+        
+        .nav-item {
+            transition: background 0.2s;
+        }
+        
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100">
+    
+    <div class="flex min-h-screen">
+        
+        <!-- Sidebar -->
+        <aside class="sidebar w-64 text-white p-6 hidden md:block">
+            <div class="flex items-center mb-8">
+                <div class="mr-3 bg-white/10 p-2 rounded-lg">
+                    <i class="fa-solid fa-user-graduate text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold">Social Work<br />Predictor</h1>
+                </div>
+            </div>
+
+            <nav class="space-y-2">
+                <a href="{% url 'dashboard:home' %}" class="flex items-center p-3 nav-item rounded text-sm">
+                    <i class="fa-solid fa-house-chimney mr-3 w-5"></i>Dashboard
+                </a>
+                <a href="{% url 'prediction:predict' %}" class="flex items-center p-3 nav-item rounded text-sm bg-white/10">
+                    <i class="fa-solid fa-brain mr-3 w-5"></i>Predictions
+                </a>
+                <a href="#" class="flex items-center p-3 nav-item rounded text-sm">
+                    <i class="fa-solid fa-chart-line mr-3 w-5"></i>Reports
+                </a>
+                <a href="#" class="flex items-center p-3 nav-item rounded text-sm">
+                    <i class="fa-solid fa-gear mr-3 w-5"></i>Settings
+                </a>
+            </nav>
+
+            <div class="mt-10 text-xs text-gray-300">
+                <div>© 2024 Thesis Project</div>
+                <div class="mt-1">Version 1.0.0</div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1">
+            
+            <!-- Header -->
+            <header class="bg-white p-4 md:pl-8 md:pr-8 flex items-center justify-between shadow-sm">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Exam Pass Prediction</h1>
+                    <p class="text-sm text-gray-600">Social Work Licensure Examination</p>
+                </div>
+                <a href="{% url 'dashboard:home' %}" class="flex items-center bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm transition">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Back to Dashboard
+                </a>
+            </header>
+
+            <!-- Form Container -->
+            <main class="p-6 md:p-8 max-w-5xl mx-auto">
+                
+                <!-- Messages -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% elif message.tags == 'warning' %}fa-triangle-exclamation{% else %}fa-circle-info{% endif %}"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <!-- Info Card -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <i class="fa-solid fa-circle-info text-blue-600 text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-semibold text-blue-900 mb-2">About This Prediction Tool</h3>
+                            <p class="text-blue-800 text-sm">
+                                This AI-powered tool analyzes your academic background, study habits, and preparation level 
+                                to predict your likelihood of passing the Social Work Licensure Examination. 
+                                Fill out all fields accurately for the most reliable prediction.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prediction Form -->
+                <form method="POST" id="predictionForm">
+                    {% csrf_token %}
+
+                    <!-- Section 1: Personal Information -->
+                    <div class="form-section">
+                        <div class="flex items-center mb-6">
+                            <div class="section-icon">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-800">Personal Information</h2>
+                                <p class="text-sm text-gray-600">Basic demographic information</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="form-group">
+                                <label class="form-label" for="id_age">{{ form.age.label }}</label>
+                                {{ form.age }}
+                                {% if form.age.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.age.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.age.help_text %}
+                                    <p class="help-text">{{ form.age.help_text }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="id_gender">{{ form.gender.label }}</label>
+                                {{ form.gender }}
+                                {% if form.gender.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.gender.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Academic Background -->
+                    <div class="form-section">
+                        <div class="flex items-center mb-6">
+                            <div class="section-icon">
+                                <i class="fa-solid fa-graduation-cap"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-800">Academic Background</h2>
+                                <p class="text-sm text-gray-600">Your academic performance indicators</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="form-group">
+                                <label class="form-label" for="id_gpa">{{ form.gpa.label }}</label>
+                                {{ form.gpa }}
+                                {% if form.gpa.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.gpa.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.gpa.help_text %}
+                                    <p class="help-text">{{ form.gpa.help_text }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="id_internship_grade">{{ form.internship_grade.label }}</label>
+                                {{ form.internship_grade }}
+                                {% if form.internship_grade.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.internship_grade.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.internship_grade.help_text %}
+                                    <p class="help-text">{{ form.internship_grade.help_text }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="id_scholarship">{{ form.scholarship.label }}</label>
+                                {{ form.scholarship }}
+                                {% if form.scholarship.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.scholarship.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.scholarship.help_text %}
+                                    <p class="help-text">{{ form.scholarship.help_text }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Study Habits & Preparation -->
+                    <div class="form-section">
+                        <div class="flex items-center mb-6">
+                            <div class="section-icon">
+                                <i class="fa-solid fa-book"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-800">Study Habits & Preparation</h2>
+                                <p class="text-sm text-gray-600">Your current preparation routine</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="form-group">
+                                <label class="form-label" for="id_study_hours">{{ form.study_hours.label }}</label>
+                                {{ form.study_hours }}
+                                {% if form.study_hours.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.study_hours.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.study_hours.help_text %}
+                                    <p class="help-text">{{ form.study_hours.help_text }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="id_sleep_hours">{{ form.sleep_hours.label }}</label>
+                                {{ form.sleep_hours }}
+                                {% if form.sleep_hours.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.sleep_hours.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.sleep_hours.help_text %}
+                                    <p class="help-text">{{ form.sleep_hours.help_text }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="id_review_center">{{ form.review_center.label }}</label>
+                                {{ form.review_center }}
+                                {% if form.review_center.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.review_center.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.review_center.help_text %}
+                                    <p class="help-text">{{ form.review_center.help_text }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="id_confidence">{{ form.confidence.label }}</label>
+                                {{ form.confidence }}
+                                {% if form.confidence.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.confidence.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.confidence.help_text %}
+                                    <p class="help-text">{{ form.confidence.help_text }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group md:col-span-2">
+                                <label class="form-label" for="id_mock_exam_score">{{ form.mock_exam_score.label }}</label>
+                                {{ form.mock_exam_score }}
+                                {% if form.mock_exam_score.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.mock_exam_score.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.mock_exam_score.help_text %}
+                                    <p class="help-text">{{ form.mock_exam_score.help_text }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 4: Socioeconomic Factors -->
+                    <div class="form-section">
+                        <div class="flex items-center mb-6">
+                            <div class="section-icon">
+                                <i class="fa-solid fa-briefcase"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-800">Socioeconomic Background</h2>
+                                <p class="text-sm text-gray-600">Family and employment information</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="form-group">
+                                <label class="form-label" for="id_income_level">{{ form.income_level.label }}</label>
+                                {{ form.income_level }}
+                                {% if form.income_level.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.income_level.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="id_employment_status">{{ form.employment_status.label }}</label>
+                                {{ form.employment_status }}
+                                {% if form.employment_status.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.employment_status.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.employment_status.help_text %}
+                                    <p class="help-text">{{ form.employment_status.help_text }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Non-field errors -->
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-error mb-6">
+                            <i class="fa-solid fa-circle-exclamation"></i>
+                            <div>
+                                {% for error in form.non_field_errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Submit Button -->
+                    <div class="text-center mt-8">
+                        <button type="submit" class="btn-predict" id="submitBtn">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>
+                            Generate Prediction
+                        </button>
+                        <p class="text-sm text-gray-600 mt-4">
+                            <i class="fa-solid fa-shield-halved mr-1"></i>
+                            Your data is processed securely and not stored permanently
+                        </p>
+                    </div>
+
+                </form>
+
+            </main>
+
+        </div>
+    </div>
+
+    <script>
+        // Form validation and UX improvements
+        document.getElementById('predictionForm').addEventListener('submit', function(e) {
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Processing...';
+        });
+
+        // Real-time validation for study + sleep hours
+        const studyHours = document.getElementById('id_study_hours');
+        const sleepHours = document.getElementById('id_sleep_hours');
+
+        function validateTotalHours() {
+            const study = parseInt(studyHours.value) || 0;
+            const sleep = parseInt(sleepHours.value) || 0;
+            
+            if (study + sleep > 24) {
+                studyHours.style.borderColor = '#dc2626';
+                sleepHours.style.borderColor = '#dc2626';
+                return false;
+            } else {
+                studyHours.style.borderColor = '#e5e7eb';
+                sleepHours.style.borderColor = '#e5e7eb';
+                return true;
+            }
+        }
+
+        studyHours.addEventListener('input', validateTotalHours);
+        sleepHours.addEventListener('input', validateTotalHours);
+    </script>
+
+</body>
+</html>

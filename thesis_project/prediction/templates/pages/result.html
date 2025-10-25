@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Results - Social Work Licensure</title>
+    
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        .glass {
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+            border-radius: 12px;
+        }
+        
+        .sidebar {
+            background: linear-gradient(180deg, #1f2937, #111827);
+        }
+        
+        .nav-item {
+            transition: background 0.2s;
+        }
+        
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .result-badge {
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 14px;
+            display: inline-block;
+        }
+        
+        .badge-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+        
+        .badge-warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+        
+        .badge-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+        
+        .probability-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: 700;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin: 0 auto;
+        }
+        
+        .model-result-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.3s;
+        }
+        
+        .model-result-card:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+        }
+        
+        .recommendation-card {
+            border-left: 4px solid;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .recommendation-red {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+        
+        .recommendation-orange {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+        
+        .recommendation-green {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        
+        .progress-bar {
+            height: 24px;
+            background: #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+            transition: width 1s ease;
+        }
+        
+        .input-summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .input-summary-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100">
+    
+    <div class="flex min-h-screen">
+        
+        <!-- Sidebar -->
+        <aside class="sidebar w-64 text-white p-6 hidden md:block">
+            <div class="flex items-center mb-8">
+                <div class="mr-3 bg-white/10 p-2 rounded-lg">
+                    <i class="fa-solid fa-user-graduate text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold">Social Work<br />Predictor</h1>
+                </div>
+            </div>
+
+            <nav class="space-y-2">
+                <a href="{% url 'dashboard:home' %}" class="flex items-center p-3 nav-item rounded text-sm">
+                    <i class="fa-solid fa-house-chimney mr-3 w-5"></i>Dashboard
+                </a>
+                <a href="{% url 'prediction:predict' %}" class="flex items-center p-3 nav-item rounded text-sm bg-white/10">
+                    <i class="fa-solid fa-brain mr-3 w-5"></i>Predictions
+                </a>
+                <a href="#" class="flex items-center p-3 nav-item rounded text-sm">
+                    <i class="fa-solid fa-chart-line mr-3 w-5"></i>Reports
+                </a>
+                <a href="#" class="flex items-center p-3 nav-item rounded text-sm">
+                    <i class="fa-solid fa-gear mr-3 w-5"></i>Settings
+                </a>
+            </nav>
+
+            <div class="mt-10 text-xs text-gray-300">
+                <div>© 2024 Thesis Project</div>
+                <div class="mt-1">Version 1.0.0</div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1">
+            
+            <!-- Header -->
+            <header class="bg-white p-4 md:pl-8 md:pr-8 flex items-center justify-between shadow-sm">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Prediction Results</h1>
+                    <p class="text-sm text-gray-600">Your personalized exam likelihood analysis</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="window.print()" class="flex items-center bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm transition">
+                        <i class="fa-solid fa-print mr-2"></i> Print
+                    </button>
+                    <a href="{% url 'prediction:predict' %}" class="flex items-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition">
+                        <i class="fa-solid fa-rotate mr-2"></i> New Prediction
+                    </a>
+                </div>
+            </header>
+
+            <!-- Results Container -->
+            <main class="p-6 md:p-8 max-w-7xl mx-auto">
+                
+                <!-- Overall Result Banner -->
+                <div class="glass p-8 mb-6 text-center">
+                    <div class="mb-4">
+                        {% if avg_probability >= 0.75 %}
+                            <i class="fa-solid fa-circle-check text-green-500 text-6xl"></i>
+                        {% elif avg_probability >= 0.5 %}
+                            <i class="fa-solid fa-triangle-exclamation text-yellow-500 text-6xl"></i>
+                        {% else %}
+                            <i class="fa-solid fa-circle-xmark text-red-500 text-6xl"></i>
+                        {% endif %}
+                    </div>
+                    
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">
+                        {{ risk_info.level }}
+                    </h2>
+                    
+                    <p class="text-gray-600 text-lg mb-6">{{ risk_info.message }}</p>
+                    
+                    <div class="probability-circle {% if avg_probability >= 0.75 %}bg-gradient-to-br from-green-400 to-green-600{% elif avg_probability >= 0.5 %}bg-gradient-to-br from-yellow-400 to-yellow-600{% else %}bg-gradient-to-br from-red-400 to-red-600{% endif %} text-white">
+                        {{ avg_probability|floatformat:0 }}%
+                    </div>
+                    
+                    <p class="text-sm text-gray-600 mt-4">Average Pass Probability</p>
+                </div>
+
+                <!-- Recommendations and Input Summary Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    <!-- Personalized Recommendations -->
+                    <div class="glass p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">
+                            <i class="fa-solid fa-lightbulb text-yellow-500 mr-2"></i>
+                            Personalized Recommendations
+                        </h3>
+                        
+                        <div class="space-y-3">
+                            {% for rec in recommendations %}
+                                <div class="recommendation-card recommendation-{{ rec.color }}">
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0 mr-3">
+                                            <i class="fa-solid {{ rec.icon }} text-2xl {% if rec.color == 'red' %}text-red-600{% elif rec.color == 'orange' %}text-orange-600{% else %}text-green-600{% endif %}"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h4 class="font-semibold {% if rec.color == 'red' %}text-red-800{% elif rec.color == 'orange' %}text-orange-800{% else %}text-green-800{% endif %} mb-1">
+                                                {{ rec.title }}
+                                            </h4>
+                                            <p class="text-sm text-gray-700">{{ rec.message }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                            <div class="flex items-start">
+                                <i class="fa-solid fa-circle-info text-blue-600 text-xl mr-3 mt-1"></i>
+                                <div>
+                                    <p class="text-sm text-blue-900 font-semibold mb-1">Need More Help?</p>
+                                    <p class="text-xs text-blue-800">
+                                        Consider consulting with academic advisors or enrolling in review centers for personalized guidance.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Your Input Summary -->
+                    <div class="glass p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">
+                            <i class="fa-solid fa-clipboard-list text-blue-600 mr-2"></i>
+                            Your Input Summary
+                        </h3>
+                        
+                        <div class="space-y-0">
+                            <div class="input-summary-item">
+                                <span class="text-gray-600">Age</span>
+                                <span class="font-semibold text-gray-800">{{ input_data.Age }} years</span>
+                            </div>
+                            
+                            <div class="input-summary-item">
+                                <span class="text-gray-600">Gender</span>
+                                <span class="font-semibold text-gray-800">{{ input_data.Gender }}</span>
+                            </div>
+                            
+                            <div class="input-summary-item">
+                                <span class="text-gray-600">GPA</span>
+                                <span class="font-semibold text-gray-800">{{ input_data.GPA|floatformat:2 }}</span>
+                            </div>
+                            
+                            <div class="input-summary-item">
+                                <span class="text-gray-600">Internship Grade</span>
+                                <span class="font-semibold text-gray-800">{{ input_data.InternshipGrade|floatformat:2 }}</span>
+                            </div>
+                            
+                            <div class="input-summary-item">
+                                <span class="text-gray-600">Study Hours/Day</span>
+                                <span class="font-semibold text-gray-800">{{ input_data.StudyHours }} hours</span>
+                            </div>
+                            
+                            <div class="input-summary-item">
+                                <span class="text-gray-600">Sleep Hours/Day</span>
+                                <span class="font-semibold text-gray-800">{{ input_data.SleepHours }} hours</span>
+                            </div>
+                            
+                            <div class="input-summary-item">
+                                <span class="text-gray-600">Review Center</span>
+                                <span class="font-semibold text-gray-800">
+                                    {% if input_data.ReviewCenter == 1 %}
+                                        <i class="fa-solid fa-check text-green-600"></i> Yes
+                                    {% else %}
+                                        <i class="fa-solid fa-xmark text-red-600"></i> No
+                                    {% endif %}
+                                </span>
+                            </div>
+                            
+                            <div class="input-summary-item">
+                                <span class="text-gray-600">Confidence Level</span>
+                                <span class="font-semibold text-gray-800">{{ input_data.Confidence }}/5</span>
+                            </div>
+                            
+                            {% if input_data.MockExamScore %}
+                                <div class="input-summary-item">
+                                    <span class="text-gray-600">Mock Exam Score</span>
+                                    <span class="font-semibold text-gray-800">{{ input_data.MockExamScore|floatformat:1 }}%</span>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="input-summary-item">
+                                <span class="text-gray-600">Scholarship</span>
+                                <span class="font-semibold text-gray-800">
+                                    {% if input_data.Scholarship == 1 %}
+                                        <i class="fa-solid fa-check text-green-600"></i> Yes
+                                    {% else %}
+                                        <i class="fa-solid fa-xmark text-red-600"></i> No
+                                    {% endif %}
+                                </span>
+                            </div>
+                            
+                            <div class="input-summary-item">
+                                <span class="text-gray-600">Income Level</span>
+                                <span class="font-semibold text-gray-800">{{ input_data.IncomeLevel }}</span>
+                            </div>
+                            
+                            <div class="input-summary-item">
+                                <span class="text-gray-600">Employment Status</span>
+                                <span class="font-semibold text-gray-800">{{ input_data.EmploymentStatus }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-4 mt-6">
+                    <a href="{% url 'prediction:predict' %}" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-lg font-semibold text-center transition flex items-center justify-center">
+                        <i class="fa-solid fa-plus mr-2"></i>
+                        Make Another Prediction
+                    </a>
+                    <button onclick="window.print()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-4 rounded-lg font-semibold transition flex items-center justify-center">
+                        <i class="fa-solid fa-download mr-2"></i>
+                        Save as PDF
+                    </button>
+                </div>
+
+                <!-- Disclaimer -->
+                <div class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div class="flex items-start">
+                        <i class="fa-solid fa-triangle-exclamation text-yellow-600 text-xl mr-3 mt-1"></i>
+                        <div>
+                            <p class="text-sm font-semibold text-yellow-900 mb-1">Important Disclaimer</p>
+                            <p class="text-xs text-yellow-800">
+                                This prediction is based on machine learning models trained on historical data and should be used as a guide only. 
+                                Actual exam results may vary. Continue to study diligently and maintain a positive mindset.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+
+        </div>
+    </div>
+
+    <script>
+        // Animate progress bars
+        window.addEventListener('load', function() {
+            const progressFills = document.querySelectorAll('.progress-fill');
+            progressFills.forEach(fill => {
+                const width = fill.style.width;
+                fill.style.width = '0%';
+                setTimeout(() => {
+                    fill.style.width = width;
+                }, 100);
+            });
+        });
+    </script>
+
+</body>
+</html>
