@@ -16,8 +16,8 @@ sys.path.append(models_path)
 from .forms import PredictionForm
 from .utils import load_selected_model, prepare_input_data, generate_recommendations, get_risk_level
 
-SELECTED_MODEL_NAME = 'stacking_ridge'  
-SELECTED_MODEL_TYPE = 'ensemble'  
+SELECTED_MODEL_NAME = 'ramdom_forest'  
+SELECTED_MODEL_TYPE = 'base'  
 
 def predict_view(request):
     if request.method == 'POST':
