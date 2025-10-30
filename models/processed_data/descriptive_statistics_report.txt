@@ -1,0 +1,21 @@
+DESCRIPTIVE STATISTICS REPORT
+================================================================================
+
+Dataset: social_work_exam_dataset.csv
+Total Records: 546
+Total Features: 14
+
+NUMERICAL FEATURES STATISTICS
+--------------------------------------------------------------------------------
+          Feature      Mean  Std. Dev.  Min   Max
+              Age 22.023810   1.065463 21.0 27.00
+       StudyHours  4.459707   2.606137  1.0 15.00
+       SleepHours  6.368132   1.685886  4.0  9.00
+       Confidence  3.126374   1.419575  1.0  5.00
+    MockExamScore 75.601286  13.529723 50.0 99.00
+              GPA  2.104212   0.701408  1.0  3.90
+      Scholarship  0.532967   0.499369  0.0  1.00
+  InternshipGrade  2.058150   0.686490  1.0  3.75
+     ReviewCenter  0.540293   0.498831  0.0  1.00
+ExamResultPercent 72.417582  17.643711 40.0 99.00
+
