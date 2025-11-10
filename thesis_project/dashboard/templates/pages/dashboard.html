@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Social Work Licensure Exam Predictor - Dashboard</title>
+    <title>Dashboard - Social Work Licensure Predictor</title>
     
     <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,93 +15,369 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        .kpi-card {
-            border-radius: 10px;
+        /* Modern Design System */
+        * {
+            font-family: 'Inter', sans-serif;
         }
 
-        .glass {
-            background: rgba(255, 255, 255, 0.9);
-            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
-            border-radius: 12px;
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --dark-gradient: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
         }
 
-        .metric {
-            font-weight: 700;
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            color: #1f2937;
         }
 
-        .muted {
-            color: #6b7280;
+        /* Stat Cards with Modern Design */
+        .stat-card {
+            border-radius: 20px;
+            animation: slideInUp 0.6s ease-out backwards;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
         }
 
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-gradient);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
+        }
+
+        .stat-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 32px rgba(102, 126, 234, 0.15);
+        }
+
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+        .stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+        /* Gradient Icon Backgrounds */
+        .icon-gradient-purple {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .icon-gradient-green {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .icon-gradient-pink {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .icon-gradient-blue {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        /* Modern Card Design */
+        .modern-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s ease;
+            animation: fadeIn 0.6s ease-out;
+            border: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        .modern-card:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 280px;
+        }
+
+        @media (min-width: 640px) {
+            .chart-container {
+                height: 320px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .chart-container {
+                height: 360px;
+            }
+        }
+
+        /* Sidebar Design */
         .sidebar {
-            background: linear-gradient(180deg, #1f2937, #111827);
+            background: linear-gradient(180deg, #1e293b, #0f172a);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 40;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
         }
 
+        .sidebar > div:first-child {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
+        }
+        
         .nav-item {
-            transition: background 0.2s;
+            transition: all 0.2s ease;
+            border-radius: 12px;
+            position: relative;
         }
 
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 0;
+            background: linear-gradient(180deg, #667eea, #764ba2);
+            transition: height 0.2s ease;
+            border-radius: 0 3px 3px 0;
+        }
+        
         .nav-item:hover {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.08);
         }
 
         .nav-item.active {
-            background: #232b47;
+            background: rgba(102, 126, 234, 0.15);
+            color: #a5b4fc;
         }
 
-        .small-card {
-            border-radius: 10px;
-            padding: 18px;
+        .nav-item.active::before {
+            height: 24px;
         }
 
-        .feature-bar {
-            height: 12px;
-            border-radius: 8px;
+        /* Fixed Header */
+        .fixed-header {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 256px;
+            z-index: 30;
+            backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.95);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         }
 
-        .feature-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #0ea5e9, #3b82f6);
-            border-radius: 8px;
-            transition: width 0.5s ease;
+        @media (max-width: 768px) {
+            .fixed-header {
+                left: 0;
+            }
         }
 
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
+        /* Main content margin for fixed header */
+        .main-content {
+            margin-top: 100px;
+            padding: 2rem;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 1.5rem;
+                margin-top: 80px;
+            }
+        }
+        /* Mobile menu */
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 85%;
+            max-width: 300px;
+            height: 100vh;
+            z-index: 1000;
+            transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+            box-shadow: 4px 0 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .mobile-menu.active {
+            left: 0;
+        }
+
+        .mobile-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            display: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .mobile-overlay.active {
+            display: block;
+        }
+
+        /* Animations */
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { 
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to { 
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
 
+
+        /* Loading & Utility Styles */
+        .loading {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2.5px solid rgba(102, 126, 234, 0.2);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 0.8s linear infinite;
+        }
+
         .error-message {
-            background: #fee2e2;
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
             border-left: 4px solid #ef4444;
             color: #991b1b;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideInDown 0.4s ease-out;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.1);
         }
 
         .success-message {
-            background: #d1fae5;
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
             border-left: 4px solid #10b981;
             color: #065f46;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideInDown 0.4s ease-out;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
         }
 
+        /* Feature Importance Bar */
+        .feature-bar {
+            position: relative;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .feature-fill {
+            height: 100%;
+            border-radius: 8px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Stat Trend Indicators */
         .stat-trend {
             font-size: 0.75rem;
-            margin-top: 8px;
+            margin-top: 0.5rem;
+            font-weight: 600;
         }
 
         .stat-trend.up {
@@ -111,6 +387,26 @@
         .stat-trend.down {
             color: #ef4444;
         }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.3);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(102, 126, 234, 0.5);
+        }
     </style>
 </head>
 
@@ -119,208 +415,284 @@
     <div class="flex min-h-screen">
         
         <!-- Sidebar -->
-        <aside class="sidebar w-64 text-white p-6 hidden md:block">
-            <div class="flex items-center mb-8">
-                <div class="mr-3 bg-white/10 p-2 rounded-lg">
-                    <i class="fa-solid fa-user-graduate text-xl"></i>
+        <aside class="sidebar w-64 text-white hidden md:block">
+            <div>
+                <div class="flex items-center mb-10">
+                    <div class="mr-3 bg-gradient-to-br from-purple-500 to-blue-500 p-3 rounded-xl shadow-lg">
+                        <i class="fa-solid fa-user-graduate text-2xl text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-white leading-tight">Social Work</h1>
+                        <p class="text-sm text-gray-400 font-medium">Predictor</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="text-lg font-bold">Social Work<br />Predictor</h1>
-                </div>
+
+                <nav class="space-y-1.5">
+                    <a href="{% url 'dashboard:home' %}" class="flex items-center px-4 py-3 nav-item text-sm font-medium active">
+                        <i class="fa-solid fa-house-chimney mr-3 w-5 text-base"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="{% url 'prediction:predict' %}" class="flex items-center px-4 py-3 nav-item text-sm font-medium">
+                        <i class="fa-solid fa-brain mr-3 w-5 text-base"></i>
+                        <span>Predictions</span>
+                    </a>
+                    <a href="#" class="flex items-center px-4 py-3 nav-item text-sm font-medium">
+                        <i class="fa-solid fa-chart-line mr-3 w-5 text-base"></i>
+                        <span>Reports</span>
+                    </a>
+                    <a href="#" class="flex items-center px-4 py-3 nav-item text-sm font-medium">
+                        <i class="fa-solid fa-file-export mr-3 w-5 text-base"></i>
+                        <span>Export</span>
+                    </a>
+                    <a href="#" class="flex items-center px-4 py-3 nav-item text-sm font-medium">
+                        <i class="fa-solid fa-gear mr-3 w-5 text-base"></i>
+                        <span>Settings</span>
+                    </a>
+                </nav>
             </div>
 
-            <nav class="space-y-2">
-                <a href="{% url 'dashboard:home' %}" class="flex items-center p-3 nav-item rounded text-sm active">
-                    <i class="fa-solid fa-house-chimney mr-3 w-5"></i>Dashboard
-                </a>
-                <a href="{% url 'prediction:predict' %}" class="flex items-center p-3 nav-item rounded text-sm">
-                    <i class="fa-solid fa-brain mr-3 w-5"></i>Predictions
-                </a>
-                <a href="#" class="flex items-center p-3 nav-item rounded text-sm">
-                    <i class="fa-solid fa-chart-line mr-3 w-5"></i>Reports
-                </a>
-                <a href="#" class="flex items-center p-3 nav-item rounded text-sm">
-                    <i class="fa-solid fa-file-export mr-3 w-5"></i>Export
-                </a>
-                <a href="#" class="flex items-center p-3 nav-item rounded text-sm">
-                    <i class="fa-solid fa-gear mr-3 w-5"></i>Settings
-                </a>
-            </nav>
-
-            <div class="mt-10 text-xs text-gray-300">
-                <div>© 2024 Thesis Project</div>
-                <div class="mt-1">Version 1.0.0</div>
+            <div class="sidebar-footer text-xs text-gray-400 font-medium">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-copyright text-xs"></i>
+                    <span>2024 Thesis Project</span>
+                </div>
+                <div class="mt-2 flex items-center gap-2">
+                    <i class="fa-solid fa-code-branch text-xs"></i>
+                    <span>Version 1.0.0</span>
+                </div>
             </div>
         </aside>
 
-        <!-- Main content -->
-        <div class="flex-1">
+        <!-- Mobile Menu Overlay -->
+        <div class="mobile-overlay" id="mobileOverlay"></div>
+
+        <!-- Mobile Sidebar -->
+        <aside class="mobile-menu sidebar text-white" id="mobileSidebar">
+            <div>
+                <div class="flex items-center justify-between mb-10">
+                    <div class="flex items-center">
+                        <div class="mr-3 bg-gradient-to-br from-purple-500 to-blue-500 p-3 rounded-xl shadow-lg">
+                            <i class="fa-solid fa-user-graduate text-xl text-white"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-lg font-bold text-white leading-tight">Social Work</h1>
+                            <p class="text-xs text-gray-400 font-medium">Predictor</p>
+                        </div>
+                    </div>
+                    <button id="closeMobileMenu" class="text-gray-400 hover:text-white text-2xl transition-colors">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+
+                <nav class="space-y-1.5">
+                    <a href="{% url 'dashboard:home' %}" class="flex items-center px-4 py-3 nav-item text-sm font-medium active">
+                        <i class="fa-solid fa-house-chimney mr-3 w-5 text-base"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="{% url 'prediction:predict' %}" class="flex items-center px-4 py-3 nav-item text-sm font-medium">
+                        <i class="fa-solid fa-brain mr-3 w-5 text-base"></i>
+                        <span>Predictions</span>
+                    </a>
+                    <a href="#" class="flex items-center px-4 py-3 nav-item text-sm font-medium">
+                        <i class="fa-solid fa-chart-line mr-3 w-5 text-base"></i>
+                        <span>Reports</span>
+                    </a>
+                    <a href="#" class="flex items-center px-4 py-3 nav-item text-sm font-medium">
+                        <i class="fa-solid fa-file-export mr-3 w-5 text-base"></i>
+                        <span>Export</span>
+                    </a>
+                    <a href="#" class="flex items-center px-4 py-3 nav-item text-sm font-medium">
+                        <i class="fa-solid fa-gear mr-3 w-5 text-base"></i>
+                        <span>Settings</span>
+                    </a>
+                </nav>
+            </div>
+
+            <div class="sidebar-footer text-xs text-gray-400 font-medium">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-copyright text-xs"></i>
+                    <span>2024 Thesis Project</span>
+                </div>
+                <div class="mt-2 flex items-center gap-2">
+                    <i class="fa-solid fa-code-branch text-xs"></i>
+                    <span>Version 1.0.0</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main content wrapper -->
+        <div class="flex-1 lg:ml-64">
             
-            <!-- Top bar -->
-            <header class="bg-white p-4 md:pl-8 md:pr-8 flex items-center justify-between shadow-sm">
-                <div class="text-xl font-semibold">Social Work Licensure Exam Predictor</div>
-                <div class="flex items-center space-x-4">
-                    <button class="hidden md:inline-flex items-center bg-slate-700 hover:bg-slate-600 p-3 rounded text-sm text-white transition">
-                        <i class="fa-solid fa-magnifying-glass mr-2"></i>Search
+            <!-- Modern Header -->
+            <header class="fixed-header p-5 md:px-8 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <!-- Mobile menu button -->
+                    <button id="mobileMenuBtn" class="lg:hidden text-gray-600 hover:text-gray-900 text-xl p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                        <i class="fa-solid fa-bars"></i>
                     </button>
-                    <button id="refreshBtn" class="hidden md:inline-flex items-center bg-blue-600 hover:bg-blue-700 p-3 rounded text-sm text-white transition" title="Refresh Data">
-                        <i class="fa-solid fa-arrows-rotate mr-2"></i>Refresh
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                            Dashboard
+                        </h1>
+                        <p class="text-xs md:text-sm text-gray-500 mt-0.5 font-medium">Social Work Licensure Exam Insights</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 md:gap-3">
+                    <button id="refreshBtn" class="inline-flex items-center bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-sm font-semibold text-white transition-all shadow-md hover:shadow-xl transform hover:scale-105" title="Refresh Data">
+                        <i class="fa-solid fa-arrows-rotate text-sm"></i>
+                        <span class="hidden md:inline ml-2">Refresh</span>
                     </button>
-                    <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center cursor-pointer hover:bg-slate-600 transition">
-                        <i class="fa-solid fa-user text-white"></i>
+                    <div class="relative group">
+                        <div class="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center cursor-pointer shadow-md hover:shadow-xl transition-all transform hover:scale-105">
+                            <i class="fa-solid fa-user text-white text-sm"></i>
+                        </div>
                     </div>
                 </div>
             </header>
 
-            <main class="p-6 md:p-8">
+        
+
+            <main class="main-content p-6 md:p-8">
                 
                 <!-- Messages -->
                 <div id="messageContainer"></div>
 
-                <!-- KPI Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <!-- Main Grid Layout -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     
-                    <div class="kpi-card glass p-6 bg-gradient-to-br from-green-500 to-green-600 text-white">
-                        <div class="text-sm font-semibold uppercase tracking-wide">Total Predictions Made</div>
-                        <div class="text-4xl font-bold mt-4" id="totalPredictions">
-                            <span class="loading"></span>
-                        </div>
-                        <div class="stat-trend up" id="totalPredictionsTrend"></div>
-                    </div>
-
-                    <div class="kpi-card glass p-6 bg-gradient-to-br from-blue-600 to-blue-700 text-white">
-                        <div class="text-sm font-semibold uppercase tracking-wide">Average Likelihood of Passing</div>
-                        <div class="text-4xl font-bold mt-4" id="avgLikelihood">
-                            <span class="loading"></span>
-                        </div>
-                        <div class="stat-trend" id="avgLikelihoodTrend"></div>
-                    </div>
-
-                    <div class="kpi-card glass p-6 bg-gradient-to-br from-red-600 to-red-700 text-white">
-                        <div class="text-sm font-semibold uppercase tracking-wide">At-Risk Students</div>
-                        <div class="text-4xl font-bold mt-4" id="atRiskStudents">
-                            <span class="loading"></span>
-                        </div>
-                        <div class="stat-trend down" id="atRiskTrend"></div>
-                    </div>
-
-                    <div class="kpi-card glass p-6 bg-gradient-to-br from-emerald-600 to-emerald-700 text-white">
-                        <div class="text-sm font-semibold uppercase tracking-wide">Likely to Pass</div>
-                        <div class="text-4xl font-bold mt-4" id="likelyToPass">
-                            <span class="loading"></span>
-                        </div>
-                        <div class="stat-trend up" id="likelyToPassTrend"></div>
-                    </div>
-
-                </div>
-
-                <!-- Main panels -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-                    <!-- Left column: Model metrics + trend chart + action buttons -->
-                    <div class="lg:col-span-2 space-y-6">
-
+                    <!-- Left Column - Charts & Model Performance (70%) -->
+                    <div class="lg:col-span-8 space-y-6">
+                        
                         <!-- Model Performance Metrics -->
-                        <div class="glass p-6">
-                            <div class="flex items-center justify-between mb-4">
-                                <h2 class="text-lg font-semibold uppercase tracking-wide">Model Performance Metrics</h2>
-                                <div class="text-sm text-gray-500" id="lastUpdated">Loading...</div>
-                            </div>
-
-                            <div class="grid grid-cols-5 gap-4 text-center">
-                                <div>
-                                    <div class="text-3xl font-bold text-gray-800" id="modelAccuracy">--</div>
-                                    <div class="muted text-sm mt-1">Accuracy</div>
+                        <div class="modern-card p-6">
+                            <h2 class="text-xl font-bold text-gray-800 mb-6">Model Performance Metrics</h2>
+                            <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
+                                <div class="text-center">
+                                    <div class="text-3xl font-bold text-purple-600" id="modelAccuracy">--</div>
+                                    <div class="text-sm text-gray-500 mt-2">Accuracy</div>
                                 </div>
-                                <div>
-                                    <div class="text-3xl font-bold text-gray-800" id="modelPrecision">--</div>
-                                    <div class="muted text-sm mt-1">Precision</div>
+                                <div class="text-center">
+                                    <div class="text-3xl font-bold text-blue-600" id="modelPrecision">--</div>
+                                    <div class="text-sm text-gray-500 mt-2">Precision</div>
                                 </div>
-                                <div>
-                                    <div class="text-3xl font-bold text-gray-800" id="modelRecall">--</div>
-                                    <div class="muted text-sm mt-1">Recall</div>
+                                <div class="text-center">
+                                    <div class="text-3xl font-bold text-green-600" id="modelRecall">--</div>
+                                    <div class="text-sm text-gray-500 mt-2">Recall</div>
                                 </div>
-                                <div>
-                                    <div class="text-3xl font-bold text-gray-800" id="modelF1Score">--</div>
-                                    <div class="muted text-sm mt-1">F1-Score</div>
+                                <div class="text-center">
+                                    <div class="text-3xl font-bold text-orange-600" id="modelF1Score">--</div>
+                                    <div class="text-sm text-gray-500 mt-2">F1-Score</div>
                                 </div>
-                                <div>
-                                    <div class="text-3xl font-bold text-gray-800" id="modelAUC">--</div>
-                                    <div class="muted text-sm mt-1">AUC</div>
+                                <div class="text-center">
+                                    <div class="text-3xl font-bold text-pink-600" id="modelAUC">--</div>
+                                    <div class="text-sm text-gray-500 mt-2">AUC</div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Prediction Trends Chart -->
-                        <div class="glass p-6">
-                            <h3 class="text-lg font-semibold mb-4 uppercase tracking-wide">Prediction Trends</h3>
-                            <canvas id="trendChart" height="120"></canvas>
+                        <div class="modern-card p-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-6">Prediction Trends</h3>
+                            <div class="chart-container">
+                                <canvas id="trendChart"></canvas>
+                            </div>
                         </div>
 
-                        <!-- Action Buttons -->
-                        <div class="flex gap-4">
-                            <button id="downloadCsvBtn" class="flex-1 bg-white border-2 border-gray-300 hover:border-gray-400 py-3 rounded-lg text-gray-700 font-semibold transition flex items-center justify-center">
-                                <i class="fa-solid fa-file-csv mr-2"></i>Download CSV
-                            </button>
-                            <button id="generatePdfBtn" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white py-3 rounded-lg font-semibold transition flex items-center justify-center">
-                                <i class="fa-solid fa-file-pdf mr-2"></i>Generate PDF Report
-                            </button>
-                        </div>
+                        <!-- Combined Key Statistics & System Status -->
+                        <div class="modern-card p-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <h2 class="text-xl font-bold text-gray-800">Key Statistics & System Status</h2>
+                                <div class="text-sm text-gray-500" id="lastUpdated">Loading...</div>
+                            </div>
 
+                            <!-- 2x2 Grid for Statistics -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <!-- Average GPA -->
+                                <div class="stat-card p-6">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex-1">
+                                            <div class="text-sm font-medium text-gray-500 mb-2">Average GPA</div>
+                                            <div class="text-3xl font-bold text-gray-800" id="avgGpa">
+                                                <span class="loading"></span>
+                                            </div>
+                                        </div>
+                                        <div class="w-14 h-14 rounded-2xl icon-gradient-purple flex items-center justify-center shadow-lg">
+                                            <i class="fas fa-graduation-cap text-white text-2xl"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Study Hours -->
+                                <div class="stat-card p-6">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex-1">
+                                            <div class="text-sm font-medium text-gray-500 mb-2">Avg Study Hours</div>
+                                            <div class="text-3xl font-bold text-gray-800" id="avgStudyHours">
+                                                <span class="loading"></span>
+                                            </div>
+                                        </div>
+                                        <div class="w-14 h-14 rounded-2xl icon-gradient-green flex items-center justify-center shadow-lg">
+                                            <i class="fas fa-book-open text-white text-2xl"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Sleep Hours -->
+                                <div class="stat-card p-6">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex-1">
+                                            <div class="text-sm font-medium text-gray-500 mb-2">Avg Sleep Hours</div>
+                                            <div class="text-3xl font-bold text-gray-800" id="avgSleepHours">
+                                                <span class="loading"></span>
+                                            </div>
+                                        </div>
+                                        <div class="w-14 h-14 rounded-2xl icon-gradient-pink flex items-center justify-center shadow-lg">
+                                            <i class="fas fa-bed text-white text-2xl"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Attendance Rate -->
+                                <div class="stat-card p-6">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex-1">
+                                            <div class="text-sm font-medium text-gray-500 mb-2">Attendance Rate</div>
+                                            <div class="text-3xl font-bold text-gray-800" id="avgAttendance">
+                                                <span class="loading"></span>
+                                            </div>
+                                        </div>
+                                        <div class="w-14 h-14 rounded-2xl icon-gradient-blue flex items-center justify-center shadow-lg">
+                                            <i class="fas fa-user-check text-white text-2xl"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Right column: Feature importance + statistics -->
-                    <div class="space-y-6">
+                    <!-- Right Column - Quick Actions & Feature Importance (30%) -->
+                    <div class="lg:col-span-4 space-y-6">
+
+                        <!-- Quick Actions -->
+                        <div class="modern-card p-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-6">Quick Actions</h3>
+                            <div class="space-y-3">
+                                <button id="generatePdfBtn" class="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white py-3.5 rounded-xl font-medium transition shadow-md hover:shadow-lg transform hover:scale-105 flex items-center justify-center">
+                                    <i class="fa-solid fa-file-pdf mr-2"></i>Generate PDF Report
+                                </button>
+                                <button id="downloadCsvBtn" class="w-full bg-white border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50 text-gray-700 py-3.5 rounded-xl font-medium transition flex items-center justify-center">
+                                    <i class="fa-solid fa-file-csv mr-2 text-green-600"></i>Download CSV Data
+                                </button>
+                            </div>
+                        </div>
 
                         <!-- Feature Importance -->
-                        <div class="glass p-6">
-                            <h3 class="text-lg font-semibold mb-4 uppercase tracking-wide">Feature Importance</h3>
+                        <div class="modern-card p-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-6">Top Predictive Features</h3>
                             <div id="featureImportanceContainer">
                                 <div class="text-center text-gray-500 py-8">
                                     <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i>
                                     <p>Loading feature importance...</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- User Input Statistics -->
-                        <div class="glass p-6">
-                            <h3 class="text-lg font-semibold mb-4 uppercase tracking-wide">User Input Statistics</h3>
-                            <div class="space-y-3" id="userStatsContainer">
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">Average GPA</span>
-                                    <span class="font-semibold text-gray-800" id="avgGPA">--</span>
-                                </div>
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">Most Common Study Hours</span>
-                                    <span class="font-semibold text-gray-800" id="commonStudyHours">--</span>
-                                </div>
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">Average Sleeping Hours</span>
-                                    <span class="font-semibold text-gray-800" id="avgSleepHours">--</span>
-                                </div>
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">Review Center Attendance</span>
-                                    <span class="font-semibold text-gray-800" id="reviewCenterRate">--</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Model Status -->
-                        <div class="glass p-6">
-                            <h3 class="text-lg font-semibold mb-4 uppercase tracking-wide">Model Status</h3>
-                            <div class="space-y-3" id="modelStatusContainer">
-                                <div class="flex items-center justify-between text-sm">
-                                    <span class="text-gray-600">Base Models</span>
-                                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold">READY</span>
-                                </div>
-                                <div class="flex items-center justify-between text-sm">
-                                    <span class="text-gray-600">Ensemble Models</span>
-                                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold">READY</span>
-                                </div>
-                                <div class="flex items-center justify-between text-sm">
-                                    <span class="text-gray-600">Last Trained</span>
-                                    <span class="font-semibold text-gray-800" id="lastTrained">--</span>
                                 </div>
                             </div>
                         </div>
@@ -381,7 +753,6 @@
                 updateKPICards(data);
                 updateModelMetrics(data);
                 updateFeatureImportance(data);
-                updateUserStatistics(data);
                 updateTrendChart(data);
                 updateLastUpdated();
                 
@@ -395,33 +766,19 @@
             }
         }
 
-        // Update KPI Cards
+        // Update KPI Cards - Combined Key Statistics
         function updateKPICards(data) {
-            const kpi = data.kpi_metrics || {};
+            const stats = data.user_statistics || {};
             
-            document.getElementById('totalPredictions').textContent = 
-                (kpi.total_predictions || 0).toLocaleString();
-            
-            document.getElementById('avgLikelihood').innerHTML = 
-                `${(kpi.average_likelihood || 0).toFixed(1)}<span class="text-xl">%</span>`;
-            
-            document.getElementById('atRiskStudents').textContent = 
-                (kpi.at_risk_students || 0).toLocaleString();
-            
-            document.getElementById('likelyToPass').textContent = 
-                (kpi.likely_to_pass || 0).toLocaleString();
-            
-            // Update trends (optional - add if backend provides trend data)
-            if (kpi.trends) {
-                document.getElementById('totalPredictionsTrend').textContent = 
-                    `↑ ${kpi.trends.predictions || 0}% from last month`;
-                document.getElementById('avgLikelihoodTrend').textContent = 
-                    `${kpi.trends.likelihood >= 0 ? '↑' : '↓'} ${Math.abs(kpi.trends.likelihood || 0)}% from last month`;
-                document.getElementById('atRiskTrend').textContent = 
-                    `↓ ${kpi.trends.at_risk || 0}% from last month`;
-                document.getElementById('likelyToPassTrend').textContent = 
-                    `↑ ${kpi.trends.likely_pass || 0}% from last month`;
-            }
+            // Update key statistics in the combined section
+            document.getElementById('avgGpa').textContent = 
+                stats.average_gpa ? stats.average_gpa.toFixed(2) : '--';
+            document.getElementById('avgStudyHours').textContent = 
+                stats.common_study_hours ? `${stats.common_study_hours}h` : '--';
+            document.getElementById('avgSleepHours').textContent = 
+                stats.average_sleep_hours ? `${stats.average_sleep_hours.toFixed(1)}h` : '--';
+            document.getElementById('avgAttendance').textContent = 
+                stats.review_center_rate ? `${stats.review_center_rate}%` : '--';
         }
 
         // Update model metrics
@@ -446,26 +803,35 @@
             const features = data.feature_importance || {};
             
             if (Object.keys(features).length === 0) {
-                container.innerHTML = '<p class="text-center text-gray-500">No feature importance data available</p>';
+                container.innerHTML = '<p class="text-center text-gray-500 py-4">No feature importance data available</p>';
                 return;
             }
             
             const sortedFeatures = Object.entries(features)
                 .sort(([,a], [,b]) => b - a)
-                .slice(0, 6);
+                .slice(0, 5);
+            
+            const colors = [
+                'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+                'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+            ];
             
             let html = '<div class="space-y-4">';
             
-            sortedFeatures.forEach(([feature, importance]) => {
+            sortedFeatures.forEach(([feature, importance], index) => {
                 const percentage = (importance * 100).toFixed(1);
                 html += `
-                    <div>
-                        <div class="flex items-center justify-between mb-1">
-                            <div class="text-sm font-medium text-gray-700">${formatFeatureName(feature)}</div>
-                            <div class="text-sm text-gray-600">${percentage}%</div>
+                    <div class="group">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="text-sm font-semibold text-gray-700">${formatFeatureName(feature)}</div>
+                            <div class="text-sm font-bold text-purple-600">${percentage}%</div>
                         </div>
-                        <div class="w-full bg-gray-200 rounded-full h-3 feature-bar">
-                            <div class="feature-fill" style="width: ${percentage}%"></div>
+                        <div class="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                            <div class="h-full rounded-full transition-all duration-1000 ease-out" 
+                                 style="width: ${percentage}%; background: ${colors[index % colors.length]}"></div>
                         </div>
                     </div>
                 `;
@@ -473,20 +839,6 @@
             
             html += '</div>';
             container.innerHTML = html;
-        }
-
-        // Update user statistics
-        function updateUserStatistics(data) {
-            const stats = data.user_statistics || {};
-            
-            document.getElementById('avgGPA').textContent = 
-                stats.average_gpa ? stats.average_gpa.toFixed(2) : '--';
-            document.getElementById('commonStudyHours').textContent = 
-                stats.common_study_hours || '--';
-            document.getElementById('avgSleepHours').textContent = 
-                stats.average_sleep_hours ? stats.average_sleep_hours.toFixed(1) : '--';
-            document.getElementById('reviewCenterRate').textContent = 
-                stats.review_center_rate ? `${stats.review_center_rate}%` : '--';
         }
 
         // Initialize trend chart
@@ -499,32 +851,67 @@
                     datasets: [{
                         label: 'Pass Likelihood (%)',
                         data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                        borderColor: 'rgba(37, 99, 235, 1)',
-                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
                         tension: 0.4,
                         fill: true,
-                        pointRadius: 5,
-                        pointBackgroundColor: 'rgba(37, 99, 235, 1)',
+                        pointRadius: 6,
+                        pointBackgroundColor: 'rgba(102, 126, 234, 1)',
                         pointBorderColor: '#fff',
-                        pointBorderWidth: 2
+                        pointBorderWidth: 3,
+                        pointHoverRadius: 8
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: {
+                        duration: 2000,
+                        easing: 'easeInOutQuart',
+                        delay: (context) => {
+                            let delay = 0;
+                            if (context.type === 'data' && context.mode === 'default') {
+                                delay = context.dataIndex * 100;
+                            }
+                            return delay;
+                        }
+                    },
+                    transitions: {
+                        active: {
+                            animation: {
+                                duration: 400
+                            }
+                        }
+                    },
                     plugins: {
                         legend: { display: false },
                         tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            padding: 12,
-                            titleFont: { size: 14 },
-                            bodyFont: { size: 13 }
+                            backgroundColor: 'rgba(31, 41, 55, 0.95)',
+                            padding: 16,
+                            titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 13 },
+                            cornerRadius: 12,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Pass Likelihood: ' + context.parsed.y + '%';
+                                }
+                            }
                         }
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
                     },
                     scales: {
                         x: {
-                            grid: { display: false },
-                            ticks: { font: { size: 11 } }
+                            grid: { 
+                                display: false 
+                            },
+                            ticks: { 
+                                font: { size: 11 },
+                                color: '#6B7280'
+                            }
                         },
                         y: {
                             beginAtZero: true,
@@ -532,10 +919,12 @@
                             ticks: {
                                 stepSize: 20,
                                 callback: value => value + '%',
-                                font: { size: 11 }
+                                font: { size: 11 },
+                                color: '#6B7280'
                             },
                             grid: {
-                                color: 'rgba(0, 0, 0, 0.05)'
+                                color: 'rgba(0, 0, 0, 0.05)',
+                                drawBorder: false
                             }
                         }
                     }
@@ -549,7 +938,7 @@
             
             trendChart.data.labels = data.trend_data.labels || trendChart.data.labels;
             trendChart.data.datasets[0].data = data.trend_data.values || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-            trendChart.update('active');
+            trendChart.update('show');
         }
 
         // Update last updated timestamp
@@ -575,7 +964,6 @@
                 a.click();
                 window.URL.revokeObjectURL(url);
                 document.body.removeChild(a);
-                showMessage('CSV file downloaded successfully', 'success');
             } catch (error) {
                 console.error('Error downloading CSV:', error);
                 showMessage('Failed to download CSV file', 'error');
@@ -585,7 +973,6 @@
         // Generate PDF
         async function generatePDF() {
             try {
-                showMessage('Generating PDF report...', 'info');
                 const response = await fetch(API_URLS.exportPDF);
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
@@ -596,7 +983,6 @@
                 a.click();
                 window.URL.revokeObjectURL(url);
                 document.body.removeChild(a);
-                showMessage('PDF report generated successfully', 'success');
             } catch (error) {
                 console.error('Error generating PDF:', error);
                 showMessage('Failed to generate PDF report', 'error');
@@ -639,6 +1025,41 @@
                 messageEl.remove();
             }, 5000);
         }
+
+        // Mobile menu functionality
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const closeMobileMenu = document.getElementById('closeMobileMenu');
+        const mobileSidebar = document.getElementById('mobileSidebar');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+
+        function openMobileMenu() {
+            mobileSidebar.classList.add('active');
+            mobileOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileMenuHandler() {
+            mobileSidebar.classList.remove('active');
+            mobileOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', openMobileMenu);
+        }
+
+        if (closeMobileMenu) {
+            closeMobileMenu.addEventListener('click', closeMobileMenuHandler);
+        }
+
+        if (mobileOverlay) {
+            mobileOverlay.addEventListener('click', closeMobileMenuHandler);
+        }
+
+        // Close mobile menu when clicking on a nav link
+        document.querySelectorAll('.mobile-menu .nav-item').forEach(link => {
+            link.addEventListener('click', closeMobileMenuHandler);
+        });
 
         // Auto-refresh every 60 seconds
         setInterval(loadDashboardData, 60000);
