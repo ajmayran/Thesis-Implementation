@@ -1,24 +1,26 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from .forms import PredictionForm
+from .models import Prediction, PredictionHistory
 import json
 import sys
 import os
 import traceback
 import pandas as pd
-from .models import PredictionHistory
 
 models_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'models')
 sys.path.append(models_path)
 
-from .forms import PredictionForm
 from .utils import load_selected_model, prepare_input_data, generate_recommendations, get_risk_level
 
-SELECTED_MODEL_NAME = 'ramdom_forest'  
-SELECTED_MODEL_TYPE = 'base'  
+SELECTED_MODEL_NAME = 'random_forest'
+SELECTED_MODEL_TYPE = 'base'
 
+@login_required
 def predict_view(request):
     if request.method == 'POST':
         form = PredictionForm(request.POST)
@@ -53,7 +55,26 @@ def predict_view(request):
                 recommendations = generate_recommendations(input_data, pass_probability)
                 risk_info = get_risk_level(pass_probability)
                 
+                prediction_obj = Prediction.objects.create(
+                    user=request.user,
+                    age=input_data['Age'],
+                    gender=input_data['Gender'],
+                    gpa=input_data['GPA'],
+                    internship_grade=input_data['InternshipGrade'],
+                    study_hours=input_data['StudyHours'],
+                    sleep_hours=input_data['SleepHours'],
+                    review_center=bool(input_data['ReviewCenter']),
+                    confidence=input_data['Confidence'],
+                    mock_exam_score=input_data.get('MockExamScore'),
+                    scholarship=bool(input_data['Scholarship']),
+                    income_level=input_data['IncomeLevel'],
+                    employment_status=input_data['EmploymentStatus'],
+                    prediction_result='PASS' if predicted_class == 1 else 'FAIL',
+                    probability=pass_probability * 100
+                )
+                
                 PredictionHistory.objects.create(
+                    user=request.user,
                     age=input_data['Age'],
                     gender=input_data['Gender'],
                     study_hours=input_data['StudyHours'],
@@ -66,7 +87,7 @@ def predict_view(request):
                     internship_grade=input_data['InternshipGrade'],
                     income_level=input_data['IncomeLevel'],
                     employment_status=input_data['EmploymentStatus'],
-                    avg_probability=pass_probability,
+                    avg_probability=pass_probability * 100,
                     risk_level=risk_info['level'],
                     base_predictions={'selected_model': prediction_result},
                     ensemble_predictions=None,
@@ -74,17 +95,8 @@ def predict_view(request):
                     user_agent=request.META.get('HTTP_USER_AGENT')
                 )
                 
-                request.session['prediction_results'] = {
-                    'input_data': input_data,
-                    'prediction': prediction_result,
-                    'model_name': SELECTED_MODEL_NAME,
-                    'model_type': SELECTED_MODEL_TYPE,
-                    'recommendations': recommendations,
-                    'avg_probability': pass_probability * 100,
-                    'risk_info': risk_info
-                }
-                
-                return redirect('prediction:result')
+                messages.success(request, 'Prediction completed successfully!')
+                return redirect('prediction:result', prediction_id=prediction_obj.id)
                 
             except Exception as e:
                 messages.error(request, f'Prediction error: {str(e)}')
@@ -95,32 +107,53 @@ def predict_view(request):
     
     return render(request, 'pages/predict.html', {'form': form})
 
-def result_view(request):
-    results = request.session.get('prediction_results')
+@login_required
+def result_view(request, prediction_id):
+    prediction = get_object_or_404(Prediction, id=prediction_id, user=request.user)
     
-    if not results:
-        messages.warning(request, 'No prediction results found. Please submit the form first.')
-        return redirect('prediction:predict')
+    input_data = {
+        'Age': prediction.age,
+        'Gender': prediction.gender,
+        'GPA': prediction.gpa,
+        'InternshipGrade': prediction.internship_grade,
+        'StudyHours': prediction.study_hours,
+        'SleepHours': prediction.sleep_hours,
+        'ReviewCenter': prediction.review_center,
+        'Confidence': prediction.confidence,
+        'MockExamScore': prediction.mock_exam_score,
+        'Scholarship': prediction.scholarship,
+        'IncomeLevel': prediction.income_level,
+        'EmploymentStatus': prediction.employment_status,
+    }
     
-    if 'avg_probability' not in results:
-        request.session.flush()
-        messages.warning(request, 'Session expired. Please submit the prediction form again.')
-        return redirect('prediction:predict')
+    recommendations = generate_recommendations(input_data, prediction.probability / 100)
+    risk_info = get_risk_level(prediction.probability / 100)
     
     return render(request, 'pages/result.html', {
-        'input_data': results['input_data'],
-        'predictions': {
-            'base_models': {
-                results['model_name']: results['prediction']
-            },
-            'ensemble_models': {}
-        },
-        'model_name': results['model_name'],
-        'model_type': results['model_type'],
-        'recommendations': results['recommendations'],
-        'avg_probability': results['avg_probability'],
-        'risk_info': results['risk_info']
+        'prediction': prediction,
+        'input_data': input_data,
+        'recommendations': recommendations,
+        'avg_probability': prediction.probability,
+        'risk_info': risk_info
     })
+
+@login_required
+def history(request):
+    predictions = Prediction.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'pages/history.html', {'predictions': predictions})
+
+@login_required
+def detail_view(request, prediction_id):
+    prediction = get_object_or_404(Prediction, id=prediction_id, user=request.user)
+    return redirect('prediction:result', prediction_id=prediction.id)
+
+@login_required
+@require_http_methods(["POST"])
+def delete_prediction(request, prediction_id):
+    prediction = get_object_or_404(Prediction, id=prediction_id, user=request.user)
+    prediction.delete()
+    messages.success(request, 'Prediction deleted successfully.')
+    return redirect('prediction:history')
 
 @csrf_exempt
 @require_http_methods(["POST"])

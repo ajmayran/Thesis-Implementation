@@ -6,13 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Social Work Licensure Exam Predictor - Dashboard</title>
     
-    <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     
     <style>
@@ -48,11 +43,6 @@
 
         .nav-item.active {
             background: #232b47;
-        }
-
-        .small-card {
-            border-radius: 10px;
-            padding: 18px;
         }
 
         .feature-bar {
@@ -111,6 +101,12 @@
         .stat-trend.down {
             color: #ef4444;
         }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
     </style>
 </head>
 
@@ -118,7 +114,6 @@
     
     <div class="flex min-h-screen">
         
-        <!-- Sidebar -->
         <aside class="sidebar w-64 text-white p-6 hidden md:block">
             <div class="flex items-center mb-8">
                 <div class="mr-3 bg-white/10 p-2 rounded-lg">
@@ -142,8 +137,8 @@
                 <a href="#" class="flex items-center p-3 nav-item rounded text-sm">
                     <i class="fa-solid fa-file-export mr-3 w-5"></i>Export
                 </a>
-                <a href="#" class="flex items-center p-3 nav-item rounded text-sm">
-                    <i class="fa-solid fa-gear mr-3 w-5"></i>Settings
+                <a href="{% url 'accounts:logout' %}" class="flex items-center p-3 nav-item rounded text-sm text-red-300 hover:bg-red-900/20">
+                    <i class="fa-solid fa-right-from-bracket mr-3 w-5"></i>Logout
                 </a>
             </nav>
 
@@ -153,20 +148,15 @@
             </div>
         </aside>
 
-        <!-- Main content -->
         <div class="flex-1">
             
-            <!-- Top bar -->
             <header class="bg-white p-4 md:pl-8 md:pr-8 flex items-center justify-between shadow-sm">
                 <div class="text-xl font-semibold">Social Work Licensure Exam Predictor</div>
                 <div class="flex items-center space-x-4">
-                    <button class="hidden md:inline-flex items-center bg-slate-700 hover:bg-slate-600 p-3 rounded text-sm text-white transition">
-                        <i class="fa-solid fa-magnifying-glass mr-2"></i>Search
-                    </button>
                     <button id="refreshBtn" class="hidden md:inline-flex items-center bg-blue-600 hover:bg-blue-700 p-3 rounded text-sm text-white transition" title="Refresh Data">
                         <i class="fa-solid fa-arrows-rotate mr-2"></i>Refresh
                     </button>
-                    <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center cursor-pointer hover:bg-slate-600 transition">
+                    <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center">
                         <i class="fa-solid fa-user text-white"></i>
                     </div>
                 </div>
@@ -174,10 +164,8 @@
 
             <main class="p-6 md:p-8">
                 
-                <!-- Messages -->
                 <div id="messageContainer"></div>
 
-                <!-- KPI Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                     
                     <div class="kpi-card glass p-6 bg-gradient-to-br from-green-500 to-green-600 text-white">
@@ -214,13 +202,10 @@
 
                 </div>
 
-                <!-- Main panels -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                    <!-- Left column: Model metrics + trend chart + action buttons -->
                     <div class="lg:col-span-2 space-y-6">
 
-                        <!-- Model Performance Metrics -->
                         <div class="glass p-6">
                             <div class="flex items-center justify-between mb-4">
                                 <h2 class="text-lg font-semibold uppercase tracking-wide">Model Performance Metrics</h2>
@@ -251,13 +236,13 @@
                             </div>
                         </div>
 
-                        <!-- Prediction Trends Chart -->
                         <div class="glass p-6">
-                            <h3 class="text-lg font-semibold mb-4 uppercase tracking-wide">Prediction Trends</h3>
-                            <canvas id="trendChart" height="120"></canvas>
+                            <h3 class="text-lg font-semibold mb-4 uppercase tracking-wide">Prediction Trends (Last 12 Months)</h3>
+                            <div class="chart-container">
+                                <canvas id="trendChart"></canvas>
+                            </div>
                         </div>
 
-                        <!-- Action Buttons -->
                         <div class="flex gap-4">
                             <button id="downloadCsvBtn" class="flex-1 bg-white border-2 border-gray-300 hover:border-gray-400 py-3 rounded-lg text-gray-700 font-semibold transition flex items-center justify-center">
                                 <i class="fa-solid fa-file-csv mr-2"></i>Download CSV
@@ -269,10 +254,8 @@
 
                     </div>
 
-                    <!-- Right column: Feature importance + statistics -->
                     <div class="space-y-6">
 
-                        <!-- Feature Importance -->
                         <div class="glass p-6">
                             <h3 class="text-lg font-semibold mb-4 uppercase tracking-wide">Feature Importance</h3>
                             <div id="featureImportanceContainer">
@@ -283,7 +266,6 @@
                             </div>
                         </div>
 
-                        <!-- User Input Statistics -->
                         <div class="glass p-6">
                             <h3 class="text-lg font-semibold mb-4 uppercase tracking-wide">User Input Statistics</h3>
                             <div class="space-y-3" id="userStatsContainer">
@@ -306,16 +288,15 @@
                             </div>
                         </div>
 
-                        <!-- Model Status -->
                         <div class="glass p-6">
                             <h3 class="text-lg font-semibold mb-4 uppercase tracking-wide">Model Status</h3>
                             <div class="space-y-3" id="modelStatusContainer">
                                 <div class="flex items-center justify-between text-sm">
-                                    <span class="text-gray-600">Base Models</span>
-                                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold">READY</span>
+                                    <span class="text-gray-600">Active Model</span>
+                                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold" id="activeModel">Random Forest</span>
                                 </div>
                                 <div class="flex items-center justify-between text-sm">
-                                    <span class="text-gray-600">Ensemble Models</span>
+                                    <span class="text-gray-600">Model Status</span>
                                     <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold">READY</span>
                                 </div>
                                 <div class="flex items-center justify-between text-sm">
@@ -335,39 +316,31 @@
     </div>
 
     <script>
-        // CSRF Token
         function getCsrfToken() {
             return document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
                    document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
         }
 
-        // API URLs
         const API_URLS = {
-            dashboardStats: '/api/dashboard/stats/',
-            modelStatus: '/api/prediction/model-status/',
-            exportCSV: '/api/dashboard/export-csv/',
-            exportPDF: '/api/dashboard/export-pdf/'
+            dashboardStats: '/dashboard/api/dashboard/stats/',
+            exportCSV: '/dashboard/api/dashboard/export-csv/',
+            exportPDF: '/dashboard/api/dashboard/export-pdf/'
         };
 
-        // Global variables
         let trendChart = null;
         let dashboardData = null;
 
-        // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
             loadDashboardData();
             setupEventListeners();
-            initializeTrendChart();
         });
 
-        // Setup event listeners
         function setupEventListeners() {
             document.getElementById('refreshBtn')?.addEventListener('click', loadDashboardData);
             document.getElementById('downloadCsvBtn')?.addEventListener('click', downloadCSV);
             document.getElementById('generatePdfBtn')?.addEventListener('click', generatePDF);
         }
 
-        // Load dashboard data
         async function loadDashboardData() {
             try {
                 showLoading();
@@ -382,7 +355,7 @@
                 updateModelMetrics(data);
                 updateFeatureImportance(data);
                 updateUserStatistics(data);
-                updateTrendChart(data);
+                initOrUpdateTrendChart(data);
                 updateLastUpdated();
                 
                 showMessage('Dashboard data loaded successfully', 'success');
@@ -395,7 +368,6 @@
             }
         }
 
-        // Update KPI Cards
         function updateKPICards(data) {
             const kpi = data.kpi_metrics || {};
             
@@ -411,7 +383,6 @@
             document.getElementById('likelyToPass').textContent = 
                 (kpi.likely_to_pass || 0).toLocaleString();
             
-            // Update trends (optional - add if backend provides trend data)
             if (kpi.trends) {
                 document.getElementById('totalPredictionsTrend').textContent = 
                     `↑ ${kpi.trends.predictions || 0}% from last month`;
@@ -424,7 +395,6 @@
             }
         }
 
-        // Update model metrics
         function updateModelMetrics(data) {
             const perf = data.model_performance || {};
             
@@ -440,7 +410,6 @@
                 perf.auc ? perf.auc.toFixed(2) : '--';
         }
 
-        // Update feature importance
         function updateFeatureImportance(data) {
             const container = document.getElementById('featureImportanceContainer');
             const features = data.feature_importance || {};
@@ -475,7 +444,6 @@
             container.innerHTML = html;
         }
 
-        // Update user statistics
         function updateUserStatistics(data) {
             const stats = data.user_statistics || {};
             
@@ -489,70 +457,77 @@
                 stats.review_center_rate ? `${stats.review_center_rate}%` : '--';
         }
 
-        // Initialize trend chart
-        function initializeTrendChart() {
-            const ctx = document.getElementById('trendChart').getContext('2d');
-            trendChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                    datasets: [{
-                        label: 'Pass Likelihood (%)',
-                        data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                        borderColor: 'rgba(37, 99, 235, 1)',
-                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        pointRadius: 5,
-                        pointBackgroundColor: 'rgba(37, 99, 235, 1)',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            padding: 12,
-                            titleFont: { size: 14 },
-                            bodyFont: { size: 13 }
-                        }
+        function initOrUpdateTrendChart(data) {
+            const ctx = document.getElementById('trendChart');
+            if (!ctx) return;
+
+            const trendData = data.trend_data || {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                values: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            };
+
+            if (trendChart) {
+                trendChart.data.labels = trendData.labels;
+                trendChart.data.datasets[0].data = trendData.values;
+                trendChart.update();
+            } else {
+                trendChart = new Chart(ctx.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: trendData.labels,
+                        datasets: [{
+                            label: 'Pass Likelihood (%)',
+                            data: trendData.values,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#3b82f6',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2
+                        }]
                     },
-                    scales: {
-                        x: {
-                            grid: { display: false },
-                            ticks: { font: { size: 11 } }
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                padding: 12,
+                                titleFont: { size: 14 },
+                                bodyFont: { size: 13 },
+                                callbacks: {
+                                    label: function(context) {
+                                        return 'Likelihood: ' + context.parsed.y.toFixed(1) + '%';
+                                    }
+                                }
+                            }
                         },
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: {
-                                stepSize: 20,
-                                callback: value => value + '%',
-                                font: { size: 11 }
+                        scales: {
+                            x: {
+                                grid: { display: false },
+                                ticks: { font: { size: 11 } }
                             },
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.05)'
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    stepSize: 20,
+                                    callback: value => value + '%',
+                                    font: { size: 11 }
+                                },
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
+            }
         }
 
-        // Update trend chart
-        function updateTrendChart(data) {
-            if (!trendChart || !data.trend_data) return;
-            
-            trendChart.data.labels = data.trend_data.labels || trendChart.data.labels;
-            trendChart.data.datasets[0].data = data.trend_data.values || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-            trendChart.update('active');
-        }
-
-        // Update last updated timestamp
         function updateLastUpdated() {
             const now = new Date();
             const timeStr = now.toLocaleTimeString('en-US', { 
@@ -560,9 +535,13 @@
                 minute: '2-digit' 
             });
             document.getElementById('lastUpdated').textContent = `Updated: Today, ${timeStr}`;
+            
+            const latestModelPerformance = dashboardData?.model_performance;
+            if (latestModelPerformance) {
+                document.getElementById('lastTrained').textContent = 'Recently';
+            }
         }
 
-        // Download CSV
         async function downloadCSV() {
             try {
                 const response = await fetch(API_URLS.exportCSV);
@@ -582,7 +561,6 @@
             }
         }
 
-        // Generate PDF
         async function generatePDF() {
             try {
                 showMessage('Generating PDF report...', 'info');
@@ -603,7 +581,6 @@
             }
         }
 
-        // Utility functions
         function formatFeatureName(name) {
             return name.replace(/_/g, ' ')
                 .split(' ')
@@ -612,17 +589,15 @@
         }
 
         function showLoading() {
-            // Keep loading indicators in KPI cards
         }
 
         function hideLoading() {
-            // Loading handled by data update
         }
 
         function showMessage(message, type = 'info') {
             const container = document.getElementById('messageContainer');
             const messageClass = type === 'error' ? 'error-message' : 
-                               type === 'success' ? 'success-message' : 'info-message';
+                               type === 'success' ? 'success-message' : 'success-message';
             
             const messageEl = document.createElement('div');
             messageEl.className = messageClass;
@@ -640,7 +615,6 @@
             }, 5000);
         }
 
-        // Auto-refresh every 60 seconds
         setInterval(loadDashboardData, 60000);
     </script>
 

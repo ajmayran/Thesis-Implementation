@@ -1,11 +1,43 @@
 from django.db import models
 from django.utils import timezone
-import json
+from django.conf import settings
+
+class Prediction(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='predictions')
+    
+    age = models.IntegerField()
+    gender = models.CharField(max_length=10)
+    gpa = models.FloatField()
+    internship_grade = models.FloatField()
+    study_hours = models.IntegerField()
+    sleep_hours = models.IntegerField()
+    review_center = models.BooleanField(default=False)
+    confidence = models.IntegerField()
+    mock_exam_score = models.FloatField(null=True, blank=True)
+    scholarship = models.BooleanField(default=False)
+    income_level = models.CharField(max_length=20)
+    employment_status = models.CharField(max_length=20)
+    
+    prediction_result = models.CharField(max_length=10)
+    probability = models.FloatField()
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'prediction_history'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['-created_at']),
+            models.Index(fields=['user', '-created_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.get_full_name()} - {self.prediction_result} ({self.probability:.2f}%)"
 
 class PredictionHistory(models.Model):
-    """Store prediction history for analytics"""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='prediction_histories')
     
-    # Input Data
     age = models.IntegerField()
     gender = models.CharField(max_length=10)
     study_hours = models.IntegerField()
@@ -19,19 +51,18 @@ class PredictionHistory(models.Model):
     income_level = models.CharField(max_length=20)
     employment_status = models.CharField(max_length=20)
     
-    # Prediction Results
     avg_probability = models.FloatField()
     risk_level = models.CharField(max_length=20)
-    base_predictions = models.JSONField()  # Store as JSON
+    base_predictions = models.JSONField()
     ensemble_predictions = models.JSONField(null=True, blank=True)
     
-    # Metadata
     created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     user_agent = models.TextField(null=True, blank=True)
     
     class Meta:
-        db_table = 'prediction_history'
+        db_table = 'prediction_history_legacy'
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['-created_at']),
@@ -43,17 +74,13 @@ class PredictionHistory(models.Model):
     
     @property
     def prediction_outcome(self):
-        """Get predicted outcome"""
         return "Pass" if self.avg_probability >= 50 else "Fail"
     
     @property
     def is_high_risk(self):
-        """Check if high risk"""
         return self.avg_probability < 50
 
 class ModelPerformance(models.Model):
-    """Track model performance metrics"""
-    
     model_name = models.CharField(max_length=50)
     model_type = models.CharField(max_length=20, choices=[
         ('base', 'Base Model'),

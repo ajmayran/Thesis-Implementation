@@ -6,6 +6,7 @@ app_name = 'dashboard'
 urlpatterns = [
     # Web pages
     path('', views.dashboard_home, name='home'),
+    path('student/', views.student_dashboard, name='student_dashboard'),
     
     # API endpoints
     path('api/dashboard/stats/', views.dashboard_stats, name='api_stats'),
