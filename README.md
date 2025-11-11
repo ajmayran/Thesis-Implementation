@@ -106,14 +106,6 @@ python manage.py test
 ```
 
 
-## Troubleshooting
-
-| Issue | Possible Cause | Fix |
-|-------|----------------|-----|
-| ImportError / ModuleNotFoundError | Virtual environment not active | Activate venv or reinstall requirements |
-| openpyxl version error | Typo in requirements (`=>`) | Change to `>=` and reinstall |
-| Static files not served in production | Missing `collectstatic` or WhiteNoise config | Run `collectstatic`; verify `MIDDLEWARE` settings |
-| CORS errors in browser | Missing/incorrect CORS config | Check `django-cors-headers` setup |
 
 ## Members
 - Alvan Jay Mayran
