@@ -25,15 +25,11 @@ class Prediction(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        db_table = 'prediction_history'
+        db_table = 'predictions'
         ordering = ['-created_at']
-        indexes = [
-            models.Index(fields=['-created_at']),
-            models.Index(fields=['user', '-created_at']),
-        ]
     
     def __str__(self):
-        return f"{self.user.get_full_name()} - {self.prediction_result} ({self.probability:.2f}%)"
+        return f"{self.user.username} - {self.prediction_result} ({self.probability:.2f}%)"
 
 class PredictionHistory(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='prediction_histories')
@@ -62,28 +58,18 @@ class PredictionHistory(models.Model):
     user_agent = models.TextField(null=True, blank=True)
     
     class Meta:
-        db_table = 'prediction_history_legacy'
+        db_table = 'prediction_history'
         ordering = ['-created_at']
-        indexes = [
-            models.Index(fields=['-created_at']),
-            models.Index(fields=['risk_level']),
-        ]
+        verbose_name = 'Prediction History'
+        verbose_name_plural = 'Prediction Histories'
     
     def __str__(self):
-        return f"Prediction {self.id} - {self.avg_probability:.1f}% ({self.created_at})"
-    
-    @property
-    def prediction_outcome(self):
-        return "Pass" if self.avg_probability >= 50 else "Fail"
-    
-    @property
-    def is_high_risk(self):
-        return self.avg_probability < 50
+        return f"{self.user.username} - {self.risk_level} ({self.created_at})"
 
 class ModelPerformance(models.Model):
     model_name = models.CharField(max_length=50)
     model_type = models.CharField(max_length=20, choices=[
-        ('base', 'Base Model'),
+        ('classification', 'Classification Model'),
         ('ensemble', 'Ensemble Model')
     ])
     accuracy = models.FloatField()
@@ -100,7 +86,31 @@ class ModelPerformance(models.Model):
     class Meta:
         db_table = 'model_performance'
         ordering = ['-trained_at']
-        unique_together = ['model_name', 'trained_at']
+        unique_together = [['model_name', 'trained_at']]
     
     def __str__(self):
-        return f"{self.model_name} - Accuracy: {self.accuracy:.2%}"
+        return f"{self.model_name} ({self.model_type}) - Accuracy: {self.accuracy:.2f}%"
+
+class RegressionModelPerformance(models.Model):
+    model_name = models.CharField(max_length=50)
+    model_type = models.CharField(max_length=20, choices=[
+        ('regression', 'Regression Model'),
+        ('ensemble_regression', 'Ensemble Regression')
+    ])
+    rmse = models.FloatField()
+    mae = models.FloatField()
+    r2_score = models.FloatField()
+    mse = models.FloatField()
+    cv_rmse = models.FloatField(null=True, blank=True)
+    cv_std = models.FloatField(null=True, blank=True)
+    
+    trained_at = models.DateTimeField(default=timezone.now)
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        db_table = 'regression_model_performance'
+        ordering = ['-trained_at']
+        unique_together = [['model_name', 'trained_at']]
+    
+    def __str__(self):
+        return f"{self.model_name} ({self.model_type}) - RMSE: {self.rmse:.4f}"

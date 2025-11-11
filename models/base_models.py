@@ -727,25 +727,24 @@ class SocialWorkPredictorModels:
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         
-        fig, axes = plt.subplots(1, 3, figsize=(20, 6))
+        model_count = len(results)
+        fig, axes = plt.subplots(2, 3, figsize=(20, 12))
+        axes = axes.flatten()
         
         for idx, (model_name, result) in enumerate(results.items()):
             y_pred = result['y_pred']
             
-            # Create comparison plot
             comparison_df = pd.DataFrame({
                 'Index': range(len(self.y_test)),
                 'Actual': self.y_test,
                 'Predicted': y_pred
             })
             
-            # Plot actual vs predicted
             axes[idx].scatter(comparison_df['Index'], comparison_df['Actual'], 
                             alpha=0.6, label='Actual', color='blue', s=50)
             axes[idx].scatter(comparison_df['Index'], comparison_df['Predicted'], 
                             alpha=0.6, label='Predicted', color='red', s=30, marker='x')
             
-            # Highlight incorrect predictions
             incorrect_mask = self.y_test != y_pred
             if incorrect_mask.sum() > 0:
                 axes[idx].scatter(comparison_df[incorrect_mask]['Index'], 
@@ -757,7 +756,7 @@ class SocialWorkPredictorModels:
             axes[idx].set_xlabel('Test Sample Index', fontsize=10)
             axes[idx].set_ylabel('Class (0=Fail, 1=Pass)', fontsize=10)
             axes[idx].set_title(f'{model_name.upper()}\nAccuracy: {result["accuracy"]:.3f}', 
-                              fontsize=12, fontweight='bold')
+                            fontsize=12, fontweight='bold')
             axes[idx].legend(loc='upper right')
             axes[idx].grid(alpha=0.3)
             axes[idx].set_ylim(-0.2, 1.2)
@@ -766,7 +765,7 @@ class SocialWorkPredictorModels:
         plt.savefig(f'{output_dir}/prediction_comparison.png', dpi=300, bbox_inches='tight')
         print(f"\n[SAVED] Prediction comparison plot: {output_dir}/prediction_comparison.png")
         plt.close()
-    
+
     def generate_test_report(self, results, output_dir='model_comparison'):
         """Generate comprehensive test report in markdown"""
         report_path = f'{output_dir}/test_evaluation_report.md'
@@ -943,7 +942,7 @@ def main():
                 print(f"{i:2d}. {feature:<25s}: {importance:.4f}")
         
         # Save models
-        predictor.save_models('saved_base_models')
+        predictor.save_models('saved_models')
         
         print(f"\n[COMPLETE] Training completed successfully!")
         print(f"[OUTPUT] Files generated:")
