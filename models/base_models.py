@@ -26,7 +26,7 @@ class SocialWorkPredictorModels:
         
         # Features available BEFORE taking the exam
         self.categorical_columns = ['Gender', 'IncomeLevel', 'EmploymentStatus']
-        self.numerical_columns = ['Age', 'StudyHours', 'SleepHours', 'Confidence', 
+        self.numerical_columns = ['Age', 'StudyHours', 'SleepHours', 'Confidence', 'TestAnxiety',
                                 'MockExamScore', 'GPA', 'Scholarship', 'InternshipGrade']
         self.binary_columns = ['ReviewCenter']
         

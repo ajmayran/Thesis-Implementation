@@ -2,8 +2,8 @@
 
 ## Dataset Overview
 
-- **Original Shape:** (546, 14)
-- **Features:** 12
+- **Original Shape:** (546, 15)
+- **Features:** 13
 - **Target:** Passed
 - **Pass Rate:** 50.37%
 
@@ -11,19 +11,19 @@
 
 **Categorical Features (3):** Gender, IncomeLevel, EmploymentStatus
 
-**Numerical Features (8):** Age, StudyHours, SleepHours, Confidence, MockExamScore, GPA, Scholarship, InternshipGrade
+**Numerical Features (8):** Age, StudyHours, SleepHours, Confidence, MockExamScore, GPA, InternshipGrade, TestAnxiety
 
-**Binary Features (1):** ReviewCenter
+**Binary Features (2):** ReviewCenter, Scholarship
 
 ## Preprocessing Approaches
 
 ### Approach 1: OneHot Encoding + Standard Scaling
-- **Final Shape:** 15 features
+- **Final Shape:** 16 features
 - **Training Samples:** 436
 - **Test Samples:** 110
 
 ### Approach 2: Label Encoding + Standard Scaling
-- **Final Shape:** 12 features
+- **Final Shape:** 13 features
 - **Training Samples:** 436
 - **Test Samples:** 110
 
@@ -34,24 +34,24 @@
 - GPA: 6.7583
 - StudyHours: 3.7202
 - Gender: 2.9335
+- TestAnxiety: 2.8672
 - EmploymentStatus: 2.8265
 - InternshipGrade: 1.2623
 - Scholarship: 1.2167
+- Confidence: 0.6762
 - Age: 0.4606
-- IncomeLevel: 0.2255
-- ReviewCenter: 0.1721
 
 ### Pearson Correlation with Target
 - MockExamScore: r=0.1820, p=0.0013 (significant)
 - GPA: r=0.1108, p=0.0096 (significant)
 - StudyHours: r=0.0824, p=0.0543
 - Gender: r=-0.0732, p=0.0873
+- TestAnxiety: r=0.0724, p=0.0910
 - EmploymentStatus: r=-0.0719, p=0.0933
 - InternshipGrade: r=0.0481, p=0.2617
 - Scholarship: r=0.0472, p=0.2705
+- Confidence: r=0.0352, p=0.4113
 - Age: r=0.0291, p=0.4976
-- IncomeLevel: r=-0.0204, p=0.6351
-- ReviewCenter: r=0.0178, p=0.6784
 
 ## Data Quality Checks
 

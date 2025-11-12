@@ -2,7 +2,7 @@
   "data_stats": {
     "shape": [
       546,
-      14
+      15
     ],
     "missing_values": {
       "Age": 0,
@@ -10,13 +10,14 @@
       "StudyHours": 0,
       "SleepHours": 0,
       "ReviewCenter": 0,
-      "Confidence": 0,
       "MockExamScore": 235,
       "GPA": 0,
       "Scholarship": 0,
       "InternshipGrade": 0,
       "IncomeLevel": 0,
       "EmploymentStatus": 0,
+      "Confidence": 0,
+      "TestAnxiety": 0,
       "ExamResultPercent": 0,
       "Passed": 0
     },
@@ -75,13 +76,13 @@
       },
       "Confidence": {
         "count": 546.0,
-        "mean": 3.1263736263736264,
-        "std": 1.419574958858079,
+        "mean": 7.503663003663004,
+        "std": 1.6121628722285049,
         "min": 1.0,
-        "25%": 2.0,
-        "50%": 3.0,
-        "75%": 4.0,
-        "max": 5.0
+        "25%": 7.0,
+        "50%": 8.0,
+        "75%": 9.0,
+        "max": 10.0
       },
       "MockExamScore": {
         "count": 311.0,
@@ -103,16 +104,6 @@
         "75%": 2.75,
         "max": 3.9
       },
-      "Scholarship": {
-        "count": 546.0,
-        "mean": 0.532967032967033,
-        "std": 0.4993694986269055,
-        "min": 0.0,
-        "25%": 0.0,
-        "50%": 1.0,
-        "75%": 1.0,
-        "max": 1.0
-      },
       "InternshipGrade": {
         "count": 546.0,
         "mean": 2.058150183150183,
@@ -123,10 +114,30 @@
         "75%": 2.5,
         "max": 3.75
       },
+      "TestAnxiety": {
+        "count": 546.0,
+        "mean": 5.119047619047619,
+        "std": 2.950124209719675,
+        "min": 1.0,
+        "25%": 2.0,
+        "50%": 5.0,
+        "75%": 8.0,
+        "max": 10.0
+      },
       "ReviewCenter": {
         "count": 546.0,
         "mean": 0.5402930402930403,
         "std": 0.4988308406141343,
+        "min": 0.0,
+        "25%": 0.0,
+        "50%": 1.0,
+        "75%": 1.0,
+        "max": 1.0
+      },
+      "Scholarship": {
+        "count": 546.0,
+        "mean": 0.532967032967033,
+        "std": 0.4993694986269055,
         "min": 0.0,
         "25%": 0.0,
         "50%": 1.0,
@@ -143,12 +154,13 @@
       "Age": -0.001638628778128557,
       "StudyHours": -0.019752279476226098,
       "SleepHours": 0.030159773203276244,
-      "Confidence": -0.05778516907039404,
+      "Confidence": -0.03183052576609993,
       "MockExamScore": -0.04894159399356389,
       "GPA": -0.002591572089492882,
-      "Scholarship": -0.06583625080176403,
       "InternshipGrade": 0.012994905691076915,
+      "TestAnxiety": -0.014144143096118882,
       "ReviewCenter": 0.00029615227874137687,
+      "Scholarship": -0.06583625080176403,
       "Passed": -0.07323569470061685
     },
     "IncomeLevel": {
@@ -158,12 +170,13 @@
       "Age": 0.06746344491167305,
       "StudyHours": -0.08417530618061579,
       "SleepHours": 0.10720168209686858,
-      "Confidence": -0.013709517138265882,
+      "Confidence": -0.009115953929661054,
       "MockExamScore": 0.005784231870118595,
       "GPA": 0.06341744454961931,
-      "Scholarship": 0.01957308556252831,
       "InternshipGrade": 0.03517228557094184,
+      "TestAnxiety": 0.018651336822167054,
       "ReviewCenter": 0.014908826663199691,
+      "Scholarship": 0.01957308556252831,
       "Passed": -0.020356156378414796
     },
     "EmploymentStatus": {
@@ -173,12 +186,13 @@
       "Age": -0.0850338540505231,
       "StudyHours": -0.15787293238629202,
       "SleepHours": 0.08359917671328496,
-      "Confidence": -0.006476862424351983,
+      "Confidence": 0.0264323644830922,
       "MockExamScore": -0.08916443611742127,
       "GPA": -0.09960948639631613,
-      "Scholarship": -0.08121457976659445,
       "InternshipGrade": -0.03570028309779715,
+      "TestAnxiety": -0.04754611772402092,
       "ReviewCenter": -0.012203758175356528,
+      "Scholarship": -0.08121457976659445,
       "Passed": -0.07189576171883175
     },
     "Age": {
@@ -188,12 +202,13 @@
       "Age": 1.0,
       "StudyHours": 0.28547982932876265,
       "SleepHours": 0.00021889206811382718,
-      "Confidence": 0.11204105584493566,
+      "Confidence": 0.04641621217182693,
       "MockExamScore": 0.1060203863569812,
       "GPA": 0.22734375581504104,
-      "Scholarship": -0.013548077586527438,
       "InternshipGrade": 0.216978715417422,
+      "TestAnxiety": 0.0282839366005573,
       "ReviewCenter": 0.06551198644413746,
+      "Scholarship": -0.013548077586527438,
       "Passed": 0.029086246226783255
     },
     "StudyHours": {
@@ -203,12 +218,13 @@
       "Age": 0.28547982932876265,
       "StudyHours": 1.0,
       "SleepHours": -0.13714582276603102,
-      "Confidence": 0.07750895721106901,
+      "Confidence": -0.024639158184903358,
       "MockExamScore": 0.14744564841480984,
       "GPA": 0.213143865054459,
-      "Scholarship": 0.15258537004280948,
       "InternshipGrade": 0.31655153739199593,
+      "TestAnxiety": 0.01005181417931289,
       "ReviewCenter": 0.11063534473463084,
+      "Scholarship": 0.15258537004280948,
       "Passed": 0.08241447625716206
     },
     "SleepHours": {
@@ -218,28 +234,30 @@
       "Age": 0.00021889206811382718,
       "StudyHours": -0.13714582276603102,
       "SleepHours": 1.0,
-      "Confidence": -0.03787507919290391,
+      "Confidence": 0.0011906935441789693,
       "MockExamScore": 0.0142553547941106,
       "GPA": -0.05732978418682024,
-      "Scholarship": -0.12232641285196641,
       "InternshipGrade": 0.025860885289576325,
+      "TestAnxiety": 0.002608808057163824,
       "ReviewCenter": 0.016147979196399886,
+      "Scholarship": -0.12232641285196641,
       "Passed": 0.008185364684031145
     },
     "Confidence": {
-      "Gender": -0.05778516907039404,
-      "IncomeLevel": -0.013709517138265882,
-      "EmploymentStatus": -0.006476862424351983,
-      "Age": 0.11204105584493566,
-      "StudyHours": 0.07750895721106901,
-      "SleepHours": -0.03787507919290391,
+      "Gender": -0.03183052576609993,
+      "IncomeLevel": -0.009115953929661054,
+      "EmploymentStatus": 0.0264323644830922,
+      "Age": 0.04641621217182693,
+      "StudyHours": -0.024639158184903358,
+      "SleepHours": 0.0011906935441789693,
       "Confidence": 1.0,
-      "MockExamScore": 0.048109612412158095,
-      "GPA": 0.1286435594992539,
-      "Scholarship": 0.013524844626169893,
-      "InternshipGrade": 0.10212023607406367,
-      "ReviewCenter": 0.077008287391489,
-      "Passed": 0.0006386014110431784
+      "MockExamScore": -0.003773923825082872,
+      "GPA": 0.057833678324453845,
+      "InternshipGrade": 0.015764550444801562,
+      "TestAnxiety": -0.0010563378244074165,
+      "ReviewCenter": -0.06292812284164996,
+      "Scholarship": 0.010105893496846373,
+      "Passed": 0.03523421052240093
     },
     "MockExamScore": {
       "Gender": -0.04894159399356389,
@@ -248,12 +266,13 @@
       "Age": 0.1060203863569812,
       "StudyHours": 0.14744564841480984,
       "SleepHours": 0.0142553547941106,
-      "Confidence": 0.048109612412158095,
+      "Confidence": -0.003773923825082872,
       "MockExamScore": 1.0,
       "GPA": 0.19771786227173638,
-      "Scholarship": 0.1208316454658186,
       "InternshipGrade": 0.18823230085561876,
+      "TestAnxiety": 0.09248137699982242,
       "ReviewCenter": 0.1526039560743937,
+      "Scholarship": 0.1208316454658186,
       "Passed": 0.1820368119744996
     },
     "GPA": {
@@ -263,28 +282,14 @@
       "Age": 0.22734375581504104,
       "StudyHours": 0.213143865054459,
       "SleepHours": -0.05732978418682024,
-      "Confidence": 0.1286435594992539,
+      "Confidence": 0.057833678324453845,
       "MockExamScore": 0.19771786227173638,
       "GPA": 1.0,
-      "Scholarship": 0.06587040876395313,
       "InternshipGrade": 0.1887366006733647,
+      "TestAnxiety": 0.10705181552683841,
       "ReviewCenter": 0.10361144050452038,
+      "Scholarship": 0.06587040876395313,
       "Passed": 0.11077446455830822
-    },
-    "Scholarship": {
-      "Gender": -0.06583625080176403,
-      "IncomeLevel": 0.01957308556252831,
-      "EmploymentStatus": -0.08121457976659445,
-      "Age": -0.013548077586527438,
-      "StudyHours": 0.15258537004280948,
-      "SleepHours": -0.12232641285196641,
-      "Confidence": 0.013524844626169893,
-      "MockExamScore": 0.1208316454658186,
-      "GPA": 0.06587040876395313,
-      "Scholarship": 1.0,
-      "InternshipGrade": 0.11014297161197345,
-      "ReviewCenter": 0.07200004193275934,
-      "Passed": 0.047240074378527175
     },
     "InternshipGrade": {
       "Gender": 0.012994905691076915,
@@ -293,13 +298,30 @@
       "Age": 0.216978715417422,
       "StudyHours": 0.31655153739199593,
       "SleepHours": 0.025860885289576325,
-      "Confidence": 0.10212023607406367,
+      "Confidence": 0.015764550444801562,
       "MockExamScore": 0.18823230085561876,
       "GPA": 0.1887366006733647,
-      "Scholarship": 0.11014297161197345,
       "InternshipGrade": 1.0,
+      "TestAnxiety": 0.04051661759465612,
       "ReviewCenter": 0.09026201802491353,
+      "Scholarship": 0.1101429716119735,
       "Passed": 0.048114398853485875
+    },
+    "TestAnxiety": {
+      "Gender": -0.014144143096118882,
+      "IncomeLevel": 0.018651336822167054,
+      "EmploymentStatus": -0.04754611772402092,
+      "Age": 0.0282839366005573,
+      "StudyHours": 0.01005181417931289,
+      "SleepHours": 0.002608808057163824,
+      "Confidence": -0.0010563378244074165,
+      "MockExamScore": 0.09248137699982242,
+      "GPA": 0.10705181552683841,
+      "InternshipGrade": 0.04051661759465612,
+      "TestAnxiety": 1.0,
+      "ReviewCenter": 0.04723139677604325,
+      "Scholarship": 0.021618194598204705,
+      "Passed": 0.07240881752201317
     },
     "ReviewCenter": {
       "Gender": 0.00029615227874137687,
@@ -308,13 +330,30 @@
       "Age": 0.06551198644413746,
       "StudyHours": 0.11063534473463084,
       "SleepHours": 0.016147979196399886,
-      "Confidence": 0.077008287391489,
+      "Confidence": -0.06292812284164996,
       "MockExamScore": 0.1526039560743937,
       "GPA": 0.10361144050452038,
-      "Scholarship": 0.07200004193275934,
       "InternshipGrade": 0.09026201802491353,
+      "TestAnxiety": 0.04723139677604325,
       "ReviewCenter": 1.0,
+      "Scholarship": 0.07200004193275933,
       "Passed": 0.017782956106879907
+    },
+    "Scholarship": {
+      "Gender": -0.06583625080176403,
+      "IncomeLevel": 0.01957308556252831,
+      "EmploymentStatus": -0.08121457976659445,
+      "Age": -0.013548077586527438,
+      "StudyHours": 0.15258537004280948,
+      "SleepHours": -0.12232641285196641,
+      "Confidence": 0.010105893496846373,
+      "MockExamScore": 0.1208316454658186,
+      "GPA": 0.06587040876395313,
+      "InternshipGrade": 0.1101429716119735,
+      "TestAnxiety": 0.021618194598204705,
+      "ReviewCenter": 0.07200004193275933,
+      "Scholarship": 1.0,
+      "Passed": 0.047240074378527175
     },
     "Passed": {
       "Gender": -0.07323569470061685,
@@ -323,12 +362,13 @@
       "Age": 0.029086246226783255,
       "StudyHours": 0.08241447625716206,
       "SleepHours": 0.008185364684031145,
-      "Confidence": 0.0006386014110431784,
+      "Confidence": 0.03523421052240093,
       "MockExamScore": 0.1820368119744996,
       "GPA": 0.11077446455830822,
-      "Scholarship": 0.047240074378527175,
       "InternshipGrade": 0.048114398853485875,
+      "TestAnxiety": 0.07240881752201317,
       "ReviewCenter": 0.017782956106879907,
+      "Scholarship": 0.047240074378527175,
       "Passed": 1.0
     }
   },
@@ -365,8 +405,8 @@
         "significant": false
       },
       "Confidence": {
-        "correlation": 0.0006386014110432168,
-        "p_value": 0.9881217133203912,
+        "correlation": 0.035234210522400944,
+        "p_value": 0.41126273501200844,
         "significant": false
       },
       "MockExamScore": {
@@ -379,19 +419,24 @@
         "p_value": 0.009584442450658946,
         "significant": true
       },
-      "Scholarship": {
-        "correlation": 0.04724007437852716,
-        "p_value": 0.27049321885443056,
-        "significant": false
-      },
       "InternshipGrade": {
         "correlation": 0.04811439885348588,
         "p_value": 0.2617155790474468,
         "significant": false
       },
+      "TestAnxiety": {
+        "correlation": 0.07240881752201307,
+        "p_value": 0.0909719739536135,
+        "significant": false
+      },
       "ReviewCenter": {
         "correlation": 0.01778295610687991,
         "p_value": 0.678428548763622,
+        "significant": false
+      },
+      "Scholarship": {
+        "correlation": 0.04724007437852716,
+        "p_value": 0.27049321885443056,
         "significant": false
       }
     },
@@ -402,26 +447,28 @@
       "Age": 0.46061897557024434,
       "StudyHours": 3.720195478280859,
       "SleepHours": 0.03645054827994086,
-      "Confidence": 0.00022184968857499545,
+      "Confidence": 0.6761880309321953,
       "MockExamScore": 10.260035091771728,
       "GPA": 6.758345745996862,
-      "Scholarship": 1.2167190574582358,
       "InternshipGrade": 1.2622796566750734,
-      "ReviewCenter": 0.17208545836879588
+      "TestAnxiety": 2.867245120926335,
+      "ReviewCenter": 0.17208545836879588,
+      "Scholarship": 1.2167190574582358
     },
     "mutual_info": {
-      "Gender": 0.009148522341385412,
-      "IncomeLevel": 0.02151319267308871,
-      "EmploymentStatus": 0.0379271928257765,
+      "Gender": 0.0,
+      "IncomeLevel": 0.0,
+      "EmploymentStatus": 0.0,
       "Age": 0.0,
-      "StudyHours": 0.05332621329105436,
-      "SleepHours": 0.0,
-      "Confidence": 0.006029337903519449,
+      "StudyHours": 0.05240486588053428,
+      "SleepHours": 0.02762357617009492,
+      "Confidence": 0.0,
       "MockExamScore": 0.0,
-      "GPA": 0.042460335202325394,
-      "Scholarship": 0.0,
-      "InternshipGrade": 0.04758859264958759,
-      "ReviewCenter": 0.0
+      "GPA": 0.07680386611179046,
+      "InternshipGrade": 0.029480543291538153,
+      "TestAnxiety": 0.0,
+      "ReviewCenter": 0.03708457109595398,
+      "Scholarship": 0.019155909134486615
     },
     "chi_square": {
       "Gender": {
@@ -441,14 +488,14 @@
   "dataset_info": {
     "onehot_shape": [
       436,
-      15
+      16
     ],
     "label_shape": [
       436,
-      12
+      13
     ],
     "n_samples": 546,
-    "n_features_onehot": 15,
-    "n_features_label": 12
+    "n_features_onehot": 16,
+    "n_features_label": 13
   }
 }

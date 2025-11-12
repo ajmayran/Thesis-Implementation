@@ -56,6 +56,7 @@ def prepare_input_data(form_data):
         'SleepHours': int(form_data['sleep_hours']),
         'ReviewCenter': int(form_data['review_center']),
         'Confidence': int(form_data['confidence']),
+        'TestAnxiety': int(form_data['test_anxiety']),
         'MockExamScore': float(form_data['mock_exam_score']) if form_data.get('mock_exam_score') else None,
         'GPA': float(form_data['gpa']),
         'Scholarship': int(form_data['scholarship']),
@@ -64,61 +65,63 @@ def prepare_input_data(form_data):
         'EmploymentStatus': form_data['employment_status']
     }
 
-def generate_recommendations(input_data, pass_probability):
+def generate_recommendations(input_data, probability):
     recommendations = []
     
-    if pass_probability < 0.5:
+    if input_data['StudyHours'] < 5:
         recommendations.append({
-            'icon': 'fa-triangle-exclamation',
-            'color': 'red',
-            'title': 'High Risk - Immediate Action Needed',
-            'message': f'Your predicted pass probability is {pass_probability*100:.1f}%. Urgent intervention required.'
-        })
-    elif pass_probability < 0.7:
-        recommendations.append({
-            'icon': 'fa-exclamation-circle',
-            'color': 'orange',
-            'title': 'Moderate Risk - Improvement Needed',
-            'message': f'Your predicted pass probability is {pass_probability*100:.1f}%. Significant room for improvement.'
-        })
-    else:
-        recommendations.append({
-            'icon': 'fa-check-circle',
-            'color': 'green',
-            'title': 'Good Standing - Keep It Up!',
-            'message': f'Your predicted pass probability is {pass_probability*100:.1f}%. Maintain your current efforts.'
+            'type': 'critical',
+            'title': 'Increase Study Hours',
+            'message': 'Your daily study hours are below recommended levels. Aim for at least 5-6 hours.',
+            'icon': 'fa-book'
         })
     
-    if input_data.get('StudyHours', 0) < 8:
+    if input_data['SleepHours'] < 6:
         recommendations.append({
-            'icon': 'fa-book',
-            'color': 'blue',
-            'title': 'Increase Study Time',
-            'message': 'Students with 8-10 hours of daily study have significantly higher pass rates.'
-        })
-    
-    if input_data.get('SleepHours', 0) < 6:
-        recommendations.append({
-            'icon': 'fa-bed',
-            'color': 'purple',
+            'type': 'warning',
             'title': 'Improve Sleep Quality',
-            'message': 'Getting 7-8 hours of sleep improves memory retention and exam performance.'
+            'message': 'Adequate sleep (7-8 hours) is crucial for memory retention and exam performance.',
+            'icon': 'fa-bed'
         })
     
-    if input_data.get('ReviewCenter') == 0:
+    if input_data['ReviewCenter'] == 0:
         recommendations.append({
-            'icon': 'fa-school',
-            'color': 'blue',
+            'type': 'info',
             'title': 'Consider Review Center',
-            'message': 'Attending a review center increases pass likelihood by 25-30%.'
+            'message': 'Review centers provide structured learning and exam strategies.',
+            'icon': 'fa-chalkboard-teacher'
         })
     
-    if input_data.get('Confidence', 3) < 3:
+    if input_data['Confidence'] < 5:
         recommendations.append({
-            'icon': 'fa-brain',
-            'color': 'orange',
+            'type': 'warning',
             'title': 'Build Confidence',
-            'message': 'Practice mock exams regularly to boost confidence and identify weak areas.'
+            'message': 'Practice more mock exams and focus on weak areas to boost confidence.',
+            'icon': 'fa-chart-line'
+        })
+    
+    if input_data['TestAnxiety'] > 7:
+        recommendations.append({
+            'type': 'critical',
+            'title': 'Manage Test Anxiety',
+            'message': 'High anxiety can affect performance. Consider stress management techniques and counseling.',
+            'icon': 'fa-heart-pulse'
+        })
+    
+    if input_data.get('MockExamScore') and input_data['MockExamScore'] < 70:
+        recommendations.append({
+            'type': 'critical',
+            'title': 'Improve Mock Exam Scores',
+            'message': 'Your mock exam scores indicate areas needing improvement. Focus on weak topics.',
+            'icon': 'fa-clipboard-check'
+        })
+    
+    if input_data['GPA'] < 2.5:
+        recommendations.append({
+            'type': 'warning',
+            'title': 'Academic Foundation',
+            'message': 'Review fundamental concepts from your coursework to strengthen your foundation.',
+            'icon': 'fa-graduation-cap'
         })
     
     return recommendations
@@ -127,21 +130,22 @@ def get_risk_level(probability):
     if probability >= 0.75:
         return {
             'level': 'Low Risk',
-            'color': 'success',
-            'icon': 'fa-check-circle',
-            'message': 'High likelihood of passing'
+            'color': 'green',
+            'icon': 'fa-circle-check',
+            'description': 'High likelihood of passing'
         }
-    elif probability >= 0.5:
+    elif probability >= 0.50:
         return {
             'level': 'Moderate Risk',
-            'color': 'warning',
-            'icon': 'fa-exclamation-triangle',
-            'message': 'Fair chance of passing, improvement recommended'
+            'color': 'yellow',
+            'icon': 'fa-circle-exclamation',
+            'description': 'Moderate likelihood of passing'
         }
     else:
         return {
             'level': 'High Risk',
-            'color': 'danger',
-            'icon': 'fa-times-circle',
-            'message': 'Low likelihood of passing, urgent action needed'
+            'color': 'red',
+            'icon': 'fa-circle-xmark',
+            'description': 'Low likelihood of passing'
         }
+

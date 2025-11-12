@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Avg, Count, Q, Max, Min
 from django.db.models.functions import TruncMonth, ExtractMonth, ExtractYear
-from prediction.models import Prediction
+from prediction.models import Prediction, ModelPerformance
 from .models import DashboardStatistics, MonthlyTrend
 from django.utils import timezone
 import json
@@ -76,6 +76,7 @@ def calculate_dashboard_statistics():
         'ReviewCenter': 0.44,
         'SleepHours': 0.33,
         'Confidence': 0.28,
+        'TestAnxiety': 0.24,
         'MockExamScore': 0.25,
         'InternshipGrade': 0.22,
         'Scholarship': 0.18,
@@ -116,6 +117,7 @@ def calculate_dashboard_statistics():
         avg_study=Avg('study_hours'),
         avg_sleep=Avg('sleep_hours'),
         avg_confidence=Avg('confidence'),
+        avg_test_anxiety=Avg('test_anxiety'),
         avg_mock_score=Avg('mock_exam_score')
     )
     
@@ -132,6 +134,7 @@ def calculate_dashboard_statistics():
         'average_sleep_hours': round(user_stats['avg_sleep'] or 0, 1),
         'review_center_rate': round(review_center_rate, 1),
         'average_confidence': round(user_stats['avg_confidence'] or 0, 1),
+        'average_test_anxiety': round(user_stats['avg_test_anxiety'] or 0, 1),
         'average_mock_score': round(user_stats['avg_mock_score'] or 0, 1)
     }
     
@@ -239,7 +242,9 @@ def dashboard_stats(request):
                     'average_gpa': 0,
                     'common_study_hours': '0 hours',
                     'average_sleep_hours': 0,
-                    'review_center_rate': 0
+                    'review_center_rate': 0,
+                    'average_confidence': 0,
+                    'average_test_anxiety': 0
                 },
                 'trend_data': {
                     'labels': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
@@ -285,7 +290,7 @@ def export_csv(request):
         writer.writerow([
             'Student ID', 'Student Name', 'Email', 'Prediction Result', 
             'Probability (%)', 'GPA', 'Study Hours', 'Sleep Hours', 
-            'Review Center', 'Confidence', 'Mock Exam Score', 'Date'
+            'Review Center', 'Confidence', 'Test Anxiety', 'Mock Exam Score', 'Date'
         ])
         
         predictions = Prediction.objects.select_related('user').order_by('-created_at')
@@ -302,6 +307,7 @@ def export_csv(request):
                 pred.sleep_hours,
                 'Yes' if pred.review_center else 'No',
                 pred.confidence,
+                pred.test_anxiety,
                 f'{pred.mock_exam_score:.1f}' if pred.mock_exam_score else 'N/A',
                 pred.created_at.strftime('%Y-%m-%d %H:%M:%S')
             ])
@@ -422,6 +428,8 @@ def export_pdf(request):
                 ['Common Study Hours', user_stats['common_study_hours']],
                 ['Average Sleep Hours', f"{user_stats['average_sleep_hours']:.1f}"],
                 ['Review Center Rate', f"{user_stats['review_center_rate']:.1f}%"],
+                ['Average Confidence', f"{user_stats['average_confidence']:.1f}"],
+                ['Average Test Anxiety', f"{user_stats['average_test_anxiety']:.1f}"],
             ]
             
             user_table = Table(user_data, colWidths=[3*inch, 2*inch])
@@ -459,4 +467,3 @@ def export_pdf(request):
             'error': str(e),
             'message': 'Failed to generate PDF'
         }, status=500)
-    

@@ -8,7 +8,8 @@
   "Confidence",
   "MockExamScore",
   "GPA",
-  "Scholarship",
   "InternshipGrade",
-  "ReviewCenter"
+  "TestAnxiety",
+  "ReviewCenter",
+  "Scholarship"
 ]

@@ -100,13 +100,25 @@ class PredictionForm(forms.Form):
     confidence = forms.IntegerField(
         label='Confidence Level',
         min_value=1,
-        max_value=5,
+        max_value=10,
         widget=forms.NumberInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Rate 1-5 (1=Low, 5=High)',
+            'placeholder': 'Rate 1-10 (1=Very Low, 10=Very High)',
             'required': True
         }),
-        help_text='How confident are you about passing? (1-5 scale)'
+        help_text='How confident are you about passing? (1-10 scale)'
+    )
+    
+    test_anxiety = forms.IntegerField(
+        label='Test Anxiety Level',
+        min_value=1,
+        max_value=10,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Rate 1-10 (1=No Anxiety, 10=Extreme Anxiety)',
+            'required': True
+        }),
+        help_text='How anxious do you feel about the exam? (1-10 scale)'
     )
     
     mock_exam_score = forms.FloatField(
@@ -157,7 +169,6 @@ class PredictionForm(forms.Form):
         """Additional validation"""
         cleaned_data = super().clean()
         
-        # Validate study + sleep hours <= 24
         study_hours = cleaned_data.get('study_hours', 0)
         sleep_hours = cleaned_data.get('sleep_hours', 0)
         

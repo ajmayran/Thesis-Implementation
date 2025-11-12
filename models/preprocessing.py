@@ -18,7 +18,7 @@ class SocialWorkDataPreprocessor:
         self.feature_names = []
         self.categorical_columns = ['Gender', 'IncomeLevel', 'EmploymentStatus']
         self.numerical_columns = ['Age', 'StudyHours', 'SleepHours', 'Confidence', 
-                                'MockExamScore', 'GPA', 'InternshipGrade']
+                                'MockExamScore', 'GPA', 'InternshipGrade', 'TestAnxiety']
         self.binary_columns = ['ReviewCenter', 'Scholarship']
         self.target_column = 'Passed'
         
