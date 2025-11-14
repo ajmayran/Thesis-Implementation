@@ -669,7 +669,7 @@ def main():
         print("[INFO] Run base_models.py first")
         return
     
-    data = predictor.load_preprocessed_data(data_dir='processed_data', approach='label')
+    data = predictor.load_preprocessed_data(data_dir='classifictaion_processed_data', approach='label')
     
     if data is None:
         print("\n[ERROR] Could not load preprocessed data")
