@@ -32,7 +32,7 @@ class SocialWorkPredictorModels:
         
         self.target_column = 'Passed'
         
-    def load_preprocessed_data(self, data_dir='processed_data', approach='label'):
+    def load_preprocessed_data(self, data_dir='classification_processed_data', approach='label'):
         """Load preprocessed data from preprocessing.py output"""
         try:
             json_file = f'{data_dir}/dataset_{approach}.json'
@@ -897,7 +897,7 @@ def main():
     print("="*60)
     
     # Load preprocessed data
-    data = predictor.load_preprocessed_data(data_dir='processed_data', approach='label')
+    data = predictor.load_preprocessed_data(data_dir='classification_processed_data', approach='label')
     
     if data is None:
         print("\n[ERROR] Could not load preprocessed data!")

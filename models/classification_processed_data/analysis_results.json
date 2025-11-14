@@ -457,18 +457,18 @@
     },
     "mutual_info": {
       "Gender": 0.0,
-      "IncomeLevel": 0.0,
+      "IncomeLevel": 0.007132324711648819,
       "EmploymentStatus": 0.0,
-      "Age": 0.0,
-      "StudyHours": 0.05240486588053428,
-      "SleepHours": 0.02762357617009492,
+      "Age": 0.006131814791710655,
+      "StudyHours": 0.019030859712410253,
+      "SleepHours": 0.007369974271628443,
       "Confidence": 0.0,
       "MockExamScore": 0.0,
-      "GPA": 0.07680386611179046,
-      "InternshipGrade": 0.029480543291538153,
+      "GPA": 0.050304837536162106,
+      "InternshipGrade": 0.022557140265746733,
       "TestAnxiety": 0.0,
-      "ReviewCenter": 0.03708457109595398,
-      "Scholarship": 0.019155909134486615
+      "ReviewCenter": 0.03781029635707012,
+      "Scholarship": 0.0
     },
     "chi_square": {
       "Gender": {

@@ -455,7 +455,7 @@ class SocialWorkDataPreprocessor:
             'preprocessing_objects': preprocessing_objects
         }
 
-    def save_processed_data(self, processed_data, output_dir='processed_data'):
+    def save_processed_data(self, processed_data, output_dir='classification_processed_data'):
         """Save processed data in multiple formats"""
         print(f"\n[SAVING] Saving processed data to {output_dir}/...")
         

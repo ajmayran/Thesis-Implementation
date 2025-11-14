@@ -11,7 +11,7 @@ class RegressionPreprocessor:
         self.label_encoders = label_encoders
         self.scaler = scaler
         self.categorical_columns = ['Gender', 'IncomeLevel', 'EmploymentStatus']
-        self.numerical_columns = ['Age', 'StudyHours', 'SleepHours', 'Confidence', 
+        self.numerical_columns = ['Age', 'StudyHours', 'SleepHours', 'Confidence', 'TestAnxiety',
                                 'MockExamScore', 'GPA', 'Scholarship', 'InternshipGrade']
         self.binary_columns = ['ReviewCenter']
     

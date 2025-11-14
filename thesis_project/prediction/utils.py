@@ -65,63 +65,61 @@ def prepare_input_data(form_data):
         'EmploymentStatus': form_data['employment_status']
     }
 
-def generate_recommendations(input_data, probability):
+def generate_recommendations(input_data, pass_probability):
     recommendations = []
     
-    if input_data['StudyHours'] < 5:
+    if pass_probability < 0.5:
         recommendations.append({
-            'type': 'critical',
-            'title': 'Increase Study Hours',
-            'message': 'Your daily study hours are below recommended levels. Aim for at least 5-6 hours.',
-            'icon': 'fa-book'
+            'icon': 'fa-exclamation-triangle',
+            'color': 'red',
+            'title': 'High Risk - Immediate Action Required',
+            'message': 'Your predicted pass probability is below 50%. Significant improvements needed in multiple areas.'
+        })
+    elif pass_probability < 0.75:
+        recommendations.append({
+            'icon': 'fa-triangle-exclamation',
+            'color': 'orange',
+            'title': 'Moderate Risk - Improvement Needed',
+            'message': 'Your pass probability is moderate. Focus on key improvement areas to increase your chances.'
+        })
+    else:
+        recommendations.append({
+            'icon': 'fa-check-circle',
+            'color': 'green',
+            'title': 'Good Standing - Keep It Up!',
+            'message': 'Your predicted pass probability is 74.7%. Maintain your current efforts.'
         })
     
-    if input_data['SleepHours'] < 6:
+    if input_data.get('StudyHours', 0) < 8:
         recommendations.append({
-            'type': 'warning',
+            'icon': 'fa-book',
+            'color': 'blue',
+            'title': 'Increase Study Time',
+            'message': 'Students with 8-10 hours of daily study have significantly higher pass rates.'
+        })
+    
+    if input_data.get('SleepHours', 0) < 6:
+        recommendations.append({
+            'icon': 'fa-bed',
+            'color': 'purple',
             'title': 'Improve Sleep Quality',
-            'message': 'Adequate sleep (7-8 hours) is crucial for memory retention and exam performance.',
-            'icon': 'fa-bed'
+            'message': 'Getting 7-8 hours of sleep improves memory retention and exam performance.'
         })
     
-    if input_data['ReviewCenter'] == 0:
+    if input_data.get('ReviewCenter') == 0:
         recommendations.append({
-            'type': 'info',
+            'icon': 'fa-school',
+            'color': 'blue',
             'title': 'Consider Review Center',
-            'message': 'Review centers provide structured learning and exam strategies.',
-            'icon': 'fa-chalkboard-teacher'
+            'message': 'Attending a review center increases pass likelihood by 25-30%.'
         })
     
-    if input_data['Confidence'] < 5:
+    if input_data.get('Confidence', 3) < 3:
         recommendations.append({
-            'type': 'warning',
+            'icon': 'fa-brain',
+            'color': 'orange',
             'title': 'Build Confidence',
-            'message': 'Practice more mock exams and focus on weak areas to boost confidence.',
-            'icon': 'fa-chart-line'
-        })
-    
-    if input_data['TestAnxiety'] > 7:
-        recommendations.append({
-            'type': 'critical',
-            'title': 'Manage Test Anxiety',
-            'message': 'High anxiety can affect performance. Consider stress management techniques and counseling.',
-            'icon': 'fa-heart-pulse'
-        })
-    
-    if input_data.get('MockExamScore') and input_data['MockExamScore'] < 70:
-        recommendations.append({
-            'type': 'critical',
-            'title': 'Improve Mock Exam Scores',
-            'message': 'Your mock exam scores indicate areas needing improvement. Focus on weak topics.',
-            'icon': 'fa-clipboard-check'
-        })
-    
-    if input_data['GPA'] < 2.5:
-        recommendations.append({
-            'type': 'warning',
-            'title': 'Academic Foundation',
-            'message': 'Review fundamental concepts from your coursework to strengthen your foundation.',
-            'icon': 'fa-graduation-cap'
+            'message': 'Practice mock exams regularly to boost confidence and identify weak areas.'
         })
     
     return recommendations
@@ -131,21 +129,20 @@ def get_risk_level(probability):
         return {
             'level': 'Low Risk',
             'color': 'green',
-            'icon': 'fa-circle-check',
-            'description': 'High likelihood of passing'
+            'message': 'High likelihood of passing. Continue with current preparation strategy.',
+            'icon': 'fa-circle-check'
         }
-    elif probability >= 0.50:
+    elif probability >= 0.5:
         return {
             'level': 'Moderate Risk',
-            'color': 'yellow',
-            'icon': 'fa-circle-exclamation',
-            'description': 'Moderate likelihood of passing'
+            'color': 'orange',
+            'message': 'Moderate pass likelihood. Focus on improvement areas identified below.',
+            'icon': 'fa-triangle-exclamation'
         }
     else:
         return {
             'level': 'High Risk',
             'color': 'red',
-            'icon': 'fa-circle-xmark',
-            'description': 'Low likelihood of passing'
+            'message': 'Low pass likelihood. Immediate action required in multiple areas.',
+            'icon': 'fa-circle-exclamation'
         }
-

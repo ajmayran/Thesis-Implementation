@@ -124,7 +124,7 @@
                                     </div>
                                 </div>
                                 
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                <div class="grid grid-cols-3 md:grid-cols-6 gap-4 text-sm">
                                     <div>
                                         <span class="text-gray-600">GPA:</span>
                                         <span class="font-semibold text-gray-800 ml-2">{{ pred.gpa|floatformat:2 }}</span>
@@ -132,6 +132,10 @@
                                     <div>
                                         <span class="text-gray-600">Study Hours:</span>
                                         <span class="font-semibold text-gray-800 ml-2">{{ pred.study_hours }}hrs</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-600">Sleeping Hours:</span>
+                                        <span class="font-semibold text-gray-800 ml-2">{{ pred.sleep_hours }}hrs</span>
                                     </div>
                                     <div>
                                         <span class="text-gray-600">Review Center:</span>
@@ -145,7 +149,11 @@
                                     </div>
                                     <div>
                                         <span class="text-gray-600">Confidence:</span>
-                                        <span class="font-semibold text-gray-800 ml-2">{{ pred.confidence }}/5</span>
+                                        <span class="font-semibold text-gray-800 ml-2">{{ pred.confidence }}/10</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-600">Test Anxiety:</span>
+                                        <span class="font-semibold text-gray-800 ml-2">{{ pred.test_anxiety }}/10</span>
                                     </div>
                                 </div>
                             </div>
