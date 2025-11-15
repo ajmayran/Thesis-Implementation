@@ -30,21 +30,21 @@ FN: 26  TP: 29
 
 ### STACKING
 
-**Accuracy:** 0.5273
+**Accuracy:** 0.5091
 
-**10-Fold CV Mean:** 0.5258
-**10-Fold CV Std:** 0.0434
+**10-Fold CV Mean:** 0.5478
+**10-Fold CV Std:** 0.0662
 
 **Confusion Matrix:**
 
 ```
-TN: 31  FP: 24
-FN: 28  TP: 27
+TN: 34  FP: 21
+FN: 33  TP: 22
 ```
 
-**Precision:** 0.5294
-**Recall:** 0.4909
-**F1-Score:** 0.5094
+**Precision:** 0.5116
+**Recall:** 0.4000
+**F1-Score:** 0.4490
 
 ---
 
@@ -74,5 +74,5 @@ FN: 31  TP: 24
 
 **Boosting:** Gradient Boosting with 100 estimators
 
-**Stacking:** Combines 6 base models (KNN, Decision Tree, Random Forest, SVM, Neural Network, Naive Bayes) with Logistic Regression meta-learner
+**Stacking:** Combines 6 fresh base model instances (KNN, Decision Tree, Random Forest, SVM, Neural Network, Naive Bayes) with Logistic Regression meta-learner
 

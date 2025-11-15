@@ -3,6 +3,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, StackingClassifier, BaggingClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import SVC
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import cross_val_score, StratifiedKFold
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, roc_curve, auc
@@ -12,8 +17,8 @@ import warnings
 warnings.filterwarnings('ignore')
 
 class EnsembleModels:
-    def __init__(self, base_models_dict):
-        self.base_models = base_models_dict
+    def __init__(self, best_params_dict=None):
+        self.best_params = best_params_dict or {}
         self.ensemble_models = {}
         self.y_test = None
         
@@ -43,22 +48,23 @@ class EnsembleModels:
         return boosting
     
     def create_stacking_ensemble(self):
-        expected_models = ['knn', 'decision_tree', 'random_forest', 'svm', 'neural_network', 'naive_bayes']
+        knn_params = self.best_params.get('knn', {'n_neighbors': 5, 'weights': 'uniform'})
+        dt_params = self.best_params.get('decision_tree', {'max_depth': 10, 'min_samples_split': 2})
+        rf_params = self.best_params.get('random_forest', {'n_estimators': 100, 'max_depth': 10})
+        svm_params = self.best_params.get('svm', {'C': 1.0, 'kernel': 'rbf', 'gamma': 'scale'})
+        nn_params = self.best_params.get('neural_network', {'hidden_layer_sizes': (100,), 'activation': 'relu', 'alpha': 0.001})
+        nb_params = self.best_params.get('naive_bayes', {'var_smoothing': 1e-9})
         
-        estimators = []
-        for name in expected_models:
-            if name in self.base_models:
-                estimators.append((name, self.base_models[name]))
-            else:
-                print(f"[WARNING] Base model '{name}' not found")
+        estimators = [
+            ('knn', KNeighborsClassifier(**knn_params)),
+            ('decision_tree', DecisionTreeClassifier(random_state=42, **dt_params)),
+            ('random_forest', RandomForestClassifier(random_state=42, **rf_params)),
+            ('svm', SVC(probability=True, random_state=42, **svm_params)),
+            ('neural_network', MLPClassifier(random_state=42, max_iter=1000, **nn_params)),
+            ('naive_bayes', GaussianNB(**nb_params))
+        ]
         
-        if len(estimators) < len(expected_models):
-            print(f"[WARNING] Only {len(estimators)}/{len(expected_models)} base models available")
-        
-        if len(estimators) == 0:
-            raise ValueError("No base models available for stacking!")
-        
-        print(f"[INFO] Stacking: Combining {len(estimators)} base models:")
+        print(f"[INFO] Stacking: Combining 6 fresh base model instances:")
         for name, _ in estimators:
             print(f"   - {name.replace('_', ' ').upper()}")
         
@@ -66,7 +72,6 @@ class EnsembleModels:
             estimators=estimators,
             final_estimator=LogisticRegression(random_state=42, max_iter=1000),
             cv=5,
-            passthrough=True,
             n_jobs=-1
         )
         self.ensemble_models['stacking'] = stacking
@@ -611,7 +616,7 @@ class EnsembleModels:
             f.write("## Ensemble Methods\n\n")
             f.write("**Bagging:** 10 Random Forest models with bootstrap sampling\n\n")
             f.write("**Boosting:** Gradient Boosting with 100 estimators\n\n")
-            f.write("**Stacking:** Combines 6 base models (KNN, Decision Tree, Random Forest, SVM, Neural Network, Naive Bayes) with Logistic Regression meta-learner\n\n")
+            f.write("**Stacking:** Combines 6 fresh base model instances (KNN, Decision Tree, Random Forest, SVM, Neural Network, Naive Bayes) with Logistic Regression meta-learner\n\n")
         
         print(f"[SAVED] {report_path}")
         return report_path
@@ -664,12 +669,7 @@ def main():
     
     predictor = SocialWorkPredictorModels()
     
-    if not predictor.load_models('saved_models'):
-        print("\n[ERROR] No saved base models found")
-        print("[INFO] Run base_models.py first")
-        return
-    
-    data = predictor.load_preprocessed_data(data_dir='classifictaion_processed_data', approach='label')
+    data = predictor.load_preprocessed_data(data_dir='classification_processed_data', approach='label')
     
     if data is None:
         print("\n[ERROR] Could not load preprocessed data")
@@ -680,7 +680,25 @@ def main():
     y_train = data['y_train']
     y_test = data['y_test']
     
-    ensemble = EnsembleModels(predictor.models)
+    print("\n[INFO] Loading base models to extract best hyperparameters...")
+    if not predictor.load_models('saved_base_models'):
+        print("[WARNING] Could not load base models, using default hyperparameters")
+        best_params = {}
+    else:
+        best_params = {}
+        results_file = 'model_comparison/base_models_results.json'
+        if os.path.exists(results_file):
+            import json
+            with open(results_file, 'r') as f:
+                results_data = json.load(f)
+                for model_name, model_data in results_data.items():
+                    if 'best_params' in model_data:
+                        best_params[model_name] = model_data['best_params']
+            print(f"[INFO] Loaded hyperparameters for {len(best_params)} base models")
+        else:
+            print("[WARNING] No results file found, using default hyperparameters")
+    
+    ensemble = EnsembleModels(best_params_dict=best_params)
     ensemble_results = ensemble.train_ensemble_models_with_10fold(X_train, y_train, X_test, y_test)
     
     ensemble.print_10fold_summary(ensemble_results)
