@@ -1,0 +1,14 @@
+Feature,SHAP_Importance
+StudyHours,3.14439266113785
+MockExamScore,1.219092116354984
+Scholarship,0.7826496088663064
+GPA,0.1256930930096063
+Gender,0.0
+Age,0.0
+EmploymentStatus,0.0
+IncomeLevel,0.0
+SleepHours,0.0
+TestAnxiety,0.0
+Confidence,0.0
+InternshipGrade,0.0
+ReviewCenter,0.0

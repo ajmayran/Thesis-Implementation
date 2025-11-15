@@ -146,7 +146,7 @@ class SocialWorkPredictorModels:
         # 10-fold stratified cross-validation
         cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
         
-        # Model configurations (3 base models only)
+        # Model configurations
         model_configs = {
             'knn': {
                 'model': KNeighborsClassifier(),
@@ -169,7 +169,7 @@ class SocialWorkPredictorModels:
                     'max_depth': [5, 10, 15]
                 }
             },
-                        'svm': {
+            'svm': {
                 'model': SVC(probability=True, random_state=42),
                 'params': {
                     'C': [0.1, 1.0, 10.0],
@@ -196,42 +196,35 @@ class SocialWorkPredictorModels:
         for name, config in model_configs.items():
             print(f"\n[MODEL] Training {name.upper()} with 10-fold CV...")
             
-            # Grid search with 10-fold CV
             grid_search = GridSearchCV(
                 config['model'], 
                 config['params'], 
-                cv=cv,  # 10-fold stratified CV
+                cv=cv,
                 scoring='accuracy',
                 n_jobs=-1,
                 return_train_score=True
             )
             
-            # Fit on full dataset
             grid_search.fit(X_full, y_full)
             best_model = grid_search.best_estimator_
             
-            # Get 10-fold CV results
             cv_results = grid_search.cv_results_
             best_index = grid_search.best_index_
             
-            # Store all 10 fold scores
             fold_scores = []
             for fold_idx in range(10):
                 fold_key = f'split{fold_idx}_test_score'
                 fold_scores.append(cv_results[fold_key][best_index])
             
-            # Calculate detailed statistics
             cv_mean = np.mean(fold_scores)
             cv_std = np.std(fold_scores)
             cv_min = np.min(fold_scores)
             cv_max = np.max(fold_scores)
             
-            # For final evaluation, use the original test set
             y_pred = best_model.predict(self.X_test)
             y_pred_proba = best_model.predict_proba(self.X_test)[:, 1] if hasattr(best_model, 'predict_proba') else None
             test_accuracy = accuracy_score(self.y_test, y_pred)
             
-            # Store results
             self.models[name] = best_model
             results[name] = {
                 'accuracy': test_accuracy,
@@ -282,10 +275,10 @@ class SocialWorkPredictorModels:
         box_positions = []
         for idx, name in enumerate(model_names):
             model_data = fold_df[fold_df['Model'] == name.upper()]['Accuracy']
-            bp = axes[0, 0].boxplot([model_data], positions=[idx], widths=0.6,
-                                    patch_artist=True, 
-                                    boxprops=dict(facecolor=colors[idx], alpha=0.7),
-                                    medianprops=dict(color='black', linewidth=2))
+            axes[0, 0].boxplot([model_data], positions=[idx], widths=0.6,
+                                patch_artist=True, 
+                                boxprops=dict(facecolor=colors[idx], alpha=0.7),
+                                medianprops=dict(color='black', linewidth=2))
             box_positions.append(idx)
         
         axes[0, 0].set_xticks(box_positions)
@@ -397,13 +390,11 @@ class SocialWorkPredictorModels:
         print("• CV Max:  Best-case performance")
         print("• Test Acc: Performance on held-out test set")
         
-        # Find most consistent model
         most_consistent = min(results.items(), key=lambda x: x[1]['cv_10fold_std'])
-        print(f"\n🎯 Most Consistent Model: {most_consistent[0].upper()} (Std: {most_consistent[1]['cv_10fold_std']:.4f})")
+        print(f"\nMost Consistent Model: {most_consistent[0].upper()} (Std: {most_consistent[1]['cv_10fold_std']:.4f})")
         
-        # Find best average performance
         best_avg = max(results.items(), key=lambda x: x[1]['cv_10fold_mean'])
-        print(f"🏆 Best Average Performance: {best_avg[0].upper()} (CV Mean: {best_avg[1]['cv_10fold_mean']:.4f})")
+        print(f"Best Average Performance: {best_avg[0].upper()} (CV Mean: {best_avg[1]['cv_10fold_mean']:.4f})")
     
     def compare_models_visualization(self, results, output_dir='model_comparison'):
         """Create comprehensive visualizations comparing the 6 models"""
@@ -589,7 +580,6 @@ class SocialWorkPredictorModels:
         print(f"[SAVED] 3-Model accuracy comparison: {output_dir}/top3_accuracy_comparison.png")
         plt.close()
         
-        # Create a detailed comparison table
         print(f"\n{'='*70}")
         print(f"3 BASE MODELS - DETAILED ACCURACY COMPARISON (10-FOLD CV)")
         print(f"{'='*70}")
@@ -610,7 +600,6 @@ class SocialWorkPredictorModels:
     def predict_single(self, input_data):
         """Make prediction for a single candidate BEFORE they take the exam"""
         try:
-            # Map input data to correct feature names
             if isinstance(input_data, dict):
                 mapped_data = {}
                 
@@ -637,14 +626,11 @@ class SocialWorkPredictorModels:
             else:
                 df_input = pd.DataFrame([input_data])
             
-            # Use only PRE-EXAM features
             all_feature_columns = self.categorical_columns + self.numerical_columns + self.binary_columns
             X_input = df_input[all_feature_columns].copy()
             
-            # Apply preprocessing
             X_input_processed = self.preprocessor.transform(X_input)
             
-            # Make predictions
             predictions = {}
             for name, model in self.models.items():
                 pred = model.predict(X_input_processed)[0]
@@ -674,7 +660,6 @@ class SocialWorkPredictorModels:
         for model_name, result in results.items():
             y_pred = result['y_pred']
             
-            # Create detailed prediction DataFrame
             prediction_details = pd.DataFrame({
                 'Actual': self.y_test,
                 'Predicted': y_pred,
@@ -683,11 +668,9 @@ class SocialWorkPredictorModels:
                 'Predicted_Label': ['Pass' if y == 1 else 'Fail' for y in y_pred]
             })
             
-            # Add probability if available
             if result['y_pred_proba'] is not None:
                 prediction_details['Pass_Probability'] = result['y_pred_proba']
             
-            # Summary statistics
             total_samples = len(self.y_test)
             correct_predictions = (self.y_test == y_pred).sum()
             incorrect_predictions = total_samples - correct_predictions
@@ -697,7 +680,6 @@ class SocialWorkPredictorModels:
             print(f"   Correct Predictions: {correct_predictions} ({correct_predictions/total_samples*100:.2f}%)")
             print(f"   Incorrect Predictions: {incorrect_predictions} ({incorrect_predictions/total_samples*100:.2f}%)")
             
-            # Breakdown by class
             cm = confusion_matrix(self.y_test, y_pred)
             tn, fp, fn, tp = cm.ravel()
             
@@ -707,16 +689,13 @@ class SocialWorkPredictorModels:
             print(f"   False Positives (Predicted Pass, Actually Fail): {fp}")
             print(f"   False Negatives (Predicted Fail, Actually Pass): {fn}")
             
-            # Save detailed predictions to CSV
             csv_file = f'{output_dir}/{model_name}_test_predictions.csv'
             prediction_details.to_csv(csv_file, index=True)
             print(f"\n   [SAVED] Detailed predictions: {csv_file}")
             
-            # Show some examples
             print(f"\n   [EXAMPLES] First 10 predictions:")
             print(prediction_details.head(10).to_string(index=True))
             
-            # Show incorrect predictions
             incorrect = prediction_details[~prediction_details['Correct']]
             if len(incorrect) > 0:
                 print(f"\n   [ERRORS] First 5 incorrect predictions:")
@@ -768,6 +747,9 @@ class SocialWorkPredictorModels:
 
     def generate_test_report(self, results, output_dir='model_comparison'):
         """Generate comprehensive test report in markdown"""
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
         report_path = f'{output_dir}/test_evaluation_report.md'
         
         with open(report_path, 'w', encoding='utf-8') as f:
@@ -855,6 +837,59 @@ class SocialWorkPredictorModels:
             return dict(sorted(feature_importance.items(), key=lambda x: x[1], reverse=True))
         else:
             return None
+
+    def get_all_feature_importance(self, output_dir='model_comparison'):
+        """Compute feature importance for all trained models and save combined table"""
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+
+        all_rows = []
+
+        for name, model in self.models.items():
+            importances = None
+
+            if hasattr(model, 'feature_importances_'):
+                importances = np.array(model.feature_importances_)
+            elif hasattr(model, 'coef_'):
+                coef = model.coef_
+                if coef.ndim > 1:
+                    coef = np.mean(np.abs(coef), axis=0)
+                importances = np.abs(coef)
+            else:
+                print(f"[INFO] Model {name.upper()} has no native feature importance; skipping.")
+                continue
+
+            if importances.shape[0] != len(self.feature_names):
+                min_len = min(importances.shape[0], len(self.feature_names))
+                importances = importances[:min_len]
+                feature_names = self.feature_names[:min_len]
+            else:
+                feature_names = self.feature_names
+
+            df = pd.DataFrame({
+                'Model': name.upper(),
+                'Feature': feature_names,
+                'Importance': importances
+            })
+            df = df.sort_values('Importance', ascending=False)
+            all_rows.append(df)
+
+            print(f"\n[FEATURE IMPORTANCE] {name.upper()} - Top 10 features:")
+            print(f"{'Rank':<5}{'Feature':<25}{'Importance':<12}")
+            print("-" * 45)
+            for i, (_, row) in enumerate(df.head(10).iterrows(), 1):
+                print(f"{i:<5}{row['Feature']:<25}{row['Importance']:<12.4f}")
+
+        if not all_rows:
+            print("[WARNING] No feature importance could be computed for any model.")
+            return None
+
+        combined_df = pd.concat(all_rows, ignore_index=True)
+        csv_path = os.path.join(output_dir, 'all_models_feature_importance.csv')
+        combined_df.to_csv(csv_path, index=False)
+        print(f"\n[SAVED] All models feature importance: {csv_path}")
+
+        return combined_df
     
     def save_models(self, directory='saved_models'):
         """Save trained models and preprocessor"""
@@ -896,7 +931,6 @@ def main():
     print("[START] TRAINING BASE MODELS WITH 10-FOLD CROSS-VALIDATION")
     print("="*60)
     
-    # Load preprocessed data
     data = predictor.load_preprocessed_data(data_dir='classification_processed_data', approach='label')
     
     if data is None:
@@ -904,44 +938,39 @@ def main():
         print("[INFO] Please run: python preprocessing.py")
         return
     
-    # Set data for training
     predictor.X_train = data['X_train']
     predictor.X_test = data['X_test']
     predictor.y_train = data['y_train']
     predictor.y_test = data['y_test']
     
-    # Train 3 base models with 10-fold CV
     results = predictor.train_base_models()
     
     if results:
-        # Print 10-fold summary
         predictor.print_10fold_summary(results)
         
-        # Create 10-fold visualizations
         print(f"\n[VISUALIZATION] Creating 10-fold CV analysis...")
         predictor.visualize_10fold_results(results)
         
-        # Original visualizations
         print(f"\n[VISUALIZATION] Creating model comparison graphs...")
         summary_df = predictor.compare_models_visualization(results)
         predictor.create_top_accuracy_comparison(results)
         
-        # Detailed evaluation
         predictor.evaluate_test_predictions(results)
         predictor.create_prediction_comparison_plot(results)
         predictor.generate_test_report(results)
+
+        print("\n[FEATURE IMPORTANCE] Computing feature importance for all models...")
+        predictor.get_all_feature_importance(output_dir='model_comparison')
         
         print(f"\n[SUMMARY] Performance Summary Table:")
         print(summary_df.to_string(index=False))
         
-        # Feature importance
         feature_importance = predictor.get_feature_importance('random_forest')
         if feature_importance:
-            print(f"\n[FEATURE IMPORTANCE] Top 10 Predictive Factors:")
+            print(f"\n[FEATURE IMPORTANCE] Top 10 Predictive Factors (Random Forest):")
             for i, (feature, importance) in enumerate(list(feature_importance.items())[:10], 1):
                 print(f"{i:2d}. {feature:<25s}: {importance:.4f}")
         
-        # Save models
         predictor.save_models('saved_models')
         
         print(f"\n[COMPLETE] Training completed successfully!")
@@ -953,6 +982,7 @@ def main():
         print(f"   - model_comparison/top3_accuracy_comparison.png")
         print(f"   - model_comparison/prediction_comparison.png")
         print(f"   - model_comparison/test_evaluation_report.md")
+        print(f"   - model_comparison/all_models_feature_importance.csv")
 
 if __name__ == "__main__":
     main()
