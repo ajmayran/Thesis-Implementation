@@ -6,13 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Social Work Licensure Predictor</title>
     
-    <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     
     <!-- Google Fonts -->
@@ -554,7 +549,6 @@
 
             <main class="main-content p-6 md:p-8">
                 
-                <!-- Messages -->
                 <div id="messageContainer"></div>
 
                 <!-- Main Grid Layout -->
@@ -707,39 +701,31 @@
     </div>
 
     <script>
-        // CSRF Token
         function getCsrfToken() {
             return document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
                    document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
         }
 
-        // API URLs
         const API_URLS = {
-            dashboardStats: '/api/dashboard/stats/',
-            modelStatus: '/api/prediction/model-status/',
-            exportCSV: '/api/dashboard/export-csv/',
-            exportPDF: '/api/dashboard/export-pdf/'
+            dashboardStats: '/dashboard/api/dashboard/stats/',
+            exportCSV: '/dashboard/api/dashboard/export-csv/',
+            exportPDF: '/dashboard/api/dashboard/export-pdf/'
         };
 
-        // Global variables
         let trendChart = null;
         let dashboardData = null;
 
-        // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
             loadDashboardData();
             setupEventListeners();
-            initializeTrendChart();
         });
 
-        // Setup event listeners
         function setupEventListeners() {
             document.getElementById('refreshBtn')?.addEventListener('click', loadDashboardData);
             document.getElementById('downloadCsvBtn')?.addEventListener('click', downloadCSV);
             document.getElementById('generatePdfBtn')?.addEventListener('click', generatePDF);
         }
 
-        // Load dashboard data
         async function loadDashboardData() {
             try {
                 showLoading();
@@ -781,7 +767,6 @@
                 stats.review_center_rate ? `${stats.review_center_rate}%` : '--';
         }
 
-        // Update model metrics
         function updateModelMetrics(data) {
             const perf = data.model_performance || {};
             
@@ -797,7 +782,6 @@
                 perf.auc ? perf.auc.toFixed(2) : '--';
         }
 
-        // Update feature importance
         function updateFeatureImportance(data) {
             const container = document.getElementById('featureImportanceContainer');
             const features = data.feature_importance || {};
@@ -949,9 +933,13 @@
                 minute: '2-digit' 
             });
             document.getElementById('lastUpdated').textContent = `Updated: Today, ${timeStr}`;
+            
+            const latestModelPerformance = dashboardData?.model_performance;
+            if (latestModelPerformance) {
+                document.getElementById('lastTrained').textContent = 'Recently';
+            }
         }
 
-        // Download CSV
         async function downloadCSV() {
             try {
                 const response = await fetch(API_URLS.exportCSV);
@@ -970,7 +958,6 @@
             }
         }
 
-        // Generate PDF
         async function generatePDF() {
             try {
                 const response = await fetch(API_URLS.exportPDF);
@@ -989,7 +976,6 @@
             }
         }
 
-        // Utility functions
         function formatFeatureName(name) {
             return name.replace(/_/g, ' ')
                 .split(' ')
@@ -998,17 +984,15 @@
         }
 
         function showLoading() {
-            // Keep loading indicators in KPI cards
         }
 
         function hideLoading() {
-            // Loading handled by data update
         }
 
         function showMessage(message, type = 'info') {
             const container = document.getElementById('messageContainer');
             const messageClass = type === 'error' ? 'error-message' : 
-                               type === 'success' ? 'success-message' : 'info-message';
+                               type === 'success' ? 'success-message' : 'success-message';
             
             const messageEl = document.createElement('div');
             messageEl.className = messageClass;

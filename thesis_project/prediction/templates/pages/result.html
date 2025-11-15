@@ -525,9 +525,14 @@
                             
                             <div class="input-summary-item">
                                 <span class="text-gray-600">Confidence Level</span>
-                                <span class="font-semibold text-gray-800">{{ input_data.Confidence }}/5</span>
+                                <span class="font-semibold text-gray-800">{{ input_data.Confidence }}/10</span>
                             </div>
                             
+                            <div class="input-summary-item">
+                                <span class="text-gray-600">Test Anxiety Level</span>
+                                <span class="font-semibold text-gray-800">{{ input_data.TestAnxiety }}/10</span>
+                            </div>
+
                             {% if input_data.MockExamScore %}
                                 <div class="input-summary-item">
                                     <span class="text-gray-600">Mock Exam Score</span>

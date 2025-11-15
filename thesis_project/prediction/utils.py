@@ -56,6 +56,7 @@ def prepare_input_data(form_data):
         'SleepHours': int(form_data['sleep_hours']),
         'ReviewCenter': int(form_data['review_center']),
         'Confidence': int(form_data['confidence']),
+        'TestAnxiety': int(form_data['test_anxiety']),
         'MockExamScore': float(form_data['mock_exam_score']) if form_data.get('mock_exam_score') else None,
         'GPA': float(form_data['gpa']),
         'Scholarship': int(form_data['scholarship']),
@@ -69,24 +70,24 @@ def generate_recommendations(input_data, pass_probability):
     
     if pass_probability < 0.5:
         recommendations.append({
-            'icon': 'fa-triangle-exclamation',
+            'icon': 'fa-exclamation-triangle',
             'color': 'red',
-            'title': 'High Risk - Immediate Action Needed',
-            'message': f'Your predicted pass probability is {pass_probability*100:.1f}%. Urgent intervention required.'
+            'title': 'High Risk - Immediate Action Required',
+            'message': 'Your predicted pass probability is below 50%. Significant improvements needed in multiple areas.'
         })
-    elif pass_probability < 0.7:
+    elif pass_probability < 0.75:
         recommendations.append({
-            'icon': 'fa-exclamation-circle',
+            'icon': 'fa-triangle-exclamation',
             'color': 'orange',
             'title': 'Moderate Risk - Improvement Needed',
-            'message': f'Your predicted pass probability is {pass_probability*100:.1f}%. Significant room for improvement.'
+            'message': 'Your pass probability is moderate. Focus on key improvement areas to increase your chances.'
         })
     else:
         recommendations.append({
             'icon': 'fa-check-circle',
             'color': 'green',
             'title': 'Good Standing - Keep It Up!',
-            'message': f'Your predicted pass probability is {pass_probability*100:.1f}%. Maintain your current efforts.'
+            'message': 'Your predicted pass probability is 74.7%. Maintain your current efforts.'
         })
     
     if input_data.get('StudyHours', 0) < 8:
@@ -127,21 +128,21 @@ def get_risk_level(probability):
     if probability >= 0.75:
         return {
             'level': 'Low Risk',
-            'color': 'success',
-            'icon': 'fa-check-circle',
-            'message': 'High likelihood of passing'
+            'color': 'green',
+            'message': 'High likelihood of passing. Continue with current preparation strategy.',
+            'icon': 'fa-circle-check'
         }
     elif probability >= 0.5:
         return {
             'level': 'Moderate Risk',
-            'color': 'warning',
-            'icon': 'fa-exclamation-triangle',
-            'message': 'Fair chance of passing, improvement recommended'
+            'color': 'orange',
+            'message': 'Moderate pass likelihood. Focus on improvement areas identified below.',
+            'icon': 'fa-triangle-exclamation'
         }
     else:
         return {
             'level': 'High Risk',
-            'color': 'danger',
-            'icon': 'fa-times-circle',
-            'message': 'Low likelihood of passing, urgent action needed'
+            'color': 'red',
+            'message': 'Low pass likelihood. Immediate action required in multiple areas.',
+            'icon': 'fa-circle-exclamation'
         }

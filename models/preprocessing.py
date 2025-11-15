@@ -18,14 +18,14 @@ class SocialWorkDataPreprocessor:
         self.feature_names = []
         self.categorical_columns = ['Gender', 'IncomeLevel', 'EmploymentStatus']
         self.numerical_columns = ['Age', 'StudyHours', 'SleepHours', 'Confidence', 
-                                'MockExamScore', 'GPA', 'Scholarship', 'InternshipGrade']
-        self.binary_columns = ['ReviewCenter']
+                                'MockExamScore', 'GPA', 'InternshipGrade', 'TestAnxiety']
+        self.binary_columns = ['ReviewCenter', 'Scholarship']
         self.target_column = 'Passed'
         
         # Statistics storage
         self.data_stats = {}
         self.correlation_matrix = None
-        self.feature_importance_scores = {}
+        self.feature_importance_scores = {} 
         
     def load_data(self, file_path):
         """Load data from CSV file"""
@@ -455,7 +455,7 @@ class SocialWorkDataPreprocessor:
             'preprocessing_objects': preprocessing_objects
         }
 
-    def save_processed_data(self, processed_data, output_dir='processed_data'):
+    def save_processed_data(self, processed_data, output_dir='classification_processed_data'):
         """Save processed data in multiple formats"""
         print(f"\n[SAVING] Saving processed data to {output_dir}/...")
         

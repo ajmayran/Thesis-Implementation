@@ -1,152 +1,78 @@
-# Ensemble Models Testing and Evaluation Report (10-Fold Cross-Validation)
+# Ensemble Models Testing Report
 
-## Test Dataset Information
+## Test Dataset
 
-- **Total Test Samples:** 100
-- **Actual Pass Count:** 50
-- **Actual Fail Count:** 50
-- **Pass Rate:** 50.00%
+Total Test Samples: 110
+Pass Count: 55
+Fail Count: 55
 
-## Ensemble Model Performance on Test Data
+## Ensemble Performance
 
-### STACKING LOGISTIC
+### BAGGING
 
-**Overall Accuracy:** 0.4700
+**Accuracy:** 0.5545
 
-**10-Fold Cross-Validation:**
-
-- **CV Mean:** 0.5240
-- **CV Std:** 0.0838
-- **CV Min:** 0.3800
-- **CV Max:** 0.6400
+**10-Fold CV Mean:** 0.5480
+**10-Fold CV Std:** 0.0558
 
 **Confusion Matrix:**
 
 ```
-                Predicted Fail    Predicted Pass
-Actual Fail            22                28
-Actual Pass            25                25
+TN: 32  FP: 23
+FN: 26  TP: 29
 ```
 
-**Detailed Metrics:**
-
-- **True Positives (Correctly predicted Pass):** 25 (25.0%)
-- **True Negatives (Correctly predicted Fail):** 22 (22.0%)
-- **False Positives (Wrongly predicted Pass):** 28 (28.0%)
-- **False Negatives (Wrongly predicted Fail):** 25 (25.0%)
-
-**Classification Report:**
-
-- **Precision (Pass class):** 0.4717
-- **Recall (Pass class):** 0.5000
-- **F1-Score (Pass class):** 0.4854
+**Precision:** 0.5577
+**Recall:** 0.5273
+**F1-Score:** 0.5421
 
 ---
 
-### BAGGING RANDOM FOREST
+### STACKING
 
-**Overall Accuracy:** 0.4500
+**Accuracy:** 0.5091
 
-**10-Fold Cross-Validation:**
-
-- **CV Mean:** 0.5380
-- **CV Std:** 0.0460
-- **CV Min:** 0.4600
-- **CV Max:** 0.6000
+**10-Fold CV Mean:** 0.5478
+**10-Fold CV Std:** 0.0662
 
 **Confusion Matrix:**
 
 ```
-                Predicted Fail    Predicted Pass
-Actual Fail            20                30
-Actual Pass            25                25
+TN: 34  FP: 21
+FN: 33  TP: 22
 ```
 
-**Detailed Metrics:**
-
-- **True Positives (Correctly predicted Pass):** 25 (25.0%)
-- **True Negatives (Correctly predicted Fail):** 20 (20.0%)
-- **False Positives (Wrongly predicted Pass):** 30 (30.0%)
-- **False Negatives (Wrongly predicted Fail):** 25 (25.0%)
-
-**Classification Report:**
-
-- **Precision (Pass class):** 0.4545
-- **Recall (Pass class):** 0.5000
-- **F1-Score (Pass class):** 0.4762
+**Precision:** 0.5116
+**Recall:** 0.4000
+**F1-Score:** 0.4490
 
 ---
 
-### BOOSTING GRADIENT BOOST
+### BOOSTING
 
-**Overall Accuracy:** 0.3800
+**Accuracy:** 0.5000
 
-**10-Fold Cross-Validation:**
-
-- **CV Mean:** 0.4940
-- **CV Std:** 0.0820
-- **CV Min:** 0.3800
-- **CV Max:** 0.6800
+**10-Fold CV Mean:** 0.4999
+**10-Fold CV Std:** 0.0613
 
 **Confusion Matrix:**
 
 ```
-                Predicted Fail    Predicted Pass
-Actual Fail            11                39
-Actual Pass            23                27
+TN: 31  FP: 24
+FN: 31  TP: 24
 ```
 
-**Detailed Metrics:**
-
-- **True Positives (Correctly predicted Pass):** 27 (27.0%)
-- **True Negatives (Correctly predicted Fail):** 11 (11.0%)
-- **False Positives (Wrongly predicted Pass):** 39 (39.0%)
-- **False Negatives (Wrongly predicted Fail):** 23 (23.0%)
-
-**Classification Report:**
-
-- **Precision (Pass class):** 0.4091
-- **Recall (Pass class):** 0.5400
-- **F1-Score (Pass class):** 0.4655
+**Precision:** 0.5000
+**Recall:** 0.4364
+**F1-Score:** 0.4660
 
 ---
 
-## 10-Fold Cross-Validation Explained
+## Ensemble Methods
 
-10-fold cross-validation provides a robust estimate of model performance by:
+**Bagging:** 10 Random Forest models with bootstrap sampling
 
-1. Splitting the dataset into 10 equal parts (folds)
-2. Training on 9 folds and testing on 1 fold
-3. Repeating this process 10 times (each fold serves as test set once)
-4. Averaging the results for final performance metrics
+**Boosting:** Gradient Boosting with 100 estimators
 
-This approach reduces variance and provides more reliable performance estimates.
+**Stacking:** Combines 6 fresh base model instances (KNN, Decision Tree, Random Forest, SVM, Neural Network, Naive Bayes) with Logistic Regression meta-learner
 
-## Ensemble Techniques Used
-
-### 1. Bagging (Random Forest)
-- Multiple decision trees trained on bootstrap samples
-- Reduces variance and prevents overfitting
-
-### 2. Boosting (Gradient Boosting)
-- Sequential training where each model corrects previous errors
-- Reduces bias and improves accuracy
-
-### 3. Stacking (with Logistic Regression)
-- Combines predictions from 3 base models (KNN, Decision Tree, Random Forest)
-- Meta-learner (Logistic Regression) learns optimal combination
-
-## How to Interpret Results
-
-- **True Positive:** Model correctly predicted student will PASS
-- **True Negative:** Model correctly predicted student will FAIL
-- **False Positive:** Model predicted PASS but student actually FAILED (Type I Error)
-- **False Negative:** Model predicted FAIL but student actually PASSED (Type II Error)
-
-## Testing Process
-
-1. Ensemble models were validated using 10-fold cross-validation
-2. Models were trained on 80% of data (training set)
-3. Models make predictions on unseen 20% (test set)
-4. Predictions are compared with actual results
-5. Accuracy and other metrics are calculated
