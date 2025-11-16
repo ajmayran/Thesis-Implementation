@@ -30,21 +30,21 @@ FN: 26  TP: 29
 
 ### STACKING
 
-**Accuracy:** 0.5091
+**Accuracy:** 0.5182
 
-**10-Fold CV Mean:** 0.5478
-**10-Fold CV Std:** 0.0662
+**10-Fold CV Mean:** 0.5551
+**10-Fold CV Std:** 0.0641
 
 **Confusion Matrix:**
 
 ```
 TN: 34  FP: 21
-FN: 33  TP: 22
+FN: 32  TP: 23
 ```
 
-**Precision:** 0.5116
-**Recall:** 0.4000
-**F1-Score:** 0.4490
+**Precision:** 0.5227
+**Recall:** 0.4182
+**F1-Score:** 0.4646
 
 ---
 

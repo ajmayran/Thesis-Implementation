@@ -6,7 +6,7 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler, LabelEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import train_test_split
 from sklearn.feature_selection import SelectKBest, f_classif, mutual_info_classif
-from scipy.stats import chi2_contingency, pearsonr
+from scipy.stats import chi2_contingency
 import seaborn as sns
 import matplotlib.pyplot as plt
 import warnings
@@ -22,13 +22,10 @@ class SocialWorkDataPreprocessor:
         self.binary_columns = ['ReviewCenter', 'Scholarship']
         self.target_column = 'Passed'
         
-        # Statistics storage
         self.data_stats = {}
-        self.correlation_matrix = None
         self.feature_importance_scores = {} 
         
     def load_data(self, file_path):
-        """Load data from CSV file"""
         try:
             df = pd.read_csv(file_path)
             print(f"[SUCCESS] Data loaded successfully. Shape: {df.shape}")
@@ -38,16 +35,13 @@ class SocialWorkDataPreprocessor:
             return None
     
     def explore_data(self, df):
-        """Perform comprehensive data exploration"""
         print("\n" + "="*60)
         print("[INFO] DATA EXPLORATION REPORT")
         print("="*60)
         
-        # Basic information
         print(f"\n[INFO] Dataset Shape: {df.shape}")
         print(f"[INFO] Columns: {list(df.columns)}")
         
-        # Check for missing values
         missing_info = df.isnull().sum()
         print(f"\n[CHECK] Missing Values:")
         for col, missing_count in missing_info.items():
@@ -56,12 +50,10 @@ class SocialWorkDataPreprocessor:
         if missing_info.sum() == 0:
             print("   [SUCCESS] No missing values found!")
         
-        # Data types
         print(f"\n[INFO] Data Types:")
         for col, dtype in df.dtypes.items():
             print(f"   {col}: {dtype}")
         
-        # Target distribution
         if self.target_column in df.columns:
             target_dist = df[self.target_column].value_counts()
             target_pct = df[self.target_column].value_counts(normalize=True) * 100
@@ -70,7 +62,6 @@ class SocialWorkDataPreprocessor:
                 print(f"   {val}: {target_dist[val]} ({target_pct[val]:.1f}%)")
             print(f"   Pass Rate: {df[self.target_column].mean():.2%}")
         
-        # Categorical variables analysis
         print(f"\n[ANALYSIS] Categorical Variables Analysis:")
         for col in self.categorical_columns:
             if col in df.columns:
@@ -80,12 +71,10 @@ class SocialWorkDataPreprocessor:
                 for val, count in values.items():
                     print(f"      {val}: {count} ({count/len(df)*100:.1f}%)")
         
-        # Numerical variables statistics
         print(f"\n[STATS] Numerical Variables Statistics:")
         numerical_stats = df[self.numerical_columns + self.binary_columns].describe()
         print(numerical_stats.round(2))
         
-        # Store statistics
         self.data_stats = {
             'shape': df.shape,
             'missing_values': missing_info.to_dict(),
@@ -101,79 +90,7 @@ class SocialWorkDataPreprocessor:
         
         return df
     
-    def correlation_analysis(self, df):
-        """Perform correlation analysis between features"""
-        print("\n" + "="*60)
-        print("[CORRELATION] CORRELATION ANALYSIS")
-        print("="*60)
-        
-        # Prepare data for correlation analysis
-        # Encode categorical variables temporarily
-        df_encoded = df.copy()
-        le = LabelEncoder()
-        
-        for col in self.categorical_columns:
-            if col in df_encoded.columns:
-                df_encoded[col] = le.fit_transform(df_encoded[col].astype(str))
-        
-        # Calculate correlation matrix
-        feature_columns = self.categorical_columns + self.numerical_columns + self.binary_columns
-        available_features = [col for col in feature_columns if col in df_encoded.columns]
-        
-        if self.target_column in df_encoded.columns:
-            available_features.append(self.target_column)
-        
-        correlation_matrix = df_encoded[available_features].corr()
-        self.correlation_matrix = correlation_matrix
-        
-        # Find high correlations with target
-        if self.target_column in correlation_matrix.columns:
-            target_corr = correlation_matrix[self.target_column].drop(self.target_column).abs().sort_values(ascending=False)
-            print(f"\n[TARGET] Features most correlated with {self.target_column}:")
-            for feature, corr in target_corr.head(10).items():
-                print(f"   {feature}: {corr:.4f}")
-        
-        # Pearson Correlation Analysis
-        print(f"\n[PEARSON] Pearson Correlation Analysis:")
-        pearson_correlations = {}
-        
-        for col in available_features:
-            if col != self.target_column and col in df_encoded.columns:
-                try:
-                    corr_coef, p_value = pearsonr(df_encoded[col].dropna(), 
-                                                  df_encoded[self.target_column].loc[df_encoded[col].dropna().index])
-                    pearson_correlations[col] = {
-                        'correlation': corr_coef,
-                        'p_value': p_value,
-                        'significant': p_value < 0.05
-                    }
-                    sig_marker = "***" if p_value < 0.001 else "**" if p_value < 0.01 else "*" if p_value < 0.05 else ""
-                    print(f"   {col}: r={corr_coef:.4f}, p={p_value:.4f} {sig_marker}")
-                except Exception as e:
-                    print(f"   {col}: Failed ({e})")
-        
-        # Store Pearson correlations
-        self.feature_importance_scores['pearson_correlation'] = pearson_correlations
-        
-        # Find high inter-feature correlations
-        print(f"\n[INTER-FEATURE] High inter-feature correlations (>0.5):")
-        high_corr_pairs = []
-        for i in range(len(correlation_matrix.columns)):
-            for j in range(i+1, len(correlation_matrix.columns)):
-                corr_val = abs(correlation_matrix.iloc[i, j])
-                if corr_val > 0.5 and correlation_matrix.columns[i] != self.target_column and correlation_matrix.columns[j] != self.target_column:
-                    high_corr_pairs.append((correlation_matrix.columns[i], correlation_matrix.columns[j], corr_val))
-        
-        if high_corr_pairs:
-            for feat1, feat2, corr in sorted(high_corr_pairs, key=lambda x: x[2], reverse=True):
-                print(f"   {feat1} <-> {feat2}: {corr:.4f}")
-        else:
-            print("   [SUCCESS] No high inter-feature correlations found")
-        
-        return correlation_matrix
-    
     def handle_missing_values(self, df):
-        """Handle missing values in the dataset"""
         print("\n[CLEANING] Handling missing values...")
         
         missing_before = df.isnull().sum().sum()
@@ -184,26 +101,22 @@ class SocialWorkDataPreprocessor:
         
         df_clean = df.copy()
         
-        # Strategy 1: Remove rows with missing target
         if df_clean[self.target_column].isnull().sum() > 0:
             df_clean = df_clean.dropna(subset=[self.target_column])
             print(f"   [CLEAN] Removed rows with missing target")
         
-        # Strategy 2: Fill missing numerical values with median
         for col in self.numerical_columns:
             if col in df_clean.columns and df_clean[col].isnull().sum() > 0:
                 median_val = df_clean[col].median()
                 df_clean[col].fillna(median_val, inplace=True)
                 print(f"   [FILL] Filled {col} missing values with median: {median_val}")
         
-        # Strategy 3: Fill missing categorical values with mode
         for col in self.categorical_columns:
             if col in df_clean.columns and df_clean[col].isnull().sum() > 0:
                 mode_val = df_clean[col].mode()[0]
                 df_clean[col].fillna(mode_val, inplace=True)
                 print(f"   [FILL] Filled {col} missing values with mode: {mode_val}")
         
-        # Strategy 4: Fill missing binary values with mode
         for col in self.binary_columns:
             if col in df_clean.columns and df_clean[col].isnull().sum() > 0:
                 mode_val = df_clean[col].mode()[0]
@@ -216,22 +129,18 @@ class SocialWorkDataPreprocessor:
         return df_clean
     
     def feature_importance_analysis(self, df):
-        """Analyze feature importance using different methods"""
         print("\n" + "="*60)
         print("[IMPORTANCE] FEATURE IMPORTANCE ANALYSIS")
         print("="*60)
         
-        # Prepare features and target
         feature_columns = self.categorical_columns + self.numerical_columns + self.binary_columns
         available_features = [col for col in feature_columns if col in df.columns]
         
         X = df[available_features].copy()
         y = df[self.target_column].values
         
-        # Handle missing values in feature importance analysis
         print("\n[PREPROCESSING] Handling missing values for feature importance analysis...")
         
-        # Fill missing values using the same strategy as handle_missing_values
         for col in self.numerical_columns:
             if col in X.columns and X[col].isnull().sum() > 0:
                 median_val = X[col].median()
@@ -250,17 +159,14 @@ class SocialWorkDataPreprocessor:
                 X[col].fillna(mode_val, inplace=True)
                 print(f"   [FILL] Filled {col} missing values with mode: {mode_val}")
         
-        # Check for remaining missing values
         missing_count = X.isnull().sum().sum()
         if missing_count > 0:
             print(f"[WARNING] Still have {missing_count} missing values, dropping affected rows...")
-            # Get indices where any feature is missing
             missing_indices = X.isnull().any(axis=1)
             X = X[~missing_indices]
             y = y[~missing_indices]
             print(f"[INFO] Remaining samples after dropping: {len(X)}")
         
-        # Encode categorical variables
         print("\n[ENCODING] Encoding categorical variables...")
         le = LabelEncoder()
         for col in self.categorical_columns:
@@ -268,7 +174,6 @@ class SocialWorkDataPreprocessor:
                 X[col] = le.fit_transform(X[col].astype(str))
                 print(f"   [ENCODED] {col}")
         
-        # Final check: Verify no NaN values remain
         if X.isnull().sum().sum() > 0 or np.isnan(X.values).any():
             print("[ERROR] Still have NaN values after preprocessing!")
             print("Missing values by column:")
@@ -277,7 +182,6 @@ class SocialWorkDataPreprocessor:
         
         print(f"[SUCCESS] Data ready for feature importance analysis. Shape: {X.shape}")
         
-        # Method 1: ANOVA F-test
         try:
             print("\n[ANOVA] Running ANOVA F-test...")
             selector_f = SelectKBest(score_func=f_classif, k='all')
@@ -290,12 +194,7 @@ class SocialWorkDataPreprocessor:
                 print(f"   {feature}: {score:.4f}")
         except Exception as e:
             print(f"[ERROR] ANOVA F-test failed: {e}")
-            print(f"[DEBUG] X shape: {X.shape}, y shape: {y.shape}")
-            print(f"[DEBUG] X dtypes: {X.dtypes}")
-            print(f"[DEBUG] Any NaN in X: {X.isnull().sum().sum()}")
-            print(f"[DEBUG] Any NaN in y: {np.isnan(y).sum()}")
         
-        # Method 2: Mutual Information
         try:
             print("\n[MUTUAL INFO] Running Mutual Information...")
             selector_mi = SelectKBest(score_func=mutual_info_classif, k='all')
@@ -309,12 +208,10 @@ class SocialWorkDataPreprocessor:
         except Exception as e:
             print(f"[ERROR] Mutual Information failed: {e}")
         
-        # Method 3: Chi-square test for categorical variables
         print("\n[CHI-SQUARE] Chi-square tests (categorical vs target):")
         for col in self.categorical_columns:
             if col in df.columns:
                 try:
-                    # Use original data (before encoding) for chi-square test
                     contingency_table = pd.crosstab(df[col], df[self.target_column])
                     chi2, p_value, dof, expected = chi2_contingency(contingency_table)
                     print(f"   {col}: chi2={chi2:.4f}, p-value={p_value:.4f}")
@@ -331,7 +228,6 @@ class SocialWorkDataPreprocessor:
         return self.feature_importance_scores
     
     def detect_outliers(self, df):
-        """Detect outliers in numerical columns"""
         print("\n[OUTLIERS] Outlier Detection (using IQR method):")
         
         outlier_info = {}
@@ -365,19 +261,16 @@ class SocialWorkDataPreprocessor:
         return outlier_info
     
     def preprocess_for_training(self, df, test_size=0.2, random_state=42):
-        """Create training-ready datasets with different preprocessing approaches"""
         print("\n" + "="*60)
         print("[PROCESSING] CREATING TRAINING-READY DATASETS")
         print("="*60)
         
-        # Prepare features and target
         feature_columns = self.categorical_columns + self.numerical_columns + self.binary_columns
         available_features = [col for col in feature_columns if col in df.columns]
         
         X = df[available_features].copy()
         y = df[self.target_column].values
         
-        # Approach 1: OneHotEncoder + StandardScaler
         print("\n[APPROACH 1] OneHot Encoding + Standard Scaling")
         preprocessor_onehot = ColumnTransformer(
             transformers=[
@@ -389,7 +282,6 @@ class SocialWorkDataPreprocessor:
         
         X_onehot = preprocessor_onehot.fit_transform(X)
         
-        # Get feature names for one-hot encoded data
         num_feature_names = self.numerical_columns + self.binary_columns
         cat_feature_names = []
         for i, col in enumerate(self.categorical_columns):
@@ -398,7 +290,6 @@ class SocialWorkDataPreprocessor:
         
         onehot_feature_names = num_feature_names + cat_feature_names
         
-        # Approach 2: Label Encoding + Standard Scaling
         print("[APPROACH 2] Label Encoding + Standard Scaling")
         X_label = X.copy()
         label_encoders = {}
@@ -409,11 +300,9 @@ class SocialWorkDataPreprocessor:
                 X_label[col] = le.fit_transform(X_label[col].astype(str))
                 label_encoders[col] = le
         
-        # Scale all features
         scaler_label = StandardScaler()
         X_label_scaled = scaler_label.fit_transform(X_label)
         
-        # Split data for both approaches
         X_onehot_train, X_onehot_test, y_train, y_test = train_test_split(
             X_onehot, y, test_size=test_size, random_state=random_state, stratify=y
         )
@@ -427,7 +316,6 @@ class SocialWorkDataPreprocessor:
         print(f"   [SUCCESS] Training set size: {len(X_onehot_train)}")
         print(f"   [SUCCESS] Test set size: {len(X_onehot_test)}")
         
-        # Store preprocessing objects
         preprocessing_objects = {
             'onehot_preprocessor': preprocessor_onehot,
             'label_encoders': label_encoders,
@@ -436,7 +324,6 @@ class SocialWorkDataPreprocessor:
             'label_feature_names': available_features
         }
         
-        # Return processed datasets
         return {
             'onehot': {
                 'X_train': X_onehot_train,
@@ -456,26 +343,21 @@ class SocialWorkDataPreprocessor:
         }
 
     def save_processed_data(self, processed_data, output_dir='classification_processed_data'):
-        """Save processed data in multiple formats"""
         print(f"\n[SAVING] Saving processed data to {output_dir}/...")
         
-        # Create output directory
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         
-        # Save datasets in different formats
         formats_saved = []
         
         for approach in ['onehot', 'label']:
             data = processed_data[approach]
             
-            # Save as NumPy arrays
             np.save(f'{output_dir}/X_train_{approach}.npy', data['X_train'])
             np.save(f'{output_dir}/X_test_{approach}.npy', data['X_test'])
             np.save(f'{output_dir}/y_train.npy', data['y_train'])
             np.save(f'{output_dir}/y_test.npy', data['y_test'])
             
-            # Save as JSON (convert to lists for JSON serialization)
             json_data = {
                 'X_train': data['X_train'].tolist(),
                 'X_test': data['X_test'].tolist(),
@@ -487,30 +369,17 @@ class SocialWorkDataPreprocessor:
             with open(f'{output_dir}/dataset_{approach}.json', 'w') as f:
                 json.dump(json_data, f, indent=2)
             
-            # Save feature names
             with open(f'{output_dir}/feature_names_{approach}.json', 'w') as f:
                 json.dump(data['feature_names'], f, indent=2)
             
             formats_saved.extend([f'dataset_{approach}.json', f'feature_names_{approach}.json'])
         
-        # Save preprocessing objects
         import joblib
         joblib.dump(processed_data['preprocessing_objects'], f'{output_dir}/preprocessing_objects.pkl')
         
-        # Convert feature importance scores to JSON-serializable format
         feature_importance_json = {}
         for key, value in self.feature_importance_scores.items():
-            if key == 'pearson_correlation':
-                # Convert boolean 'significant' to int (0 or 1) or keep as bool string
-                feature_importance_json[key] = {
-                    feat: {
-                        'correlation': float(data['correlation']),
-                        'p_value': float(data['p_value']),
-                        'significant': bool(data['significant'])  # Explicit conversion
-                    }
-                    for feat, data in value.items()
-                }
-            elif key == 'chi_square':
+            if key == 'chi_square':
                 feature_importance_json[key] = {
                     feat: {
                         'chi2': float(data['chi2']),
@@ -519,15 +388,12 @@ class SocialWorkDataPreprocessor:
                     for feat, data in value.items()
                 }
             else:
-                # For ANOVA and mutual_info (simple dict of floats)
                 feature_importance_json[key] = {
                     feat: float(score) for feat, score in value.items()
                 }
         
-        # Save statistics and analysis results
         analysis_results = {
             'data_stats': self.data_stats,
-            'correlation_matrix': self.correlation_matrix.to_dict() if self.correlation_matrix is not None else {},
             'feature_importance': feature_importance_json,
             'dataset_info': {
                 'onehot_shape': list(processed_data['onehot']['X_train'].shape),
@@ -550,7 +416,6 @@ class SocialWorkDataPreprocessor:
         return f'{output_dir}'
     
     def generate_preprocessing_report(self, df, processed_data, output_dir='processed_data'):
-        """Generate comprehensive preprocessing report"""
         report_path = f'{output_dir}/preprocessing_report.md'
         
         with open(report_path, 'w', encoding='utf-8') as f:
@@ -580,30 +445,16 @@ class SocialWorkDataPreprocessor:
             if self.feature_importance_scores:
                 f.write("## Feature Importance Analysis\n\n")
                 
-                # ANOVA F-test
                 if 'anova_f_test' in self.feature_importance_scores:
                     f.write("### ANOVA F-test Results\n")
                     for feature, score in sorted(self.feature_importance_scores['anova_f_test'].items(), 
                                                key=lambda x: x[1], reverse=True)[:10]:
                         f.write(f"- {feature}: {score:.4f}\n")
                     f.write("\n")
-                
-                # Pearson Correlation
-                if 'pearson_correlation' in self.feature_importance_scores:
-                    f.write("### Pearson Correlation with Target\n")
-                    pearson_data = self.feature_importance_scores['pearson_correlation']
-                    sorted_pearson = sorted(pearson_data.items(), 
-                                          key=lambda x: abs(x[1]['correlation']), reverse=True)
-                    for feature, data in sorted_pearson[:10]:
-                        sig = " (significant)" if data['significant'] else ""
-                        f.write(f"- {feature}: r={data['correlation']:.4f}, p={data['p_value']:.4f}{sig}\n")
-                    f.write("\n")
             
             f.write("## Data Quality Checks\n\n")
             f.write("- [OK] Missing values handled\n")
             f.write("- [OK] Outliers detected and documented\n")
-            f.write("- [OK] Feature correlations analyzed\n")
-            f.write("- [OK] Pearson correlation computed\n")
             f.write("- [OK] Data split into train/test sets\n\n")
             
             f.write("## Files Generated\n\n")
@@ -611,23 +462,22 @@ class SocialWorkDataPreprocessor:
             f.write("- `dataset_label.json` - Label encoded dataset\n")
             f.write("- `preprocessing_objects.pkl` - Fitted preprocessing objects\n")
             f.write("- `analysis_results.json` - Complete analysis results\n")
-            f.write("- `preprocessing_report.md` - This report\n")
+            f.write("- `preprocessing_report.md` - This report\n\n")
+            f.write("## Note\n\n")
+            f.write("For correlation analysis, run `correlation_analysis.py` separately.\n")
         
         print(f"   [REPORT] Preprocessing report saved: {report_path}")
 
 def main():
-    """Main preprocessing pipeline"""
     print("[START] SOCIAL WORK EXAM DATA PREPROCESSING PIPELINE")
     print("="*60)
     
-    # Initialize preprocessor
     preprocessor = SocialWorkDataPreprocessor()
     
-    # Load data - Try different locations
     csv_files_to_try = [
-        'social_work_exam_dataset.csv',  # Current directory
-        '../social_work_exam_dataset.csv',  # Parent directory
-        os.path.join('..', 'social_work_exam_dataset.csv')  # Alternative parent
+        'social_work_exam_dataset.csv',
+        '../social_work_exam_dataset.csv',
+        os.path.join('..', 'social_work_exam_dataset.csv')
     ]
     
     df = None
@@ -644,48 +494,31 @@ def main():
         print(f"[INFO] Current working directory: {os.getcwd()}")
         return
     
-    # Step 1: Data Exploration
     df = preprocessor.explore_data(df)
     
-    # Step 2: Correlation Analysis (with Pearson correlation)
-    preprocessor.correlation_analysis(df)
-    
-    # Step 3: Handle Missing Values FIRST (before feature importance analysis)
     df_clean = preprocessor.handle_missing_values(df)
     
-    # Step 4: Feature Importance Analysis (now with clean data)
     preprocessor.feature_importance_analysis(df_clean)
     
-    # Step 5: Outlier Detection
     preprocessor.detect_outliers(df_clean)
     
-    # Step 6: Create Training-Ready Datasets
     processed_data = preprocessor.preprocess_for_training(df_clean)
     
-    # Step 7: Save Processed Data
     output_dir = preprocessor.save_processed_data(processed_data)
     
-    # Step 8: Generate Report
     preprocessor.generate_preprocessing_report(df_clean, processed_data, output_dir)
     
     print(f"\n[COMPLETE] Preprocessing completed successfully!")
     print(f"[OUTPUT] Output directory: {output_dir}")
     print(f"[READY] Ready for training with {processed_data['onehot']['X_train'].shape[0]} training samples")
     
-    # Summary of analysis results
     if 'anova_f_test' in preprocessor.feature_importance_scores:
         print(f"\n[SUMMARY] Top 5 Most Important Features (ANOVA F-test):")
         f_scores = preprocessor.feature_importance_scores['anova_f_test']
         for i, (feature, score) in enumerate(sorted(f_scores.items(), key=lambda x: x[1], reverse=True)[:5], 1):
             print(f"   {i}. {feature}: {score:.4f}")
     
-    if 'pearson_correlation' in preprocessor.feature_importance_scores:
-        print(f"\n[PEARSON] Top 5 Correlations with Target:")
-        pearson_data = preprocessor.feature_importance_scores['pearson_correlation']
-        sorted_pearson = sorted(pearson_data.items(), key=lambda x: abs(x[1]['correlation']), reverse=True)
-        for i, (feature, data) in enumerate(sorted_pearson[:5], 1):
-            sig = "***" if data['p_value'] < 0.001 else "**" if data['p_value'] < 0.01 else "*" if data['p_value'] < 0.05 else ""
-            print(f"   {i}. {feature}: r={data['correlation']:.4f} {sig}")
+    print(f"\n[INFO] For correlation analysis, run: python correlation_analysis.py")
 
 if __name__ == "__main__":
     main()

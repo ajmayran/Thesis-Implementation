@@ -14,6 +14,7 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 import joblib
 import os
 import warnings
+import json
 warnings.filterwarnings('ignore')
 
 class EnsembleModels:
@@ -112,6 +113,11 @@ class EnsembleModels:
             
             test_accuracy = accuracy_score(y_test, y_pred)
             
+            auc_roc = 0
+            if y_pred_proba is not None:
+                fpr, tpr, _ = roc_curve(y_test, y_pred_proba)
+                auc_roc = auc(fpr, tpr)
+            
             results[name] = {
                 'accuracy': test_accuracy,
                 'cv_10fold_mean': cv_mean,
@@ -122,7 +128,8 @@ class EnsembleModels:
                 'classification_report': classification_report(y_test, y_pred, output_dict=True),
                 'y_pred': y_pred,
                 'y_pred_proba': y_pred_proba,
-                'confusion_matrix': confusion_matrix(y_test, y_pred).tolist()
+                'confusion_matrix': confusion_matrix(y_test, y_pred).tolist(),
+                'auc_roc': auc_roc
             }
             
             print(f"   [RESULTS] {name.upper()}")
@@ -130,9 +137,32 @@ class EnsembleModels:
             print(f"      10-Fold CV Std:  {cv_std:.4f}")
             print(f"      10-Fold Range:   [{cv_min:.4f}, {cv_max:.4f}]")
             print(f"      Test Accuracy:   {test_accuracy:.4f}")
+            print(f"      AUC-ROC:         {auc_roc:.4f}")
+        
+        self._save_results_to_json(results, 'ensemble_comparison/ensemble_models_results.json')
         
         return results
     
+    def _save_results_to_json(self, results, filepath):
+        """Save ensemble results to JSON file"""
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        
+        json_results = {}
+        for name, result in results.items():
+            json_results[name] = {
+                'accuracy': float(result['accuracy']),
+                'cv_10fold_mean': float(result['cv_10fold_mean']),
+                'cv_10fold_std': float(result['cv_10fold_std']),
+                'cv_10fold_min': float(result['cv_10fold_min']),
+                'cv_10fold_max': float(result['cv_10fold_max']),
+                'auc_roc': float(result.get('auc_roc', 0)),
+                'classification_report': result['classification_report']
+            }
+        
+        with open(filepath, 'w') as f:
+            json.dump(json_results, f, indent=2)
+        
+        print(f"[SAVED] Ensemble results saved to {filepath}")
     def visualize_10fold_results(self, results, output_dir='ensemble_comparison'):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
@@ -393,6 +423,254 @@ class EnsembleModels:
         print(f"[SAVED] {output_dir}/ensemble_performance_summary.csv")
         
         return summary_df
+    
+    def compare_base_vs_ensemble_models(self, ensemble_results, base_results_path='model_comparison/base_models_results.json', output_dir='ensemble_comparison'):
+        """Compare base models vs ensemble models across all metrics"""
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        
+        print("\n" + "="*90)
+        print("BASE MODELS vs ENSEMBLE MODELS COMPARISON")
+        print("="*90)
+        
+        base_results = {}
+        if os.path.exists(base_results_path):
+            import json
+            with open(base_results_path, 'r') as f:
+                base_results = json.load(f)
+            print(f"[INFO] Loaded {len(base_results)} base model results")
+        else:
+            print(f"[WARNING] Base model results not found at {base_results_path}")
+            return None
+        
+        comparison_data = []
+        
+        for name, result in base_results.items():
+            if isinstance(result, dict):
+                comparison_data.append({
+                    'Type': 'Base',
+                    'Model': name.upper(),
+                    'Accuracy': result.get('accuracy', 0),
+                    'Precision': result.get('classification_report', {}).get('1', {}).get('precision', 0),
+                    'Recall': result.get('classification_report', {}).get('1', {}).get('recall', 0),
+                    'F1-Score': result.get('classification_report', {}).get('1', {}).get('f1-score', 0),
+                    'AUC-ROC': result.get('auc_roc', 0),
+                    'CV Mean': result.get('cv_10fold_mean', 0),
+                    'CV Std': result.get('cv_10fold_std', 0)
+                })
+        
+        for name, result in ensemble_results.items():
+            comparison_data.append({
+                'Type': 'Ensemble',
+                'Model': name.upper(),
+                'Accuracy': result['accuracy'],
+                'Precision': result['classification_report']['1']['precision'],
+                'Recall': result['classification_report']['1']['recall'],
+                'F1-Score': result['classification_report']['1']['f1-score'],
+                'AUC-ROC': result.get('auc_roc', 0),
+                'CV Mean': result['cv_10fold_mean'],
+                'CV Std': result['cv_10fold_std']
+            })
+        
+        comparison_df = pd.DataFrame(comparison_data)
+        comparison_df = comparison_df.sort_values('Accuracy', ascending=False)
+        
+        csv_path = f'{output_dir}/base_vs_ensemble_comparison.csv'
+        comparison_df.to_csv(csv_path, index=False)
+        print(f"[SAVED] {csv_path}")
+        
+        print(f"\n{'Type':<10} {'Model':<25} {'Accuracy':<10} {'Precision':<10} {'Recall':<10} {'F1-Score':<10} {'AUC-ROC':<10}")
+        print("-"*90)
+        for _, row in comparison_df.iterrows():
+            print(f"{row['Type']:<10} {row['Model']:<25} {row['Accuracy']:<10.4f} {row['Precision']:<10.4f} "
+                  f"{row['Recall']:<10.4f} {row['F1-Score']:<10.4f} {row['AUC-ROC']:<10.4f}")
+        
+        self._visualize_base_vs_ensemble(comparison_df, output_dir)
+        
+        return comparison_df
+    
+    def _visualize_base_vs_ensemble(self, comparison_df, output_dir):
+        """Create comprehensive visualizations comparing base vs ensemble models"""
+        
+        fig, axes = plt.subplots(2, 3, figsize=(20, 12))
+        
+        metrics = ['Accuracy', 'Precision', 'Recall', 'F1-Score', 'AUC-ROC', 'CV Mean']
+        positions = [(0,0), (0,1), (0,2), (1,0), (1,1), (1,2)]
+        
+        base_color = '#3498db'
+        ensemble_color = '#f59e0b'
+        
+        for metric, (row, col) in zip(metrics, positions):
+            ax = axes[row, col]
+            
+            base_data = comparison_df[comparison_df['Type'] == 'Base'].sort_values('Model')
+            ensemble_data = comparison_df[comparison_df['Type'] == 'Ensemble'].sort_values('Model')
+            
+            num_base = len(base_data)
+            num_ensemble = len(ensemble_data)
+            
+            x_base = np.arange(num_base)
+            x_ensemble = np.arange(num_base, num_base + num_ensemble)
+            
+            width = 0.7
+            
+            bars1 = ax.bar(x_base, base_data[metric], width, 
+                        label='Base Models', color=base_color, alpha=0.8)
+            bars2 = ax.bar(x_ensemble, ensemble_data[metric], width,
+                        label='Ensemble Models', color=ensemble_color, alpha=0.8)
+            
+            for bar in bars1:
+                height = bar.get_height()
+                ax.text(bar.get_x() + bar.get_width()/2., height,
+                    f'{height:.3f}', ha='center', va='bottom', fontsize=8)
+            
+            for bar in bars2:
+                height = bar.get_height()
+                ax.text(bar.get_x() + bar.get_width()/2., height,
+                    f'{height:.3f}', ha='center', va='bottom', fontsize=8)
+            
+            all_models = list(base_data['Model']) + list(ensemble_data['Model'])
+            ax.set_xticks(list(x_base) + list(x_ensemble))
+            ax.set_xticklabels(all_models, rotation=45, ha='right', fontsize=9)
+            ax.set_ylabel(metric, fontsize=11, fontweight='bold')
+            ax.set_title(f'{metric} Comparison', fontsize=13, fontweight='bold')
+            ax.legend(loc='upper right')
+            ax.grid(axis='y', alpha=0.3)
+            ax.set_ylim([0, 1.0])
+            
+            if num_base > 0 and num_ensemble > 0:
+                ax.axvline(x=num_base - 0.5, color='red', linestyle='--', linewidth=2, alpha=0.5)
+        
+        plt.tight_layout()
+        plt.savefig(f'{output_dir}/base_vs_ensemble_metrics_comparison.png', dpi=300, bbox_inches='tight')
+        print(f"[SAVED] {output_dir}/base_vs_ensemble_metrics_comparison.png")
+        plt.close()
+        
+        fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+        
+        base_data = comparison_df[comparison_df['Type'] == 'Base']
+        ensemble_data = comparison_df[comparison_df['Type'] == 'Ensemble']
+        
+        base_avg = base_data[['Accuracy', 'Precision', 'Recall', 'F1-Score', 'AUC-ROC']].mean()
+        ensemble_avg = ensemble_data[['Accuracy', 'Precision', 'Recall', 'F1-Score', 'AUC-ROC']].mean()
+        
+        x = np.arange(len(base_avg))
+        width = 0.35
+        
+        bars1 = axes[0].bar(x - width/2, base_avg.values, width, 
+                        label='Base Models Avg', color=base_color, alpha=0.8)
+        bars2 = axes[0].bar(x + width/2, ensemble_avg.values, width,
+                        label='Ensemble Models Avg', color=ensemble_color, alpha=0.8)
+        
+        for bar in bars1:
+            height = bar.get_height()
+            axes[0].text(bar.get_x() + bar.get_width()/2., height,
+                        f'{height:.3f}', ha='center', va='bottom', fontweight='bold')
+        
+        for bar in bars2:
+            height = bar.get_height()
+            axes[0].text(bar.get_x() + bar.get_width()/2., height,
+                        f'{height:.3f}', ha='center', va='bottom', fontweight='bold')
+        
+        axes[0].set_xticks(x)
+        axes[0].set_xticklabels(base_avg.index, fontsize=11)
+        axes[0].set_ylabel('Score', fontsize=12, fontweight='bold')
+        axes[0].set_title('Average Performance: Base vs Ensemble', fontsize=14, fontweight='bold')
+        axes[0].legend()
+        axes[0].grid(axis='y', alpha=0.3)
+        axes[0].set_ylim([0, 1.0])
+        
+        from math import pi
+        
+        categories = ['Accuracy', 'Precision', 'Recall', 'F1-Score', 'AUC-ROC']
+        N = len(categories)
+        
+        angles = [n / float(N) * 2 * pi for n in range(N)]
+        angles += angles[:1]
+        
+        ax = plt.subplot(122, projection='polar')
+        
+        base_values = list(base_avg.values) + [base_avg.values[0]]
+        ensemble_values = list(ensemble_avg.values) + [ensemble_avg.values[0]]
+        
+        ax.plot(angles, base_values, 'o-', linewidth=2, 
+            label='Base Models Avg', color=base_color)
+        ax.fill(angles, base_values, alpha=0.25, color=base_color)
+        
+        ax.plot(angles, ensemble_values, 'o-', linewidth=2,
+            label='Ensemble Models Avg', color=ensemble_color)
+        ax.fill(angles, ensemble_values, alpha=0.25, color=ensemble_color)
+        
+        ax.set_xticks(angles[:-1])
+        ax.set_xticklabels(categories, size=11, fontweight='bold')
+        ax.set_ylim(0, 1)
+        ax.set_title('Performance Radar: Base vs Ensemble', size=14, fontweight='bold', pad=20)
+        ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
+        ax.grid(True)
+        
+        plt.tight_layout()
+        plt.savefig(f'{output_dir}/base_vs_ensemble_summary.png', dpi=300, bbox_inches='tight')
+        print(f"[SAVED] {output_dir}/base_vs_ensemble_summary.png")
+        plt.close()
+        
+        fig, ax = plt.subplots(figsize=(16, 8))
+        
+        base_data_sorted = comparison_df[comparison_df['Type'] == 'Base'].sort_values('Model')
+        ensemble_data_sorted = comparison_df[comparison_df['Type'] == 'Ensemble'].sort_values('Model')
+        
+        sorted_df = pd.concat([base_data_sorted, ensemble_data_sorted])
+        
+        x = np.arange(len(sorted_df))
+        width = 0.15
+        
+        metrics = ['Accuracy', 'Precision', 'Recall', 'F1-Score', 'AUC-ROC']
+        colors_grouped = ['#2ecc71', '#3498db', '#e74c3c', '#f39c12', '#9b59b6']
+        
+        for i, metric in enumerate(metrics):
+            offset = width * (i - len(metrics)/2 + 0.5)
+            bars = ax.bar(x + offset, sorted_df[metric], width, 
+                        label=metric, color=colors_grouped[i], alpha=0.8)
+        
+        ax.set_xlabel('Models', fontsize=12, fontweight='bold')
+        ax.set_ylabel('Score', fontsize=12, fontweight='bold')
+        ax.set_title('All Metrics Comparison: Base vs Ensemble Models', fontsize=14, fontweight='bold')
+        ax.set_xticks(x)
+        ax.set_xticklabels(sorted_df['Model'].values, 
+                        rotation=45, ha='right', fontsize=9)
+        ax.legend(loc='upper right')
+        ax.grid(axis='y', alpha=0.3)
+        ax.set_ylim([0, 1.0])
+        
+        num_base = len(base_data_sorted)
+        if num_base > 0:
+            ax.axvline(x=num_base - 0.5, color='red', linestyle='--', linewidth=2, alpha=0.5)
+            
+            ax.text(num_base/2 - 0.5, 0.95, 
+                'Base Models', ha='center', fontsize=12, fontweight='bold', 
+                bbox=dict(boxstyle='round', facecolor=base_color, alpha=0.3))
+            
+            ax.text(num_base + len(ensemble_data_sorted)/2 - 0.5, 0.95,
+                'Ensemble Models', ha='center', fontsize=12, fontweight='bold',
+                bbox=dict(boxstyle='round', facecolor=ensemble_color, alpha=0.3))
+        
+        plt.tight_layout()
+        plt.savefig(f'{output_dir}/base_vs_ensemble_all_metrics.png', dpi=300, bbox_inches='tight')
+        print(f"[SAVED] {output_dir}/base_vs_ensemble_all_metrics.png")
+        plt.close()
+        
+        print("\n[STATISTICS] Performance Statistics:")
+        print("\nBase Models:")
+        base_stats = comparison_df[comparison_df['Type'] == 'Base'][['Accuracy', 'Precision', 'Recall', 'F1-Score', 'AUC-ROC']].describe()
+        print(base_stats)
+        
+        print("\nEnsemble Models:")
+        ensemble_stats = comparison_df[comparison_df['Type'] == 'Ensemble'][['Accuracy', 'Precision', 'Recall', 'F1-Score', 'AUC-ROC']].describe()
+        print(ensemble_stats)
+        
+        print("\n[BEST PERFORMERS]")
+        for metric in ['Accuracy', 'Precision', 'Recall', 'F1-Score', 'AUC-ROC']:
+            best = comparison_df.loc[comparison_df[metric].idxmax()]
+            print(f"Best {metric}: {best['Model']} ({best['Type']}) = {best[metric]:.4f}")
     
     def create_ensemble_accuracy_comparison(self, results, output_dir='ensemble_comparison'):
         if not os.path.exists(output_dir):
@@ -729,8 +1007,15 @@ def main():
     
     ensemble.generate_ensemble_report(ensemble_results)
     
+    print(f"\n[COMPARISON] Comparing Base vs Ensemble Models...")
+    comparison_df = ensemble.compare_base_vs_ensemble_models(ensemble_results)
+    
     print(f"\n[SUMMARY] Performance Summary:")
     print(summary_df.to_string(index=False))
+    
+    if comparison_df is not None:
+        print(f"\n[COMPARISON SUMMARY]")
+        print(comparison_df.to_string(index=False))
     
     ensemble.save_ensemble_models()
     
@@ -742,6 +1027,10 @@ def main():
     print(f"   - ensemble_comparison/ensemble_accuracy_comparison.png")
     print(f"   - ensemble_comparison/ensemble_prediction_comparison.png")
     print(f"   - ensemble_comparison/ensemble_evaluation_report.md")
+    print(f"   - ensemble_comparison/base_vs_ensemble_comparison.csv")
+    print(f"   - ensemble_comparison/base_vs_ensemble_metrics_comparison.png")
+    print(f"   - ensemble_comparison/base_vs_ensemble_summary.png")
+    print(f"   - ensemble_comparison/base_vs_ensemble_all_metrics.png")
 
 if __name__ == "__main__":
     main()

@@ -127,6 +127,7 @@ class SocialWorkPredictorModels:
         """Split data into training and testing sets"""
         return train_test_split(X, y, test_size=test_size, random_state=random_state, stratify=y)
     
+
     def train_base_models(self):
         """Train base models with 10-fold cross-validation"""
         if not hasattr(self, 'X_train') or self.X_train is None:
@@ -139,14 +140,11 @@ class SocialWorkPredictorModels:
         
         results = {}
         
-        # Combine train and test for 10-fold CV
         X_full = np.vstack([self.X_train, self.X_test])
         y_full = np.concatenate([self.y_train, self.y_test])
         
-        # 10-fold stratified cross-validation
         cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
         
-        # Model configurations
         model_configs = {
             'knn': {
                 'model': KNeighborsClassifier(),
@@ -225,6 +223,11 @@ class SocialWorkPredictorModels:
             y_pred_proba = best_model.predict_proba(self.X_test)[:, 1] if hasattr(best_model, 'predict_proba') else None
             test_accuracy = accuracy_score(self.y_test, y_pred)
             
+            auc_roc = 0
+            if y_pred_proba is not None:
+                fpr, tpr, _ = roc_curve(self.y_test, y_pred_proba)
+                auc_roc = auc(fpr, tpr)
+            
             self.models[name] = best_model
             results[name] = {
                 'accuracy': test_accuracy,
@@ -237,7 +240,8 @@ class SocialWorkPredictorModels:
                 'classification_report': classification_report(self.y_test, y_pred, output_dict=True),
                 'y_pred': y_pred,
                 'y_pred_proba': y_pred_proba,
-                'confusion_matrix': confusion_matrix(self.y_test, y_pred).tolist()
+                'confusion_matrix': confusion_matrix(self.y_test, y_pred).tolist(),
+                'auc_roc': auc_roc
             }
             
             print(f"   [RESULTS] {name.upper()}")
@@ -245,10 +249,35 @@ class SocialWorkPredictorModels:
             print(f"      10-Fold CV Std:  {cv_std:.4f}")
             print(f"      10-Fold Range:   [{cv_min:.4f}, {cv_max:.4f}]")
             print(f"      Test Accuracy:   {test_accuracy:.4f}")
+            print(f"      AUC-ROC:         {auc_roc:.4f}")
             print(f"      Best Params:     {grid_search.best_params_}")
+        
+        self._save_results_to_json(results, 'model_comparison/base_models_results.json')
         
         return results
     
+    def _save_results_to_json(self, results, filepath):
+        """Save results to JSON file"""
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        
+        json_results = {}
+        for name, result in results.items():
+            json_results[name] = {
+                'accuracy': float(result['accuracy']),
+                'cv_10fold_mean': float(result['cv_10fold_mean']),
+                'cv_10fold_std': float(result['cv_10fold_std']),
+                'cv_10fold_min': float(result['cv_10fold_min']),
+                'cv_10fold_max': float(result['cv_10fold_max']),
+                'auc_roc': float(result.get('auc_roc', 0)),
+                'best_params': result['best_params'],
+                'classification_report': result['classification_report']
+            }
+        
+        with open(filepath, 'w') as f:
+            json.dump(json_results, f, indent=2)
+        
+        print(f"[SAVED] Results saved to {filepath}")
+
     def visualize_10fold_results(self, results, output_dir='model_comparison'):
         """Create visualizations for 10-fold cross-validation results"""
         if not os.path.exists(output_dir):
