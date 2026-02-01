@@ -6,13 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prediction Results - Social Work Licensure</title>
     
-    <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-    
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
@@ -104,6 +99,16 @@
             background: #f0fdf4;
         }
         
+        .recommendation-blue {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        
+        .recommendation-purple {
+            border-color: #8b5cf6;
+            background: #f5f3ff;
+        }
+        
         .progress-bar {
             height: 24px;
             background: #e5e7eb;
@@ -139,7 +144,6 @@
     
     <div class="flex min-h-screen">
         
-        <!-- Sidebar -->
         <aside class="sidebar w-64 text-white p-6 hidden md:block">
             <div class="flex items-center mb-8">
                 <div class="mr-3 bg-white/10 p-2 rounded-lg">
@@ -171,10 +175,8 @@
             </div>
         </aside>
 
-        <!-- Main Content -->
         <div class="flex-1">
             
-            <!-- Header -->
             <header class="bg-white p-4 md:pl-8 md:pr-8 flex items-center justify-between shadow-sm">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-800">Prediction Results</h1>
@@ -190,15 +192,13 @@
                 </div>
             </header>
 
-            <!-- Results Container -->
             <main class="p-6 md:p-8 max-w-7xl mx-auto">
                 
-                <!-- Overall Result Banner -->
                 <div class="glass p-8 mb-6 text-center">
                     <div class="mb-4">
-                        {% if avg_probability >= 0.75 %}
+                        {% if avg_probability >= 75 %}
                             <i class="fa-solid fa-circle-check text-green-500 text-6xl"></i>
-                        {% elif avg_probability >= 0.5 %}
+                        {% elif avg_probability >= 50 %}
                             <i class="fa-solid fa-triangle-exclamation text-yellow-500 text-6xl"></i>
                         {% else %}
                             <i class="fa-solid fa-circle-xmark text-red-500 text-6xl"></i>
@@ -211,17 +211,15 @@
                     
                     <p class="text-gray-600 text-lg mb-6">{{ risk_info.message }}</p>
                     
-                    <div class="probability-circle {% if avg_probability >= 0.75 %}bg-gradient-to-br from-green-400 to-green-600{% elif avg_probability >= 0.5 %}bg-gradient-to-br from-yellow-400 to-yellow-600{% else %}bg-gradient-to-br from-red-400 to-red-600{% endif %} text-white">
+                    <div class="probability-circle {% if avg_probability >= 75 %}bg-gradient-to-br from-green-400 to-green-600{% elif avg_probability >= 50 %}bg-gradient-to-br from-yellow-400 to-yellow-600{% else %}bg-gradient-to-br from-red-400 to-red-600{% endif %} text-white">
                         {{ avg_probability|floatformat:2 }}%
                     </div>
                     
                     <p class="text-sm text-gray-600 mt-4">Average Pass Probability</p>
                 </div>
 
-                <!-- Recommendations and Input Summary Grid -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     
-                    <!-- Personalized Recommendations -->
                     <div class="glass p-6">
                         <h3 class="text-xl font-bold text-gray-800 mb-4">
                             <i class="fa-solid fa-lightbulb text-yellow-500 mr-2"></i>
@@ -233,10 +231,10 @@
                                 <div class="recommendation-card recommendation-{{ rec.color }}">
                                     <div class="flex items-start">
                                         <div class="flex-shrink-0 mr-3">
-                                            <i class="fa-solid {{ rec.icon }} text-2xl {% if rec.color == 'red' %}text-red-600{% elif rec.color == 'orange' %}text-orange-600{% else %}text-green-600{% endif %}"></i>
+                                            <i class="fa-solid {{ rec.icon }} text-2xl {% if rec.color == 'red' %}text-red-600{% elif rec.color == 'orange' %}text-orange-600{% elif rec.color == 'blue' %}text-blue-600{% elif rec.color == 'purple' %}text-purple-600{% else %}text-green-600{% endif %}"></i>
                                         </div>
                                         <div class="flex-1">
-                                            <h4 class="font-semibold {% if rec.color == 'red' %}text-red-800{% elif rec.color == 'orange' %}text-orange-800{% else %}text-green-800{% endif %} mb-1">
+                                            <h4 class="font-semibold {% if rec.color == 'red' %}text-red-800{% elif rec.color == 'orange' %}text-orange-800{% elif rec.color == 'blue' %}text-blue-800{% elif rec.color == 'purple' %}text-purple-800{% else %}text-green-800{% endif %} mb-1">
                                                 {{ rec.title }}
                                             </h4>
                                             <p class="text-sm text-gray-700">{{ rec.message }}</p>
@@ -259,7 +257,6 @@
                         </div>
                     </div>
                     
-                    <!-- Your Input Summary -->
                     <div class="glass p-6">
                         <h3 class="text-xl font-bold text-gray-800 mb-4">
                             <i class="fa-solid fa-clipboard-list text-blue-600 mr-2"></i>
@@ -350,7 +347,6 @@
                     
                 </div>
 
-                <!-- Action Buttons -->
                 <div class="flex gap-4 mt-6">
                     <a href="{% url 'prediction:predict' %}" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-lg font-semibold text-center transition flex items-center justify-center">
                         <i class="fa-solid fa-plus mr-2"></i>
@@ -362,7 +358,6 @@
                     </button>
                 </div>
 
-                <!-- Disclaimer -->
                 <div class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <div class="flex items-start">
                         <i class="fa-solid fa-triangle-exclamation text-yellow-600 text-xl mr-3 mt-1"></i>
@@ -382,7 +377,6 @@
     </div>
 
     <script>
-        // Animate progress bars
         window.addEventListener('load', function() {
             const progressFills = document.querySelectorAll('.progress-fill');
             progressFills.forEach(fill => {

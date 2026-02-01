@@ -17,8 +17,8 @@ sys.path.append(models_path)
 from .forms import PredictionForm
 from .utils import load_selected_model, prepare_input_data, generate_recommendations, get_risk_level
 
-SELECTED_MODEL_NAME = 'stacking_ridge'  
-SELECTED_MODEL_TYPE = 'ensemble'  
+SELECTED_MODEL_NAME = 'stacking'
+SELECTED_MODEL_TYPE = 'classification_ensemble'
 
 @login_required
 def predict_view(request):
@@ -42,7 +42,8 @@ def predict_view(request):
                 prediction_result = make_single_prediction(
                     model=model,
                     preprocessor=preprocessor,
-                    input_data=input_data
+                    input_data=input_data,
+                    model_type=SELECTED_MODEL_TYPE
                 )
                 
                 if not prediction_result:
@@ -250,7 +251,6 @@ def history_view(request):
     
     return render(request, 'pages/history.html', context)
 
-
 @login_required
 @require_http_methods(["POST"])
 def delete_prediction(request, prediction_id):
@@ -280,7 +280,8 @@ def predict_exam_result(request):
         prediction_result = make_single_prediction(
             model=model,
             preprocessor=preprocessor,
-            input_data=data
+            input_data=data,
+            model_type=SELECTED_MODEL_TYPE
         )
         
         if not prediction_result:
@@ -321,35 +322,68 @@ def model_status(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-def make_single_prediction(model, preprocessor, input_data):
+
+def make_single_prediction(model, preprocessor, input_data, model_type='base'):
     try:
         df_input = pd.DataFrame([input_data])
         
         categorical_columns = ['Gender', 'IncomeLevel', 'EmploymentStatus']
         numerical_columns = ['Age', 'StudyHours', 'SleepHours', 'Confidence', 
-                           'TestAnxiety', 'MockExamScore', 'GPA', 'Scholarship', 'InternshipGrade']
-        binary_columns = ['ReviewCenter']
+                           'MockExamScore', 'GPA', 'InternshipGrade', 'TestAnxiety']
+        binary_columns = ['ReviewCenter', 'Scholarship']
         
         all_feature_columns = categorical_columns + numerical_columns + binary_columns
         X_input = df_input[all_feature_columns].copy()
         
-        if preprocessor is None:
-            print("[ERROR] Preprocessor is None!")
-            return None
+        if model_type == 'classification_ensemble':
+            if 'MockExamScore' in X_input.columns and X_input['MockExamScore'].isnull().any():
+                X_input.loc[:, 'MockExamScore'] = X_input['MockExamScore'].fillna(77.0)
+            
+            label_encoders = preprocessor['label_encoders']
+            for col in categorical_columns:
+                if col in X_input.columns:
+                    X_input.loc[:, col] = label_encoders[col].transform(X_input[col].astype(str))
+            
+            scaler = preprocessor['label_scaler']
+            X_input_processed = scaler.transform(X_input)
+            
+        elif model_type == 'classification_base':
+            if preprocessor is None:
+                print("[ERROR] Preprocessor is None!")
+                return None
+            X_input_processed = preprocessor.transform(X_input)
+        else:
+            if preprocessor is None:
+                print("[ERROR] Preprocessor is None!")
+                return None
+            X_input_processed = preprocessor.transform(X_input)
         
-        X_input_processed = preprocessor.transform(X_input)
-        
-        predicted_score = model.predict(X_input_processed)[0]
-        
-        PASSING_SCORE = 75.0
-        prediction_class = 1 if predicted_score >= PASSING_SCORE else 0
-        
-        return {
-            'prediction': prediction_class,
-            'predicted_score': float(predicted_score),
-            'pass_probability': float(predicted_score / 100.0),
-            'prediction_label': 'Pass' if prediction_class == 1 else 'Fail'
-        }
+        if model_type in ['classification_ensemble', 'classification_base']:
+            prediction_class = model.predict(X_input_processed)[0]
+            
+            if hasattr(model, 'predict_proba'):
+                probabilities = model.predict_proba(X_input_processed)[0]
+                pass_probability = float(probabilities[1])
+            else:
+                pass_probability = float(prediction_class)
+            
+            return {
+                'prediction': int(prediction_class),
+                'predicted_score': float(pass_probability * 100),
+                'pass_probability': pass_probability,
+                'prediction_label': 'Pass' if prediction_class == 1 else 'Fail'
+            }
+        else:
+            predicted_score = model.predict(X_input_processed)[0]
+            PASSING_SCORE = 75.0
+            prediction_class = 1 if predicted_score >= PASSING_SCORE else 0
+            
+            return {
+                'prediction': prediction_class,
+                'predicted_score': float(predicted_score),
+                'pass_probability': float(predicted_score / 100.0),
+                'prediction_label': 'Pass' if prediction_class == 1 else 'Fail'
+            }
         
     except Exception as e:
         print(f"[ERROR] Prediction failed: {e}")

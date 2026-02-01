@@ -95,7 +95,7 @@
                             <div class="glass p-6">
                                 <div class="flex items-center justify-between mb-4">
                                     <div class="flex items-center">
-                                        <div class="w-16 h-16 rounded-full flex items-center justify-center mr-4 {% if pred.probability >= 75 %}bg-green-100{% elif pred.probability >= 50 %}bg-yellow-100{% else %}bg-red-100{% endif %}">
+                                        <div class="w-16 h-16 rounded-full flex items-center justify-center mr-4 {% if pred.probability >= 75 %}bg-green-100{% elif pred.probability >= 60 %}bg-yellow-100{% else %}bg-red-100{% endif %}">
                                             <span class="text-2xl font-bold {% if pred.probability >= 75 %}text-green-600{% elif pred.probability >= 50 %}text-yellow-600{% else %}text-red-600{% endif %}">
                                                 {{ pred.probability|floatformat:0 }}%
                                             </span>

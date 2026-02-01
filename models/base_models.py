@@ -24,7 +24,6 @@ class SocialWorkPredictorModels:
         self.preprocessor = None
         self.feature_names = []
         
-        # Features available BEFORE taking the exam
         self.categorical_columns = ['Gender', 'IncomeLevel', 'EmploymentStatus']
         self.numerical_columns = ['Age', 'StudyHours', 'SleepHours', 'Confidence', 'TestAnxiety',
                                 'MockExamScore', 'GPA', 'Scholarship', 'InternshipGrade']
@@ -33,7 +32,6 @@ class SocialWorkPredictorModels:
         self.target_column = 'Passed'
         
     def load_preprocessed_data(self, data_dir='classification_processed_data', approach='label'):
-        """Load preprocessed data from preprocessing.py output"""
         try:
             json_file = f'{data_dir}/dataset_{approach}.json'
             
@@ -71,7 +69,6 @@ class SocialWorkPredictorModels:
             return None
     
     def load_data_from_csv(self, file_path):
-        """Load data from CSV file"""
         try:
             df = pd.read_csv(file_path)
             print(f"[SUCCESS] Data loaded from CSV successfully. Shape: {df.shape}")
@@ -81,13 +78,11 @@ class SocialWorkPredictorModels:
             return None
     
     def preprocess_data(self, df):
-        """Preprocess data using features available BEFORE exam"""
         try:
             df = df.copy()
             df = df.dropna()
             print(f"[CLEAN] After removing missing values. Shape: {df.shape}")
             
-            # Use only PRE-EXAM features
             all_feature_columns = self.categorical_columns + self.numerical_columns + self.binary_columns
             X = df[all_feature_columns].copy()
             y = df[self.target_column].values
@@ -96,7 +91,6 @@ class SocialWorkPredictorModels:
             for col in all_feature_columns:
                 print(f"   - {col}")
             
-            # Create preprocessor
             self.preprocessor = ColumnTransformer(
                 transformers=[
                     ('num', StandardScaler(), self.numerical_columns + self.binary_columns),
@@ -107,7 +101,6 @@ class SocialWorkPredictorModels:
             
             X_processed = self.preprocessor.fit_transform(X)
             
-            # Get feature names
             num_feature_names = self.numerical_columns + self.binary_columns
             cat_feature_names = []
             for i, col in enumerate(self.categorical_columns):
@@ -124,24 +117,21 @@ class SocialWorkPredictorModels:
             return None, None
     
     def split_data(self, X, y, test_size=0.2, random_state=42):
-        """Split data into training and testing sets"""
         return train_test_split(X, y, test_size=test_size, random_state=random_state, stratify=y)
     
 
     def train_base_models(self):
-        """Train base models with 10-fold cross-validation"""
         if not hasattr(self, 'X_train') or self.X_train is None:
             print("[ERROR] Please load and preprocess data first")
             return None
         
         print(f"\n[TRAINING] Training base models with 10-FOLD CROSS-VALIDATION")
-        print(f"[INFO] Using {self.X_train.shape[1]} features")
+        print(f"[INFO] Training set: {self.X_train.shape[0]} samples")
+        print(f"[INFO] Test set: {self.X_test.shape[0]} samples")
+        print(f"[INFO] Features: {self.X_train.shape[1]}")
         print("="*70)
         
         results = {}
-        
-        X_full = np.vstack([self.X_train, self.X_test])
-        y_full = np.concatenate([self.y_train, self.y_test])
         
         cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
         
@@ -176,11 +166,12 @@ class SocialWorkPredictorModels:
                 }
             },
             'neural_network': {
-                'model': MLPClassifier(random_state=42, max_iter=1000),
+                'model': MLPClassifier(random_state=42, max_iter=2000, early_stopping=True, validation_fraction=0.1),
                 'params': {
                     'hidden_layer_sizes': [(50,), (100,), (50, 25)],
                     'activation': ['relu', 'tanh'],
-                    'alpha': [0.0001, 0.001, 0.01]
+                    'alpha': [0.0001, 0.001, 0.01],
+                    'learning_rate_init': [0.001, 0.01]
                 }
             },
             'naive_bayes': {
@@ -192,7 +183,7 @@ class SocialWorkPredictorModels:
         }
         
         for name, config in model_configs.items():
-            print(f"\n[MODEL] Training {name.upper()} with 10-fold CV...")
+            print(f"\n[MODEL] Training {name.upper()} with 10-fold CV on TRAINING SET ONLY...")
             
             grid_search = GridSearchCV(
                 config['model'], 
@@ -200,10 +191,11 @@ class SocialWorkPredictorModels:
                 cv=cv,
                 scoring='accuracy',
                 n_jobs=-1,
-                return_train_score=True
+                return_train_score=True,
+                verbose=0
             )
             
-            grid_search.fit(X_full, y_full)
+            grid_search.fit(self.X_train, self.y_train)
             best_model = grid_search.best_estimator_
             
             cv_results = grid_search.cv_results_
@@ -245,19 +237,22 @@ class SocialWorkPredictorModels:
             }
             
             print(f"   [RESULTS] {name.upper()}")
-            print(f"      10-Fold CV Mean: {cv_mean:.4f}")
+            print(f"      10-Fold CV Mean (Train only): {cv_mean:.4f}")
             print(f"      10-Fold CV Std:  {cv_std:.4f}")
             print(f"      10-Fold Range:   [{cv_min:.4f}, {cv_max:.4f}]")
-            print(f"      Test Accuracy:   {test_accuracy:.4f}")
+            print(f"      Test Accuracy (Unseen data): {test_accuracy:.4f}")
             print(f"      AUC-ROC:         {auc_roc:.4f}")
             print(f"      Best Params:     {grid_search.best_params_}")
+            
+            gap = abs(test_accuracy - cv_mean)
+            if gap > 0.15:
+                print(f"      [WARNING] Large gap between CV and Test ({gap:.4f}) - Possible overfitting!")
         
         self._save_results_to_json(results, 'model_comparison/base_models_results.json')
         
         return results
     
     def _save_results_to_json(self, results, filepath):
-        """Save results to JSON file"""
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
         
         json_results = {}
@@ -279,7 +274,6 @@ class SocialWorkPredictorModels:
         print(f"[SAVED] Results saved to {filepath}")
 
     def visualize_10fold_results(self, results, output_dir='model_comparison'):
-        """Create visualizations for 10-fold cross-validation results"""
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         
@@ -392,7 +386,6 @@ class SocialWorkPredictorModels:
         print(f"[SAVED] 10-fold detailed scores: {output_dir}/10fold_detailed_scores.csv")
     
     def print_10fold_summary(self, results):
-        """Print detailed 10-fold cross-validation summary"""
         print("\n" + "="*80)
         print("10-FOLD CROSS-VALIDATION SUMMARY")
         print("="*80)
@@ -426,7 +419,6 @@ class SocialWorkPredictorModels:
         print(f"Best Average Performance: {best_avg[0].upper()} (CV Mean: {best_avg[1]['cv_10fold_mean']:.4f})")
     
     def compare_models_visualization(self, results, output_dir='model_comparison'):
-        """Create comprehensive visualizations comparing the 6 models"""
         os.makedirs(output_dir, exist_ok=True)
         
         model_names = list(results.keys())
@@ -525,7 +517,6 @@ class SocialWorkPredictorModels:
         return summary_df
 
     def create_top_accuracy_comparison(self, results, output_dir='model_comparison'):
-        """Create focused accuracy comparison for all models"""
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
@@ -627,7 +618,6 @@ class SocialWorkPredictorModels:
         return results
     
     def predict_single(self, input_data):
-        """Make prediction for a single candidate BEFORE they take the exam"""
         try:
             if isinstance(input_data, dict):
                 mapped_data = {}
@@ -678,7 +668,6 @@ class SocialWorkPredictorModels:
             return None
         
     def evaluate_test_predictions(self, results, output_dir='model_comparison'):
-        """Detailed evaluation of test predictions showing correct/incorrect predictions"""
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         
@@ -731,7 +720,6 @@ class SocialWorkPredictorModels:
                 print(incorrect.head(5).to_string(index=True))
     
     def create_prediction_comparison_plot(self, results, output_dir='model_comparison'):
-        """Visualize prediction accuracy for each model"""
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         
@@ -775,7 +763,6 @@ class SocialWorkPredictorModels:
         plt.close()
 
     def generate_test_report(self, results, output_dir='model_comparison'):
-        """Generate comprehensive test report in markdown"""
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
@@ -854,7 +841,6 @@ class SocialWorkPredictorModels:
         return report_path
     
     def get_feature_importance(self, model_name='random_forest'):
-        """Get feature importance for tree-based models"""
         if model_name not in self.models:
             return None
             
@@ -868,7 +854,6 @@ class SocialWorkPredictorModels:
             return None
 
     def get_all_feature_importance(self, output_dir='model_comparison'):
-        """Compute feature importance for all trained models and save combined table"""
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
@@ -921,7 +906,6 @@ class SocialWorkPredictorModels:
         return combined_df
     
     def save_models(self, directory='saved_models'):
-        """Save trained models and preprocessor"""
         if not os.path.exists(directory):
             os.makedirs(directory)
         
@@ -934,7 +918,6 @@ class SocialWorkPredictorModels:
         print(f"[SAVE] Models saved to {directory}/")
     
     def load_models(self, directory='saved_models'):
-        """Load trained models and preprocessor"""
         try:
             model_files = [f for f in os.listdir(directory) if f.endswith('_model.pkl')]
             
@@ -953,7 +936,6 @@ class SocialWorkPredictorModels:
             return False
 
 def main():
-    """Main training function using preprocessed data with 10-fold CV"""
     predictor = SocialWorkPredictorModels()
     
     print("="*60)

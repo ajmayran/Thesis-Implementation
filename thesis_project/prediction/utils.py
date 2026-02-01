@@ -2,6 +2,7 @@ import sys
 import os
 import numpy as np
 import joblib
+import pandas as pd
 
 parent_path = os.path.abspath(os.path.join(
     os.path.dirname(__file__),
@@ -12,24 +13,26 @@ parent_path = os.path.abspath(os.path.join(
 if parent_path not in sys.path:
     sys.path.insert(0, parent_path)
 
-# Import from models package
-from models.regression_preprocessor import RegressionPreprocessor
-
-def load_selected_model(model_name='random_forest', model_type='base'):
+def load_selected_model(model_name='random_forest', model_type='classification_base'):
     try:
-        if model_type == 'base':
-            models_path = os.path.join(parent_path, 'models')
-            model_dir = os.path.join(models_path, 'saved_base_models')
+        models_path = os.path.join(parent_path, 'models')
+        
+        if model_type == 'classification_base':
+            model_dir = os.path.join(models_path, 'saved_models')
             model_file = f'{model_name}_model.pkl'
-        else:
-            models_path = os.path.join(parent_path, 'models')
-            model_dir = os.path.join(models_path, 'saved_ensemble_models')
+            preprocessor_dir = model_dir
+            preprocessor_file = 'preprocessing_objects.pkl'
+            
+        elif model_type == 'classification_ensemble':
+            model_dir = os.path.join(models_path, 'saved_classification_ensemble_models')
             model_file = f'{model_name}_ensemble.pkl'
+            preprocessor_dir = os.path.join(models_path, 'classification_processed_data')
+            preprocessor_file = 'preprocessing_objects.pkl'
+        else:
+            return None, None, f"Invalid model_type: {model_type}. Use 'classification_base' or 'classification_ensemble'"
         
         model_path = os.path.join(model_dir, model_file)
-        preprocessor_path = os.path.join(
-            models_path, 'saved_base_models', 'preprocessor.pkl'
-        )
+        preprocessor_path = os.path.join(preprocessor_dir, preprocessor_file)
         
         if not os.path.exists(model_path):
             return None, None, f"Model file not found: {model_path}"
@@ -38,14 +41,14 @@ def load_selected_model(model_name='random_forest', model_type='base'):
             return None, None, f"Preprocessor file not found: {preprocessor_path}"
         
         model = joblib.load(model_path)
-        preprocessor = joblib.load(preprocessor_path)
+        preprocessing_objects = joblib.load(preprocessor_path)
         
-        print(f"Loaded {model_type} model: {model_name}")
-        return model, preprocessor, None
+        print(f"[LOAD] Model: {model_file} from {model_dir}")
+        print(f"[LOAD] Preprocessor from: {preprocessor_path}")
+        
+        return model, preprocessing_objects, None
         
     except Exception as e:
-        import traceback
-        traceback.print_exc()
         return None, None, f"Error loading model: {str(e)}"
 
 def prepare_input_data(form_data):
@@ -87,7 +90,7 @@ def generate_recommendations(input_data, pass_probability):
             'icon': 'fa-check-circle',
             'color': 'green',
             'title': 'Good Standing - Keep It Up!',
-            'message': 'Your predicted pass probability is 74.7%. Maintain your current efforts.'
+            'message': f'Your predicted pass probability is {pass_probability*100:.1f}%. Maintain your current efforts.'
         })
     
     if input_data.get('StudyHours', 0) < 8:
@@ -120,6 +123,22 @@ def generate_recommendations(input_data, pass_probability):
             'color': 'orange',
             'title': 'Build Confidence',
             'message': 'Practice mock exams regularly to boost confidence and identify weak areas.'
+        })
+    
+    if input_data.get('TestAnxiety', 5) > 7:
+        recommendations.append({
+            'icon': 'fa-heart',
+            'color': 'red',
+            'title': 'Manage Test Anxiety',
+            'message': 'Consider stress management techniques, breathing exercises, or counseling to reduce anxiety.'
+        })
+    
+    if input_data.get('MockExamScore', 0) and input_data.get('MockExamScore') < 70:
+        recommendations.append({
+            'icon': 'fa-chart-line',
+            'color': 'orange',
+            'title': 'Improve Mock Exam Performance',
+            'message': 'Focus on weak areas identified in mock exams. Practice more sample questions.'
         })
     
     return recommendations

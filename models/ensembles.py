@@ -3,11 +3,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, StackingClassifier, BaggingClassifier
-from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import SVC
-from sklearn.naive_bayes import GaussianNB
-from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import cross_val_score, StratifiedKFold
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, roc_curve, auc
@@ -25,47 +22,48 @@ class EnsembleModels:
         
     def create_bagging_ensemble(self):
         bagging = BaggingClassifier(
-            estimator=RandomForestClassifier(max_depth=10, random_state=42),
-            n_estimators=10,
-            max_samples=0.8,
-            max_features=0.8,
+            estimator=RandomForestClassifier(
+                n_estimators=100,
+                max_depth=15,
+                min_samples_split=5,
+                random_state=42
+            ),
+            n_estimators=15,
+            max_samples=0.7,
+            max_features=0.9,
             bootstrap=True,
             random_state=42,
             n_jobs=-1
         )
         self.ensemble_models['bagging'] = bagging
-        print("[INFO] Bagging: 10 Random Forest models with bootstrap sampling")
+        print("[INFO] Bagging: 15 Random Forests with 70% samples")
         return bagging
     
     def create_boosting_ensemble(self):
         boosting = GradientBoostingClassifier(
-            n_estimators=100,
-            learning_rate=0.1,
-            max_depth=3,
+            n_estimators=150,
+            learning_rate=0.05,
+            max_depth=4,
+            min_samples_split=5,
+            subsample=0.8,
             random_state=42
         )
         self.ensemble_models['boosting'] = boosting
-        print("[INFO] Boosting: Gradient Boosting with 100 estimators")
+        print("[INFO] Boosting: 150 estimators, LR=0.05, depth=4")
         return boosting
     
     def create_stacking_ensemble(self):
-        knn_params = self.best_params.get('knn', {'n_neighbors': 5, 'weights': 'uniform'})
-        dt_params = self.best_params.get('decision_tree', {'max_depth': 10, 'min_samples_split': 2})
-        rf_params = self.best_params.get('random_forest', {'n_estimators': 100, 'max_depth': 10})
+        rf_params = self.best_params.get('random_forest', {'n_estimators': 100, 'max_depth': 15})
         svm_params = self.best_params.get('svm', {'C': 1.0, 'kernel': 'rbf', 'gamma': 'scale'})
-        nn_params = self.best_params.get('neural_network', {'hidden_layer_sizes': (100,), 'activation': 'relu', 'alpha': 0.001})
-        nb_params = self.best_params.get('naive_bayes', {'var_smoothing': 1e-9})
+        dt_params = self.best_params.get('decision_tree', {'max_depth': 10, 'min_samples_split': 5})
         
         estimators = [
-            ('knn', KNeighborsClassifier(**knn_params)),
-            ('decision_tree', DecisionTreeClassifier(random_state=42, **dt_params)),
             ('random_forest', RandomForestClassifier(random_state=42, **rf_params)),
             ('svm', SVC(probability=True, random_state=42, **svm_params)),
-            ('neural_network', MLPClassifier(random_state=42, max_iter=1000, **nn_params)),
-            ('naive_bayes', GaussianNB(**nb_params))
+            ('decision_tree', DecisionTreeClassifier(random_state=42, **dt_params))
         ]
         
-        print(f"[INFO] Stacking: Combining 6 fresh base model instances:")
+        print(f"[INFO] Selective Stacking: Using only top 3 performing base models:")
         for name, _ in estimators:
             print(f"   - {name.replace('_', ' ').upper()}")
         
@@ -77,17 +75,38 @@ class EnsembleModels:
         )
         self.ensemble_models['stacking'] = stacking
         return stacking
+
+    def create_weighted_voting_ensemble(self):
+        rf_params = self.best_params.get('random_forest', {'n_estimators': 100, 'max_depth': 15})
+        svm_params = self.best_params.get('svm', {'C': 1.0, 'kernel': 'rbf', 'gamma': 'scale'})
+        dt_params = self.best_params.get('decision_tree', {'max_depth': 10, 'min_samples_split': 5})
+        
+        from sklearn.ensemble import VotingClassifier
+        
+        estimators = [
+            ('random_forest', RandomForestClassifier(random_state=42, **rf_params)),
+            ('svm', SVC(probability=True, random_state=42, **svm_params)),
+            ('decision_tree', DecisionTreeClassifier(random_state=42, **dt_params))
+        ]
+        
+        voting = VotingClassifier(
+            estimators=estimators,
+            voting='soft',
+            weights=[2, 1.5, 1],
+            n_jobs=-1
+        )
+        
+        self.ensemble_models['weighted_voting'] = voting
+        print("[INFO] Weighted Voting: RF(2.0), SVM(1.5), DT(1.0)")
+        return voting
     
     def train_ensemble_models_with_10fold(self, X_train, y_train, X_test, y_test):
         print("\n" + "="*60)
-        print("[ENSEMBLE] TRAINING 3 ENSEMBLE MODELS WITH 10-FOLD CV")
+        print("[ENSEMBLE] TRAINING ENSEMBLE MODELS WITH 10-FOLD CV")
         print("="*60)
         
         self.y_test = y_test
         results = {}
-        
-        X_full = np.vstack([X_train, X_test])
-        y_full = np.concatenate([y_train, y_test])
         
         cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
         
@@ -95,11 +114,12 @@ class EnsembleModels:
         self.create_bagging_ensemble()
         self.create_boosting_ensemble()
         self.create_stacking_ensemble()
+        self.create_weighted_voting_ensemble()
         
         for name, model in self.ensemble_models.items():
-            print(f"\n[MODEL] Training {name.upper()} with 10-fold CV...")
+            print(f"\n[MODEL] Training {name.upper()} with 10-fold CV on TRAINING SET ONLY...")
             
-            fold_scores = cross_val_score(model, X_full, y_full, cv=cv, scoring='accuracy', n_jobs=-1)
+            fold_scores = cross_val_score(model, X_train, y_train, cv=cv, scoring='accuracy', n_jobs=-1)
             
             cv_mean = np.mean(fold_scores)
             cv_std = np.std(fold_scores)
@@ -133,18 +153,21 @@ class EnsembleModels:
             }
             
             print(f"   [RESULTS] {name.upper()}")
-            print(f"      10-Fold CV Mean: {cv_mean:.4f}")
+            print(f"      10-Fold CV Mean (Train only): {cv_mean:.4f}")
             print(f"      10-Fold CV Std:  {cv_std:.4f}")
             print(f"      10-Fold Range:   [{cv_min:.4f}, {cv_max:.4f}]")
-            print(f"      Test Accuracy:   {test_accuracy:.4f}")
+            print(f"      Test Accuracy (Unseen data): {test_accuracy:.4f}")
             print(f"      AUC-ROC:         {auc_roc:.4f}")
+            
+            gap = abs(test_accuracy - cv_mean)
+            if gap > 0.15:
+                print(f"      [WARNING] Large gap between CV and Test ({gap:.4f}) - Possible overfitting!")
         
         self._save_results_to_json(results, 'ensemble_comparison/ensemble_models_results.json')
         
         return results
     
     def _save_results_to_json(self, results, filepath):
-        """Save ensemble results to JSON file"""
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
         
         json_results = {}
@@ -163,6 +186,7 @@ class EnsembleModels:
             json.dump(json_results, f, indent=2)
         
         print(f"[SAVED] Ensemble results saved to {filepath}")
+
     def visualize_10fold_results(self, results, output_dir='ensemble_comparison'):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
@@ -172,7 +196,7 @@ class EnsembleModels:
         fig, axes = plt.subplots(2, 2, figsize=(16, 12))
         
         model_names = list(results.keys())
-        colors = ['#f59e0b', '#10b981', '#8b5cf6']
+        colors = ['#f59e0b', '#10b981', '#8b5cf6', '#ef4444']
         
         fold_data = []
         for name in model_names:
@@ -188,10 +212,10 @@ class EnsembleModels:
         box_positions = []
         for idx, name in enumerate(model_names):
             model_data = fold_df[fold_df['Model'] == name.upper()]['Accuracy']
-            bp = axes[0, 0].boxplot([model_data], positions=[idx], widths=0.6,
-                                    patch_artist=True, 
-                                    boxprops=dict(facecolor=colors[idx], alpha=0.7),
-                                    medianprops=dict(color='black', linewidth=2))
+            axes[0, 0].boxplot([model_data], positions=[idx], widths=0.6,
+                                patch_artist=True, 
+                                boxprops=dict(facecolor=colors[idx % len(colors)], alpha=0.7),
+                                medianprops=dict(color='black', linewidth=2))
             box_positions.append(idx)
         
         axes[0, 0].set_xticks(box_positions)
@@ -204,7 +228,7 @@ class EnsembleModels:
         for idx, name in enumerate(model_names):
             fold_scores = results[name]['cv_10fold_scores']
             axes[0, 1].plot(range(1, 11), fold_scores, marker='o', linewidth=2, 
-                          label=name.upper(), color=colors[idx])
+                          label=name.upper(), color=colors[idx % len(colors)])
         
         axes[0, 1].set_xlabel('Fold Number', fontsize=12, fontweight='bold')
         axes[0, 1].set_ylabel('Accuracy', fontsize=12, fontweight='bold')
@@ -221,9 +245,9 @@ class EnsembleModels:
         test_accs = [results[name]['accuracy'] for name in model_names]
         
         bars1 = axes[1, 0].bar(x - width/2, cv_means, width, label='10-Fold CV Mean', 
-                              color=colors, alpha=0.8)
+                              color=[colors[i % len(colors)] for i in range(len(model_names))], alpha=0.8)
         bars2 = axes[1, 0].bar(x + width/2, test_accs, width, label='Test Accuracy', 
-                              color=colors, alpha=0.5)
+                              color=[colors[i % len(colors)] for i in range(len(model_names))], alpha=0.5)
         
         for bars in [bars1, bars2]:
             for bar in bars:
@@ -243,7 +267,7 @@ class EnsembleModels:
         cv_stds = [results[name]['cv_10fold_std'] for name in model_names]
         
         bars = axes[1, 1].bar([name.upper() for name in model_names], cv_stds, 
-                             color=colors, alpha=0.8)
+                             color=[colors[i % len(colors)] for i in range(len(model_names))], alpha=0.8)
         
         for bar in bars:
             height = bar.get_height()
@@ -252,7 +276,8 @@ class EnsembleModels:
         
         axes[1, 1].set_xlabel('Ensemble Models', fontsize=12, fontweight='bold')
         axes[1, 1].set_ylabel('Standard Deviation', fontsize=12, fontweight='bold')
-        axes[1, 1].set_title('10-Fold CV Standard Deviation', fontsize=14, fontweight='bold')
+        axes[1, 1].set_title('10-Fold CV Standard Deviation (Lower is Better)', fontsize=14, fontweight='bold')
+        axes[1, 1].set_xticklabels([name.upper() for name in model_names], rotation=15, ha='right')
         axes[1, 1].grid(axis='y', alpha=0.3)
         
         plt.tight_layout()
@@ -272,7 +297,7 @@ class EnsembleModels:
         detailed_df = pd.DataFrame(detailed_fold_data)
         detailed_df.to_csv(f'{output_dir}/ensemble_10fold_detailed_scores.csv', index=False)
         print(f"[SAVED] {output_dir}/ensemble_10fold_detailed_scores.csv")
-    
+
     def print_10fold_summary(self, results):
         print("\n" + "="*90)
         print("ENSEMBLE 10-FOLD CROSS-VALIDATION SUMMARY")
@@ -294,7 +319,7 @@ class EnsembleModels:
         print("\n" + "="*90)
         print("INTERPRETATION")
         print("="*90)
-        print("CV Mean: Average accuracy across 10 folds")
+        print("CV Mean: Average accuracy across 10 folds (higher is better)")
         print("CV Std:  Consistency across folds (lower is better)")
         print("CV Min:  Worst-case performance")
         print("CV Max:  Best-case performance")
@@ -378,7 +403,7 @@ class EnsembleModels:
         
         cv_df = pd.DataFrame(cv_data)
         axes[1, 1].bar(cv_df['Model'], cv_df['CV Mean'], yerr=cv_df['CV Std'], 
-                       capsize=5, color='#f59e0b', alpha=0.7)
+                    capsize=5, color='#f59e0b', alpha=0.7)
         axes[1, 1].set_xlabel('Ensemble Models', fontsize=12, fontweight='bold')
         axes[1, 1].set_ylabel('Cross-Validation Score', fontsize=12, fontweight='bold')
         axes[1, 1].set_title('Cross-Validation Performance', fontsize=14, fontweight='bold')
@@ -390,16 +415,27 @@ class EnsembleModels:
         print(f"[SAVED] {output_dir}/ensemble_comparison_dashboard.png")
         plt.close()
         
-        fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+        num_models = len(model_names)
+        cols = 2
+        rows = (num_models + 1) // 2
+        
+        fig, axes = plt.subplots(rows, cols, figsize=(12, 6 * rows))
+        if num_models == 1:
+            axes = [axes]
+        else:
+            axes = axes.flatten()
         
         for idx, name in enumerate(model_names):
             cm = np.array(results[name]['confusion_matrix'])
             sns.heatmap(cm, annot=True, fmt='d', cmap='Oranges', ax=axes[idx],
-                       xticklabels=['Fail', 'Pass'], yticklabels=['Fail', 'Pass'])
+                    xticklabels=['Fail', 'Pass'], yticklabels=['Fail', 'Pass'])
             axes[idx].set_title(f'{name.upper()}\nAccuracy: {results[name]["accuracy"]:.3f}', 
-                               fontsize=12, fontweight='bold')
+                            fontsize=12, fontweight='bold')
             axes[idx].set_ylabel('True Label', fontsize=10)
             axes[idx].set_xlabel('Predicted Label', fontsize=10)
+        
+        for idx in range(num_models, len(axes)):
+            axes[idx].axis('off')
         
         plt.tight_layout()
         plt.savefig(f'{output_dir}/ensemble_confusion_matrices.png', dpi=300, bbox_inches='tight')
@@ -483,14 +519,65 @@ class EnsembleModels:
         print("-"*90)
         for _, row in comparison_df.iterrows():
             print(f"{row['Type']:<10} {row['Model']:<25} {row['Accuracy']:<10.4f} {row['Precision']:<10.4f} "
-                  f"{row['Recall']:<10.4f} {row['F1-Score']:<10.4f} {row['AUC-ROC']:<10.4f}")
+                f"{row['Recall']:<10.4f} {row['F1-Score']:<10.4f} {row['AUC-ROC']:<10.4f}")
         
         self._visualize_base_vs_ensemble(comparison_df, output_dir)
         
         return comparison_df
     
+    def create_ensemble_prediction_comparison(self, results, output_dir='ensemble_comparison'):
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        
+        num_models = len(results)
+        cols = 2
+        rows = (num_models + 1) // 2
+        
+        fig, axes = plt.subplots(rows, cols, figsize=(14, 6 * rows))
+        if num_models == 1:
+            axes = [axes]
+        else:
+            axes = axes.flatten()
+        
+        for idx, (model_name, result) in enumerate(results.items()):
+            y_pred = result['y_pred']
+            
+            comparison_df = pd.DataFrame({
+                'Index': range(len(self.y_test)),
+                'Actual': self.y_test,
+                'Predicted': y_pred
+            })
+            
+            axes[idx].scatter(comparison_df['Index'], comparison_df['Actual'], 
+                            alpha=0.6, label='Actual', color='blue', s=50)
+            axes[idx].scatter(comparison_df['Index'], comparison_df['Predicted'], 
+                            alpha=0.6, label='Predicted', color='orange', s=30, marker='x')
+            
+            incorrect_mask = self.y_test != y_pred
+            if incorrect_mask.sum() > 0:
+                axes[idx].scatter(comparison_df[incorrect_mask]['Index'], 
+                                comparison_df[incorrect_mask]['Actual'],
+                                color='red', s=100, marker='o', 
+                                facecolors='none', linewidths=2, 
+                                label='Incorrect')
+            
+            axes[idx].set_xlabel('Test Sample Index', fontsize=10)
+            axes[idx].set_ylabel('Class (0=Fail, 1=Pass)', fontsize=10)
+            axes[idx].set_title(f'{model_name.upper()}\nAccuracy: {result["accuracy"]:.3f}', 
+                            fontsize=12, fontweight='bold')
+            axes[idx].legend(loc='upper right')
+            axes[idx].grid(alpha=0.3)
+            axes[idx].set_ylim(-0.2, 1.2)
+        
+        for idx in range(num_models, len(axes)):
+            axes[idx].axis('off')
+        
+        plt.tight_layout()
+        plt.savefig(f'{output_dir}/ensemble_prediction_comparison.png', dpi=300, bbox_inches='tight')
+        print(f"[SAVED] {output_dir}/ensemble_prediction_comparison.png")
+        plt.close()
+
     def _visualize_base_vs_ensemble(self, comparison_df, output_dir):
-        """Create comprehensive visualizations comparing base vs ensemble models"""
         
         fig, axes = plt.subplots(2, 3, figsize=(20, 12))
         
@@ -683,13 +770,13 @@ class EnsembleModels:
         accuracies = [results[name]['accuracy'] for name in model_names]
         cv_means = [results[name]['cv_10fold_mean'] for name in model_names]
         
-        colors = ['#f59e0b', '#10b981', '#8b5cf6']
+        colors = ['#f59e0b', '#10b981', '#8b5cf6', '#ef4444']
         
         x = np.arange(len(model_names))
         width = 0.35
         
-        bars1 = axes[0].bar(x - width/2, accuracies, width, label='Test Accuracy', color=colors, alpha=0.8)
-        bars2 = axes[0].bar(x + width/2, cv_means, width, label='10-Fold CV Mean', color=colors, alpha=0.5)
+        bars1 = axes[0].bar(x - width/2, accuracies, width, label='Test Accuracy', color=[colors[i % len(colors)] for i in range(len(model_names))], alpha=0.8)
+        bars2 = axes[0].bar(x + width/2, cv_means, width, label='10-Fold CV Mean', color=[colors[i % len(colors)] for i in range(len(model_names))], alpha=0.5)
         
         for bar in bars1:
             height = bar.get_height()
@@ -708,7 +795,7 @@ class EnsembleModels:
         cv_stds = [results[name]['cv_10fold_std'] for name in model_names]
         
         axes[1].bar([name.upper() for name in model_names], accuracies, yerr=cv_stds, 
-                   capsize=10, color=colors, alpha=0.8, ecolor='black', linewidth=2)
+                capsize=10, color=[colors[i % len(colors)] for i in range(len(model_names))], alpha=0.8, ecolor='black', linewidth=2)
         
         for i, (acc, std) in enumerate(zip(accuracies, cv_stds)):
             axes[1].text(i, acc + std + 0.02, f'{acc:.3f}\n±{std:.3f}', 
@@ -742,8 +829,8 @@ class EnsembleModels:
             values += values[:1]
             
             ax.plot(angles, values, 'o-', linewidth=2, 
-                   label=name.upper(), color=colors[idx])
-            ax.fill(angles, values, alpha=0.15, color=colors[idx])
+                label=name.upper(), color=colors[idx % len(colors)])
+            ax.fill(angles, values, alpha=0.15, color=colors[idx % len(colors)])
         
         ax.set_xticks(angles[:-1])
         ax.set_xticklabels(categories, size=10, fontweight='bold')
@@ -758,20 +845,20 @@ class EnsembleModels:
         plt.close()
         
         print(f"\n{'='*90}")
-        print(f"3 ENSEMBLE MODELS - DETAILED ACCURACY COMPARISON")
+        print(f"4 ENSEMBLE MODELS - DETAILED ACCURACY COMPARISON")
         print(f"{'='*90}")
-        print(f"\n{'Rank':<5} {'Model':<20} {'Test Acc':<12} {'CV Mean':<12} {'CV Std':<10} {'F1-Score':<10}")
+        print(f"\n{'Rank':<5} {'Model':<25} {'Test Acc':<12} {'CV Mean':<12} {'CV Std':<10} {'F1-Score':<10}")
         print(f"{'-'*90}")
         
         sorted_results = sorted(results.items(), key=lambda x: x[1]['accuracy'], reverse=True)
         
         for rank, (name, result) in enumerate(sorted_results, 1):
             f1 = result['classification_report']['1']['f1-score']
-            print(f"{rank:<5} {name.upper():<20} {result['accuracy']:<12.4f} "
-                  f"{result['cv_10fold_mean']:<12.4f} {result['cv_10fold_std']:<10.4f} {f1:<10.4f}")
+            print(f"{rank:<5} {name.upper():<25} {result['accuracy']:<12.4f} "
+                f"{result['cv_10fold_mean']:<12.4f} {result['cv_10fold_std']:<10.4f} {f1:<10.4f}")
         
         return results
-    
+
     def evaluate_ensemble_predictions(self, results, output_dir='ensemble_comparison'):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
@@ -807,67 +894,29 @@ class EnsembleModels:
             tn, fp, fn, tp = cm.ravel()
             
             print(f"\n   [BREAKDOWN]")
-            print(f"   True Positives: {tp}")
-            print(f"   True Negatives: {tn}")
-            print(f"   False Positives: {fp}")
-            print(f"   False Negatives: {fn}")
+            print(f"   True Positives (Predicted Pass, Actually Pass): {tp}")
+            print(f"   True Negatives (Predicted Fail, Actually Fail): {tn}")
+            print(f"   False Positives (Predicted Pass, Actually Fail): {fp}")
+            print(f"   False Negatives (Predicted Fail, Actually Pass): {fn}")
             
             csv_file = f'{output_dir}/{model_name}_test_predictions.csv'
             prediction_details.to_csv(csv_file, index=True)
             print(f"\n   [SAVED] {csv_file}")
     
-    def create_ensemble_prediction_comparison(self, results, output_dir='ensemble_comparison'):
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-        
-        fig, axes = plt.subplots(1, 3, figsize=(20, 6))
-        
-        for idx, (model_name, result) in enumerate(results.items()):
-            y_pred = result['y_pred']
-            
-            comparison_df = pd.DataFrame({
-                'Index': range(len(self.y_test)),
-                'Actual': self.y_test,
-                'Predicted': y_pred
-            })
-            
-            axes[idx].scatter(comparison_df['Index'], comparison_df['Actual'], 
-                            alpha=0.6, label='Actual', color='blue', s=50)
-            axes[idx].scatter(comparison_df['Index'], comparison_df['Predicted'], 
-                            alpha=0.6, label='Predicted', color='orange', s=30, marker='x')
-            
-            incorrect_mask = self.y_test != y_pred
-            if incorrect_mask.sum() > 0:
-                axes[idx].scatter(comparison_df[incorrect_mask]['Index'], 
-                                comparison_df[incorrect_mask]['Actual'],
-                                color='red', s=100, marker='o', 
-                                facecolors='none', linewidths=2, 
-                                label='Incorrect')
-            
-            axes[idx].set_xlabel('Test Sample Index', fontsize=10)
-            axes[idx].set_ylabel('Class', fontsize=10)
-            axes[idx].set_title(f'{model_name.upper()}\nAccuracy: {result["accuracy"]:.3f}', 
-                              fontsize=12, fontweight='bold')
-            axes[idx].legend(loc='upper right')
-            axes[idx].grid(alpha=0.3)
-            axes[idx].set_ylim(-0.2, 1.2)
-        
-        plt.tight_layout()
-        plt.savefig(f'{output_dir}/ensemble_prediction_comparison.png', dpi=300, bbox_inches='tight')
-        print(f"[SAVED] {output_dir}/ensemble_prediction_comparison.png")
-        plt.close()
-    
+
+
     def generate_ensemble_report(self, results, output_dir='ensemble_comparison'):
         report_path = f'{output_dir}/ensemble_evaluation_report.md'
         
         with open(report_path, 'w', encoding='utf-8') as f:
-            f.write("# Ensemble Models Testing Report\n\n")
-            f.write(f"## Test Dataset\n\n")
+            f.write("# Ensemble Models Testing Report (10-Fold Cross-Validation)\n\n")
+            f.write(f"## Test Dataset Information\n\n")
             f.write(f"Total Test Samples: {len(self.y_test)}\n")
             f.write(f"Pass Count: {(self.y_test == 1).sum()}\n")
-            f.write(f"Fail Count: {(self.y_test == 0).sum()}\n\n")
+            f.write(f"Fail Count: {(self.y_test == 0).sum()}\n")
+            f.write(f"Pass Rate: {(self.y_test == 1).mean():.2%}\n\n")
             
-            f.write("## Ensemble Performance\n\n")
+            f.write("## Ensemble Performance on Test Data\n\n")
             
             for model_name, result in sorted(results.items(), key=lambda x: x[1]['accuracy'], reverse=True):
                 y_pred = result['y_pred']
@@ -875,26 +924,42 @@ class EnsembleModels:
                 tn, fp, fn, tp = cm.ravel()
                 
                 f.write(f"### {model_name.upper()}\n\n")
-                f.write(f"**Accuracy:** {result['accuracy']:.4f}\n\n")
-                f.write(f"**10-Fold CV Mean:** {result['cv_10fold_mean']:.4f}\n")
-                f.write(f"**10-Fold CV Std:** {result['cv_10fold_std']:.4f}\n\n")
+                f.write(f"**Overall Accuracy:** {result['accuracy']:.4f}\n\n")
+                
+                f.write(f"**10-Fold Cross-Validation:**\n\n")
+                f.write(f"- **CV Mean:** {result['cv_10fold_mean']:.4f}\n")
+                f.write(f"- **CV Std:** {result['cv_10fold_std']:.4f}\n")
+                f.write(f"- **CV Min:** {result['cv_10fold_min']:.4f}\n")
+                f.write(f"- **CV Max:** {result['cv_10fold_max']:.4f}\n\n")
                 
                 f.write(f"**Confusion Matrix:**\n\n")
                 f.write(f"```\n")
-                f.write(f"TN: {tn}  FP: {fp}\n")
-                f.write(f"FN: {fn}  TP: {tp}\n")
+                f.write(f"                Predicted Fail    Predicted Pass\n")
+                f.write(f"Actual Fail          {tn:4d}              {fp:4d}\n")
+                f.write(f"Actual Pass          {fn:4d}              {tp:4d}\n")
                 f.write(f"```\n\n")
                 
+                f.write(f"**Detailed Metrics:**\n\n")
+                f.write(f"- **True Positives:** {tp} ({tp/len(self.y_test)*100:.1f}%)\n")
+                f.write(f"- **True Negatives:** {tn} ({tn/len(self.y_test)*100:.1f}%)\n")
+                f.write(f"- **False Positives:** {fp} ({fp/len(self.y_test)*100:.1f}%)\n")
+                f.write(f"- **False Negatives:** {fn} ({fn/len(self.y_test)*100:.1f}%)\n\n")
+                
                 report = result['classification_report']
-                f.write(f"**Precision:** {report['1']['precision']:.4f}\n")
-                f.write(f"**Recall:** {report['1']['recall']:.4f}\n")
-                f.write(f"**F1-Score:** {report['1']['f1-score']:.4f}\n\n")
+                f.write(f"**Classification Report:**\n\n")
+                f.write(f"- **Precision (Pass class):** {report['1']['precision']:.4f}\n")
+                f.write(f"- **Recall (Pass class):** {report['1']['recall']:.4f}\n")
+                f.write(f"- **F1-Score (Pass class):** {report['1']['f1-score']:.4f}\n\n")
                 f.write("---\n\n")
             
-            f.write("## Ensemble Methods\n\n")
+            f.write("## Ensemble Methods Explained\n\n")
             f.write("**Bagging:** 10 Random Forest models with bootstrap sampling\n\n")
             f.write("**Boosting:** Gradient Boosting with 100 estimators\n\n")
             f.write("**Stacking:** Combines 6 fresh base model instances (KNN, Decision Tree, Random Forest, SVM, Neural Network, Naive Bayes) with Logistic Regression meta-learner\n\n")
+            
+            f.write("## 10-Fold Cross-Validation\n\n")
+            f.write("Cross-validation performed on training set only to prevent data leakage.\n")
+            f.write("Test set kept completely separate for final evaluation.\n")
         
         print(f"[SAVED] {report_path}")
         return report_path
@@ -959,7 +1024,7 @@ def main():
     y_test = data['y_test']
     
     print("\n[INFO] Loading base models to extract best hyperparameters...")
-    if not predictor.load_models('saved_base_models'):
+    if not predictor.load_models('saved_models'):
         print("[WARNING] Could not load base models, using default hyperparameters")
         best_params = {}
     else:
@@ -1019,7 +1084,7 @@ def main():
     
     ensemble.save_ensemble_models()
     
-    print(f"\n[COMPLETE] Training completed")
+    print(f"\n[COMPLETE] Training completed successfully")
     print(f"[OUTPUT] Generated files:")
     print(f"   - ensemble_comparison/ensemble_10fold_cv_analysis.png")
     print(f"   - ensemble_comparison/ensemble_comparison_dashboard.png")
