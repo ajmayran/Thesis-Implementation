@@ -42,7 +42,7 @@ class SDVEvaluator:
         self.metadata.update_column('TestAnxiety', sdtype='numerical')
         self.metadata.update_column('EnglishProficiency', sdtype='numerical')
         self.metadata.update_column('MotivationScore', sdtype='numerical')
-        self.metadata.update_column('FamilySupport', sdtype='numerical')
+        self.metadata.update_column('SocialSupport', sdtype='numerical')
         self.metadata.update_column('ExamResultPercent', sdtype='numerical')
         self.metadata.update_column('Passed', sdtype='categorical')
         
@@ -87,7 +87,7 @@ class SDVEvaluator:
         
         numerical_cols = ['Age', 'StudyHours', 'SleepHours', 'MockExamScore', 'GPA', 
                          'InternshipGrade', 'Confidence', 'TestAnxiety', 'EnglishProficiency',
-                         'MotivationScore', 'FamilySupport', 'ExamResultPercent']
+                         'MotivationScore', 'SocialSupport', 'ExamResultPercent']
         
         for col in numerical_cols:
             if col in self.original_data.columns and col in self.synthetic_data.columns:

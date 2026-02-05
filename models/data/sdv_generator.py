@@ -42,7 +42,7 @@ class SDVDataGenerator:
         self.metadata.update_column('TestAnxiety', sdtype='numerical')
         self.metadata.update_column('EnglishProficiency', sdtype='numerical')
         self.metadata.update_column('MotivationScore', sdtype='numerical')
-        self.metadata.update_column('FamilySupport', sdtype='numerical')
+        self.metadata.update_column('SocialSupport', sdtype='numerical')
         self.metadata.update_column('ExamResultPercent', sdtype='numerical')
         self.metadata.update_column('Passed', sdtype='categorical')
         
@@ -64,8 +64,8 @@ class SDVDataGenerator:
     
     def post_process(self, synthetic_data):
         synthetic_data['Age'] = synthetic_data['Age'].clip(21, 26).round().astype(int)
-        synthetic_data['StudyHours'] = synthetic_data['StudyHours'].clip(1, 10).round().astype(int)
-        synthetic_data['SleepHours'] = synthetic_data['SleepHours'].clip(1, 9).round().astype(int)
+        synthetic_data['StudyHours'] = synthetic_data['StudyHours'].clip(1, 14).round().astype(int)
+        synthetic_data['SleepHours'] = synthetic_data['SleepHours'].clip(1, 10).round().astype(int)
         
         if synthetic_data['ReviewCenter'].dtype in ['float64', 'int64']:
             synthetic_data['ReviewCenter'] = synthetic_data['ReviewCenter'].round().astype(int)
@@ -76,7 +76,7 @@ class SDVDataGenerator:
         synthetic_data.loc[synthetic_data['ReviewCenter'] == 0, 'MockExamScore'] = np.nan
         mask = (synthetic_data['ReviewCenter'] == 1) | (synthetic_data['ReviewCenter'] == '1')
         if mask.any():
-            synthetic_data.loc[mask, 'MockExamScore'] = synthetic_data.loc[mask, 'MockExamScore'].clip(60, 100)
+            synthetic_data.loc[mask, 'MockExamScore'] = synthetic_data.loc[mask, 'MockExamScore'].clip(60, 90)
         
         gpa_values = [1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3.0]
         synthetic_data['GPA'] = synthetic_data['GPA'].apply(
@@ -92,9 +92,9 @@ class SDVDataGenerator:
         synthetic_data['TestAnxiety'] = synthetic_data['TestAnxiety'].clip(1, 10).round().astype(int)
         synthetic_data['EnglishProficiency'] = synthetic_data['EnglishProficiency'].clip(1, 10).round().astype(int)
         synthetic_data['MotivationScore'] = synthetic_data['MotivationScore'].clip(1, 10).round().astype(int)
-        synthetic_data['FamilySupport'] = synthetic_data['FamilySupport'].clip(1, 10).round().astype(int)
+        synthetic_data['SocialSupport'] = synthetic_data['SocialSupport'].clip(1, 10).round().astype(int)
         
-        synthetic_data['ExamResultPercent'] = synthetic_data['ExamResultPercent'].clip(60, 100).round(2)
+        synthetic_data['ExamResultPercent'] = synthetic_data['ExamResultPercent'].clip(60, 90).round(2)
         
         synthetic_data['Passed'] = (synthetic_data['ExamResultPercent'] >= 70).astype(int)
         

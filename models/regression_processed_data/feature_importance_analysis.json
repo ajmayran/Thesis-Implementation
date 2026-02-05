@@ -1,129 +1,129 @@
 {
   "anova_f_test": [
     {
-      "Feature": "StudyHours",
-      "F_Score": 59.55627118066732,
-      "P_Value": 2.588353537151728e-14
+      "Feature": "GPA",
+      "F_Score": 37.22084827837629,
+      "P_Value": 1.8294477655574713e-09
     },
     {
-      "Feature": "GPA",
-      "F_Score": 38.88745824734083,
-      "P_Value": 6.316759933407653e-10
+      "Feature": "StudyHours",
+      "F_Score": 35.38074389672823,
+      "P_Value": 4.469556755645244e-09
     },
     {
       "Feature": "Age",
-      "F_Score": 33.22093882008929,
-      "P_Value": 1.0583985680989295e-08
+      "F_Score": 24.486339331272724,
+      "P_Value": 9.586795977476527e-07
     },
     {
       "Feature": "SleepHours",
-      "F_Score": 25.539983377933893,
-      "P_Value": 5.045023208972343e-07
+      "F_Score": 13.274733366756584,
+      "P_Value": 0.0002908775261077013
     },
     {
       "Feature": "FamilySupport",
-      "F_Score": 19.652704453714378,
-      "P_Value": 1.0185085191363903e-05
-    },
-    {
-      "Feature": "TestAnxiety",
-      "F_Score": 19.088479741759905,
-      "P_Value": 1.3618381521473547e-05
+      "F_Score": 12.071763027517726,
+      "P_Value": 0.0005465843605863544
     },
     {
       "Feature": "InternshipGrade",
-      "F_Score": 12.446185043066627,
-      "P_Value": 0.00043554437967028154
+      "F_Score": 6.408725762348716,
+      "P_Value": 0.011595051063091819
+    },
+    {
+      "Feature": "TestAnxiety",
+      "F_Score": 5.883443172239837,
+      "P_Value": 0.015560271499272187
     },
     {
       "Feature": "ReviewCenter",
-      "F_Score": 7.765207960026251,
-      "P_Value": 0.0054147451958838815
-    },
-    {
-      "Feature": "MockExamScore",
-      "F_Score": 3.052497309531616,
-      "P_Value": 0.08088284481660057
-    },
-    {
-      "Feature": "MotivationScore",
-      "F_Score": 1.7576434194649642,
-      "P_Value": 0.18518478343274558
-    },
-    {
-      "Feature": "EmploymentStatus",
-      "F_Score": 1.4741459119829277,
-      "P_Value": 0.22494459726854427
+      "F_Score": 4.353469816769257,
+      "P_Value": 0.037330124862675465
     },
     {
       "Feature": "IncomeLevel",
-      "F_Score": 1.0431493068385616,
-      "P_Value": 0.3073072247824764
+      "F_Score": 1.5071073855433406,
+      "P_Value": 0.22003375354178367
     },
     {
-      "Feature": "Scholarship",
-      "F_Score": 0.6207988567773639,
-      "P_Value": 0.4309146616543408
+      "Feature": "MockExamScore",
+      "F_Score": 0.8982298810654977,
+      "P_Value": 0.34361561982512434
     },
     {
-      "Feature": "Confidence",
-      "F_Score": 0.08097891953418543,
-      "P_Value": 0.7760269400788584
-    },
-    {
-      "Feature": "Gender",
-      "F_Score": 0.025797313335857046,
-      "P_Value": 0.8724248146966056
+      "Feature": "EmploymentStatus",
+      "F_Score": 0.7206818551327321,
+      "P_Value": 0.39623874982235163
     },
     {
       "Feature": "EnglishProficiency",
-      "F_Score": 0.00723364812147632,
-      "P_Value": 0.9322359197063376
+      "F_Score": 0.7205353014189702,
+      "P_Value": 0.39628675101370214
+    },
+    {
+      "Feature": "MotivationScore",
+      "F_Score": 0.48580253615193253,
+      "P_Value": 0.48605957712955494
+    },
+    {
+      "Feature": "Gender",
+      "F_Score": 0.4197513663657822,
+      "P_Value": 0.5172942097567683
+    },
+    {
+      "Feature": "Scholarship",
+      "F_Score": 0.07413207228593237,
+      "P_Value": 0.7855009323765892
+    },
+    {
+      "Feature": "Confidence",
+      "F_Score": 0.0009024757993181511,
+      "P_Value": 0.9760435620406912
     }
   ],
   "mutual_information": [
     {
       "Feature": "FamilySupport",
-      "MI_Score": 0.0404790718867063
+      "MI_Score": 0.06395348425495673
     },
     {
       "Feature": "StudyHours",
-      "MI_Score": 0.03520837858206116
-    },
-    {
-      "Feature": "Age",
-      "MI_Score": 0.03337339022562613
+      "MI_Score": 0.03406963128859353
     },
     {
       "Feature": "EmploymentStatus",
-      "MI_Score": 0.02501175575869663
-    },
-    {
-      "Feature": "Confidence",
-      "MI_Score": 0.0067459501145590295
-    },
-    {
-      "Feature": "TestAnxiety",
-      "MI_Score": 0.003772168200031345
-    },
-    {
-      "Feature": "EnglishProficiency",
-      "MI_Score": 0.003248287872964273
+      "MI_Score": 0.03044946739187271
     },
     {
       "Feature": "GPA",
-      "MI_Score": 0.0025202877340499974
+      "MI_Score": 0.028177668394847366
     },
     {
-      "Feature": "Scholarship",
-      "MI_Score": 0.0
+      "Feature": "Age",
+      "MI_Score": 0.022690603992003844
+    },
+    {
+      "Feature": "Confidence",
+      "MI_Score": 0.01956169971556143
     },
     {
       "Feature": "MockExamScore",
-      "MI_Score": 0.0
+      "MI_Score": 0.014594024889726942
+    },
+    {
+      "Feature": "Gender",
+      "MI_Score": 0.0058896846647282786
     },
     {
       "Feature": "ReviewCenter",
+      "MI_Score": 0.004025378301259153
+    },
+    {
+      "Feature": "InternshipGrade",
+      "MI_Score": 0.0026954975876494203
+    },
+    {
+      "Feature": "Scholarship",
       "MI_Score": 0.0
     },
     {
@@ -131,15 +131,15 @@
       "MI_Score": 0.0
     },
     {
-      "Feature": "Gender",
-      "MI_Score": 0.0
-    },
-    {
       "Feature": "IncomeLevel",
       "MI_Score": 0.0
     },
     {
-      "Feature": "InternshipGrade",
+      "Feature": "TestAnxiety",
+      "MI_Score": 0.0
+    },
+    {
+      "Feature": "EnglishProficiency",
       "MI_Score": 0.0
     },
     {
@@ -149,210 +149,210 @@
   ],
   "pearson_correlation": [
     {
-      "Feature": "StudyHours",
-      "Correlation": 0.22300560808244604,
-      "Abs_Correlation": 0.22300560808244604,
-      "P_Value": 2.5883535371536416e-14,
+      "Feature": "GPA",
+      "Correlation": -0.23478492678699187,
+      "Abs_Correlation": 0.23478492678699187,
+      "P_Value": 1.8294477655602627e-09,
       "Significant": true
     },
     {
-      "Feature": "GPA",
-      "Correlation": -0.18177632189172638,
-      "Abs_Correlation": 0.18177632189172638,
-      "P_Value": 6.316759933403329e-10,
+      "Feature": "StudyHours",
+      "Correlation": 0.22922032999366665,
+      "Abs_Correlation": 0.22922032999366665,
+      "P_Value": 4.469556755640211e-09,
       "Significant": true
     },
     {
       "Feature": "Age",
-      "Correlation": 0.16841723642707276,
-      "Abs_Correlation": 0.16841723642707276,
-      "P_Value": 1.058398568101611e-08,
+      "Correlation": 0.1922531516909693,
+      "Abs_Correlation": 0.1922531516909693,
+      "P_Value": 9.586795977406802e-07,
       "Significant": true
     },
     {
       "Feature": "SleepHours",
-      "Correlation": -0.14815613818981427,
-      "Abs_Correlation": 0.14815613818981427,
-      "P_Value": 5.045023208969665e-07,
+      "Correlation": -0.14276797134385333,
+      "Abs_Correlation": 0.14276797134385333,
+      "P_Value": 0.0002908775261079143,
       "Significant": true
     },
     {
       "Feature": "FamilySupport",
-      "Correlation": 0.130293279718029,
-      "Abs_Correlation": 0.130293279718029,
-      "P_Value": 1.0185085191370092e-05,
-      "Significant": true
-    },
-    {
-      "Feature": "TestAnxiety",
-      "Correlation": 0.1284406178002097,
-      "Abs_Correlation": 0.1284406178002097,
-      "P_Value": 1.3618381521478896e-05,
+      "Correlation": 0.13627139434448035,
+      "Abs_Correlation": 0.13627139434448035,
+      "P_Value": 0.0005465843605858551,
       "Significant": true
     },
     {
       "Feature": "InternshipGrade",
-      "Correlation": -0.10401236531001859,
-      "Abs_Correlation": 0.10401236531001859,
-      "P_Value": 0.00043554437967013816,
+      "Correlation": -0.0997252509286756,
+      "Abs_Correlation": 0.0997252509286756,
+      "P_Value": 0.011595051063099215,
+      "Significant": true
+    },
+    {
+      "Feature": "TestAnxiety",
+      "Correlation": 0.09558993198733626,
+      "Abs_Correlation": 0.09558993198733626,
+      "P_Value": 0.015560271499263626,
       "Significant": true
     },
     {
       "Feature": "ReviewCenter",
-      "Correlation": 0.08232442960208577,
-      "Abs_Correlation": 0.08232442960208577,
-      "P_Value": 0.005414745195884884,
+      "Correlation": 0.0823248089810889,
+      "Abs_Correlation": 0.0823248089810889,
+      "P_Value": 0.03733012486266486,
       "Significant": true
     },
     {
-      "Feature": "MockExamScore",
-      "Correlation": -0.05172194308059374,
-      "Abs_Correlation": 0.05172194308059374,
-      "P_Value": 0.08088284481601427,
+      "Feature": "IncomeLevel",
+      "Correlation": 0.048545548375225574,
+      "Abs_Correlation": 0.048545548375225574,
+      "P_Value": 0.22003375354173468,
       "Significant": false
     },
     {
-      "Feature": "MotivationScore",
-      "Correlation": -0.039269839800516244,
-      "Abs_Correlation": 0.039269839800516244,
-      "P_Value": 0.18518478343273978,
+      "Feature": "MockExamScore",
+      "Correlation": -0.03749539272960087,
+      "Abs_Correlation": 0.03749539272960087,
+      "P_Value": 0.3436156198254943,
       "Significant": false
     },
     {
       "Feature": "EmploymentStatus",
-      "Correlation": 0.03596814152226679,
-      "Abs_Correlation": 0.03596814152226679,
-      "P_Value": 0.22494459726859642,
-      "Significant": false
-    },
-    {
-      "Feature": "IncomeLevel",
-      "Correlation": 0.030262384765320807,
-      "Abs_Correlation": 0.030262384765320807,
-      "P_Value": 0.3073072247825554,
-      "Significant": false
-    },
-    {
-      "Feature": "Scholarship",
-      "Correlation": -0.023349946933610668,
-      "Abs_Correlation": 0.023349946933610668,
-      "P_Value": 0.4309146616542412,
-      "Significant": false
-    },
-    {
-      "Feature": "Confidence",
-      "Correlation": 0.008435278123350192,
-      "Abs_Correlation": 0.008435278123350192,
-      "P_Value": 0.7760269400788614,
-      "Significant": false
-    },
-    {
-      "Feature": "Gender",
-      "Correlation": 0.004761142564022531,
-      "Abs_Correlation": 0.004761142564022531,
-      "P_Value": 0.8724248146969155,
+      "Correlation": 0.03359048731724672,
+      "Abs_Correlation": 0.03359048731724672,
+      "P_Value": 0.3962387498223602,
       "Significant": false
     },
     {
       "Feature": "EnglishProficiency",
-      "Correlation": 0.002521193496033525,
-      "Abs_Correlation": 0.002521193496033525,
-      "P_Value": 0.9322359197059479,
+      "Correlation": -0.03358707561276328,
+      "Abs_Correlation": 0.03358707561276328,
+      "P_Value": 0.3962867510139173,
+      "Significant": false
+    },
+    {
+      "Feature": "MotivationScore",
+      "Correlation": -0.027583810878784504,
+      "Abs_Correlation": 0.027583810878784504,
+      "P_Value": 0.4860595771298132,
+      "Significant": false
+    },
+    {
+      "Feature": "Gender",
+      "Correlation": 0.0256414689769734,
+      "Abs_Correlation": 0.0256414689769734,
+      "P_Value": 0.5172942097568084,
+      "Significant": false
+    },
+    {
+      "Feature": "Scholarship",
+      "Correlation": -0.010778727711614594,
+      "Abs_Correlation": 0.010778727711614594,
+      "P_Value": 0.7855009323766119,
+      "Significant": false
+    },
+    {
+      "Feature": "Confidence",
+      "Correlation": -0.001189343041120193,
+      "Abs_Correlation": 0.001189343041120193,
+      "P_Value": 0.9760435620403043,
       "Significant": false
     }
   ],
   "combined_ranking": [
     {
-      "Feature": "StudyHours",
-      "F_Score": 59.55627118066732,
-      "P_Value": 2.588353537151728e-14,
-      "MI_Score": 0.03520837858206116,
-      "Correlation": 0.22300560808244604,
-      "Abs_Correlation": 0.22300560808244604,
+      "Feature": "GPA",
+      "F_Score": 37.22084827837629,
+      "P_Value": 1.8294477655574713e-09,
+      "MI_Score": 0.028177668394847366,
+      "Correlation": -0.23478492678699187,
+      "Abs_Correlation": 0.23478492678699187,
       "F_Rank": 1.0,
-      "MI_Rank": 2.0,
+      "MI_Rank": 4.0,
       "Corr_Rank": 1.0,
-      "Avg_Rank": 1.3333333333333333
+      "Avg_Rank": 2.0
+    },
+    {
+      "Feature": "StudyHours",
+      "F_Score": 35.38074389672823,
+      "P_Value": 4.469556755645244e-09,
+      "MI_Score": 0.03406963128859353,
+      "Correlation": 0.22922032999366665,
+      "Abs_Correlation": 0.22922032999366665,
+      "F_Rank": 2.0,
+      "MI_Rank": 2.0,
+      "Corr_Rank": 2.0,
+      "Avg_Rank": 2.0
     },
     {
       "Feature": "Age",
-      "F_Score": 33.22093882008929,
-      "P_Value": 1.0583985680989295e-08,
-      "MI_Score": 0.03337339022562613,
-      "Correlation": 0.16841723642707276,
-      "Abs_Correlation": 0.16841723642707276,
+      "F_Score": 24.486339331272724,
+      "P_Value": 9.586795977476527e-07,
+      "MI_Score": 0.022690603992003844,
+      "Correlation": 0.1922531516909693,
+      "Abs_Correlation": 0.1922531516909693,
       "F_Rank": 3.0,
-      "MI_Rank": 3.0,
+      "MI_Rank": 5.0,
       "Corr_Rank": 3.0,
-      "Avg_Rank": 3.0
+      "Avg_Rank": 3.6666666666666665
     },
     {
       "Feature": "FamilySupport",
-      "F_Score": 19.652704453714378,
-      "P_Value": 1.0185085191363903e-05,
-      "MI_Score": 0.0404790718867063,
-      "Correlation": 0.130293279718029,
-      "Abs_Correlation": 0.130293279718029,
+      "F_Score": 12.071763027517726,
+      "P_Value": 0.0005465843605863544,
+      "MI_Score": 0.06395348425495673,
+      "Correlation": 0.13627139434448035,
+      "Abs_Correlation": 0.13627139434448035,
       "F_Rank": 5.0,
       "MI_Rank": 1.0,
       "Corr_Rank": 5.0,
       "Avg_Rank": 3.6666666666666665
     },
     {
-      "Feature": "GPA",
-      "F_Score": 38.88745824734083,
-      "P_Value": 6.316759933407653e-10,
-      "MI_Score": 0.0025202877340499974,
-      "Correlation": -0.18177632189172638,
-      "Abs_Correlation": 0.18177632189172638,
-      "F_Rank": 2.0,
-      "MI_Rank": 8.0,
-      "Corr_Rank": 2.0,
-      "Avg_Rank": 4.0
-    },
-    {
       "Feature": "SleepHours",
-      "F_Score": 25.539983377933893,
-      "P_Value": 5.045023208972343e-07,
+      "F_Score": 13.274733366756584,
+      "P_Value": 0.0002908775261077013,
       "MI_Score": 0.0,
-      "Correlation": -0.14815613818981427,
-      "Abs_Correlation": 0.14815613818981427,
+      "Correlation": -0.14276797134385333,
+      "Abs_Correlation": 0.14276797134385333,
       "F_Rank": 4.0,
-      "MI_Rank": 9.0,
+      "MI_Rank": 11.0,
       "Corr_Rank": 4.0,
-      "Avg_Rank": 5.666666666666667
-    },
-    {
-      "Feature": "TestAnxiety",
-      "F_Score": 19.088479741759905,
-      "P_Value": 1.3618381521473547e-05,
-      "MI_Score": 0.003772168200031345,
-      "Correlation": 0.1284406178002097,
-      "Abs_Correlation": 0.1284406178002097,
-      "F_Rank": 6.0,
-      "MI_Rank": 6.0,
-      "Corr_Rank": 6.0,
-      "Avg_Rank": 6.0
+      "Avg_Rank": 6.333333333333333
     },
     {
       "Feature": "InternshipGrade",
-      "F_Score": 12.446185043066627,
-      "P_Value": 0.00043554437967028154,
+      "F_Score": 6.408725762348716,
+      "P_Value": 0.011595051063091819,
+      "MI_Score": 0.0026954975876494203,
+      "Correlation": -0.0997252509286756,
+      "Abs_Correlation": 0.0997252509286756,
+      "F_Rank": 6.0,
+      "MI_Rank": 10.0,
+      "Corr_Rank": 6.0,
+      "Avg_Rank": 7.333333333333333
+    },
+    {
+      "Feature": "TestAnxiety",
+      "F_Score": 5.883443172239837,
+      "P_Value": 0.015560271499272187,
       "MI_Score": 0.0,
-      "Correlation": -0.10401236531001859,
-      "Abs_Correlation": 0.10401236531001859,
+      "Correlation": 0.09558993198733626,
+      "Abs_Correlation": 0.09558993198733626,
       "F_Rank": 7.0,
-      "MI_Rank": 9.0,
+      "MI_Rank": 11.0,
       "Corr_Rank": 7.0,
-      "Avg_Rank": 7.666666666666667
+      "Avg_Rank": 8.333333333333334
     },
     {
       "Feature": "ReviewCenter",
-      "F_Score": 7.765207960026251,
-      "P_Value": 0.0054147451958838815,
-      "MI_Score": 0.0,
-      "Correlation": 0.08232442960208577,
-      "Abs_Correlation": 0.08232442960208577,
+      "F_Score": 4.353469816769257,
+      "P_Value": 0.037330124862675465,
+      "MI_Score": 0.004025378301259153,
+      "Correlation": 0.0823248089810889,
+      "Abs_Correlation": 0.0823248089810889,
       "F_Rank": 8.0,
       "MI_Rank": 9.0,
       "Corr_Rank": 8.0,
@@ -360,99 +360,99 @@
     },
     {
       "Feature": "EmploymentStatus",
-      "F_Score": 1.4741459119829277,
-      "P_Value": 0.22494459726854427,
-      "MI_Score": 0.02501175575869663,
-      "Correlation": 0.03596814152226679,
-      "Abs_Correlation": 0.03596814152226679,
+      "F_Score": 0.7206818551327321,
+      "P_Value": 0.39623874982235163,
+      "MI_Score": 0.03044946739187271,
+      "Correlation": 0.03359048731724672,
+      "Abs_Correlation": 0.03359048731724672,
       "F_Rank": 11.0,
-      "MI_Rank": 4.0,
+      "MI_Rank": 3.0,
       "Corr_Rank": 11.0,
-      "Avg_Rank": 8.666666666666666
+      "Avg_Rank": 8.333333333333334
     },
     {
       "Feature": "MockExamScore",
-      "F_Score": 3.052497309531616,
-      "P_Value": 0.08088284481660057,
-      "MI_Score": 0.0,
-      "Correlation": -0.05172194308059374,
-      "Abs_Correlation": 0.05172194308059374,
-      "F_Rank": 9.0,
-      "MI_Rank": 9.0,
-      "Corr_Rank": 9.0,
+      "F_Score": 0.8982298810654977,
+      "P_Value": 0.34361561982512434,
+      "MI_Score": 0.014594024889726942,
+      "Correlation": -0.03749539272960087,
+      "Abs_Correlation": 0.03749539272960087,
+      "F_Rank": 10.0,
+      "MI_Rank": 7.0,
+      "Corr_Rank": 10.0,
       "Avg_Rank": 9.0
     },
     {
-      "Feature": "MotivationScore",
-      "F_Score": 1.7576434194649642,
-      "P_Value": 0.18518478343274558,
+      "Feature": "IncomeLevel",
+      "F_Score": 1.5071073855433406,
+      "P_Value": 0.22003375354178367,
       "MI_Score": 0.0,
-      "Correlation": -0.039269839800516244,
-      "Abs_Correlation": 0.039269839800516244,
-      "F_Rank": 10.0,
-      "MI_Rank": 9.0,
-      "Corr_Rank": 10.0,
+      "Correlation": 0.048545548375225574,
+      "Abs_Correlation": 0.048545548375225574,
+      "F_Rank": 9.0,
+      "MI_Rank": 11.0,
+      "Corr_Rank": 9.0,
       "Avg_Rank": 9.666666666666666
     },
     {
-      "Feature": "IncomeLevel",
-      "F_Score": 1.0431493068385616,
-      "P_Value": 0.3073072247824764,
+      "Feature": "EnglishProficiency",
+      "F_Score": 0.7205353014189702,
+      "P_Value": 0.39628675101370214,
       "MI_Score": 0.0,
-      "Correlation": 0.030262384765320807,
-      "Abs_Correlation": 0.030262384765320807,
+      "Correlation": -0.03358707561276328,
+      "Abs_Correlation": 0.03358707561276328,
       "F_Rank": 12.0,
-      "MI_Rank": 9.0,
+      "MI_Rank": 11.0,
       "Corr_Rank": 12.0,
-      "Avg_Rank": 11.0
-    },
-    {
-      "Feature": "Confidence",
-      "F_Score": 0.08097891953418543,
-      "P_Value": 0.7760269400788584,
-      "MI_Score": 0.0067459501145590295,
-      "Correlation": 0.008435278123350192,
-      "Abs_Correlation": 0.008435278123350192,
-      "F_Rank": 14.0,
-      "MI_Rank": 5.0,
-      "Corr_Rank": 14.0,
-      "Avg_Rank": 11.0
-    },
-    {
-      "Feature": "Scholarship",
-      "F_Score": 0.6207988567773639,
-      "P_Value": 0.4309146616543408,
-      "MI_Score": 0.0,
-      "Correlation": -0.023349946933610668,
-      "Abs_Correlation": 0.023349946933610668,
-      "F_Rank": 13.0,
-      "MI_Rank": 9.0,
-      "Corr_Rank": 13.0,
       "Avg_Rank": 11.666666666666666
     },
     {
       "Feature": "Gender",
-      "F_Score": 0.025797313335857046,
-      "P_Value": 0.8724248146966056,
-      "MI_Score": 0.0,
-      "Correlation": 0.004761142564022531,
-      "Abs_Correlation": 0.004761142564022531,
-      "F_Rank": 15.0,
-      "MI_Rank": 9.0,
-      "Corr_Rank": 15.0,
-      "Avg_Rank": 13.0
+      "F_Score": 0.4197513663657822,
+      "P_Value": 0.5172942097567683,
+      "MI_Score": 0.0058896846647282786,
+      "Correlation": 0.0256414689769734,
+      "Abs_Correlation": 0.0256414689769734,
+      "F_Rank": 14.0,
+      "MI_Rank": 8.0,
+      "Corr_Rank": 14.0,
+      "Avg_Rank": 12.0
     },
     {
-      "Feature": "EnglishProficiency",
-      "F_Score": 0.00723364812147632,
-      "P_Value": 0.9322359197063376,
-      "MI_Score": 0.003248287872964273,
-      "Correlation": 0.002521193496033525,
-      "Abs_Correlation": 0.002521193496033525,
+      "Feature": "MotivationScore",
+      "F_Score": 0.48580253615193253,
+      "P_Value": 0.48605957712955494,
+      "MI_Score": 0.0,
+      "Correlation": -0.027583810878784504,
+      "Abs_Correlation": 0.027583810878784504,
+      "F_Rank": 13.0,
+      "MI_Rank": 11.0,
+      "Corr_Rank": 13.0,
+      "Avg_Rank": 12.333333333333334
+    },
+    {
+      "Feature": "Confidence",
+      "F_Score": 0.0009024757993181511,
+      "P_Value": 0.9760435620406912,
+      "MI_Score": 0.01956169971556143,
+      "Correlation": -0.001189343041120193,
+      "Abs_Correlation": 0.001189343041120193,
       "F_Rank": 16.0,
-      "MI_Rank": 7.0,
+      "MI_Rank": 6.0,
       "Corr_Rank": 16.0,
-      "Avg_Rank": 13.0
+      "Avg_Rank": 12.666666666666666
+    },
+    {
+      "Feature": "Scholarship",
+      "F_Score": 0.07413207228593237,
+      "P_Value": 0.7855009323765892,
+      "MI_Score": 0.0,
+      "Correlation": -0.010778727711614594,
+      "Abs_Correlation": 0.010778727711614594,
+      "F_Rank": 15.0,
+      "MI_Rank": 11.0,
+      "Corr_Rank": 15.0,
+      "Avg_Rank": 13.666666666666666
     }
   ]
 }
