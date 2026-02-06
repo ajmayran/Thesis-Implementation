@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Avg, Count, Q, Max, Min
 from django.db.models.functions import TruncMonth, ExtractMonth, ExtractYear
-from prediction.models import Prediction, ModelPerformance
+from prediction.models import Prediction, RegressionModelPerformance
 from .models import DashboardStatistics, MonthlyTrend
 from django.utils import timezone
 import json
@@ -55,6 +55,46 @@ def student_dashboard(request):
 def student_profile(request):
     return render(request, 'pages/student_profile.html')
 
+def load_feature_importance_from_json():
+    """Load feature importance from the analysis JSON file"""
+    import os
+    
+    json_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+        'models',
+        'regression_processed_data',
+        'feature_importance_analysis.json'
+    )
+    
+    try:
+        with open(json_path, 'r') as f:
+            data = json.load(f)
+            
+        # Use combined ranking average rank (lower is better)
+        combined = data.get('combined_ranking', [])
+        
+        # Convert to importance scores (inverse of rank, normalized)
+        feature_importance = {}
+        if combined:
+            max_rank = max(item['Avg_Rank'] for item in combined)
+            for item in combined:
+                # Inverse ranking: lower rank = higher importance
+                importance = (max_rank - item['Avg_Rank'] + 1) / max_rank
+                feature_importance[item['Feature']] = round(importance, 4)
+        
+        return feature_importance
+    except Exception as e:
+        print(f"Error loading feature importance: {e}")
+        # Fallback to default values
+        return {
+            'Age': 0.85,
+            'TestAnxiety': 0.72,
+            'SleepHours': 0.68,
+            'StudyHours': 0.58,
+            'GPA': 0.52,
+            'EnglishProficiency': 0.48
+        }
+
 def calculate_dashboard_statistics():
     all_predictions = Prediction.objects.all()
     
@@ -65,79 +105,98 @@ def calculate_dashboard_statistics():
     
     avg_probability = all_predictions.aggregate(Avg('probability'))['probability__avg'] or 0
     
+    # At-risk: probability < 50%
     at_risk_students = all_predictions.filter(probability__lt=50).values('user').distinct().count()
+    # Likely to pass: probability >= 75%
     likely_to_pass = all_predictions.filter(probability__gte=75).values('user').distinct().count()
     
     pass_rate = (all_predictions.filter(probability__gte=50).count() / total_predictions * 100) if total_predictions > 0 else 0
     
-    feature_importance = {
-        'GPA': 0.62,
-        'StudyHours': 0.52,
-        'ReviewCenter': 0.44,
-        'SleepHours': 0.33,
-        'Confidence': 0.28,
-        'TestAnxiety': 0.24,
-        'MockExamScore': 0.25,
-        'InternshipGrade': 0.22,
-        'Scholarship': 0.18,
-        'Age': 0.12
-    }
+    # Load feature importance from JSON file
+    feature_importance = load_feature_importance_from_json()
     
-    latest_model = ModelPerformance.objects.filter(is_active=True).order_by('-trained_at').first()
+    # Get latest regression model performance
+    latest_model = RegressionModelPerformance.objects.filter(
+        is_active=True
+    ).order_by('-trained_at').first()
     
     if latest_model:
         model_performance = {
-            'accuracy': round(latest_model.accuracy, 2),
-            'precision': round(latest_model.precision, 2),
-            'recall': round(latest_model.recall, 2),
-            'f1_score': round(latest_model.f1_score, 2),
-            'auc': round(latest_model.auc_score or 0.88, 2),
+            'rmse': round(latest_model.rmse, 4),
+            'mae': round(latest_model.mae, 4),
+            'r2_score': round(latest_model.r2_score, 4),
+            'mse': round(latest_model.mse, 4),
+            'cv_rmse': round(latest_model.cv_rmse, 4) if latest_model.cv_rmse else None,
+            'cv_std': round(latest_model.cv_std, 4) if latest_model.cv_std else None,
             'model_name': latest_model.model_name,
+            'model_type': latest_model.model_type,
             'trained_at': latest_model.trained_at.strftime('%Y-%m-%d %H:%M:%S')
         }
     else:
-        model_metrics = all_predictions.aggregate(
-            avg_prob=Avg('probability'),
-            max_prob=Max('probability'),
-            min_prob=Min('probability')
-        )
-        
+        # No model available
         model_performance = {
-            'accuracy': round(model_metrics['avg_prob'] or 0, 2),
-            'precision': 0.78,
-            'recall': 0.76,
-            'f1_score': 0.77,
-            'auc': 0.88,
-            'model_name': 'random_forest',
+            'rmse': 0,
+            'mae': 0,
+            'r2_score': 0,
+            'mse': 0,
+            'cv_rmse': None,
+            'cv_std': None,
+            'model_name': 'No Model',
+            'model_type': 'N/A',
             'trained_at': 'Not trained yet'
         }
     
+    # Calculate user statistics
     user_stats = all_predictions.aggregate(
         avg_gpa=Avg('gpa'),
         avg_study=Avg('study_hours'),
         avg_sleep=Avg('sleep_hours'),
         avg_confidence=Avg('confidence'),
         avg_test_anxiety=Avg('test_anxiety'),
-        avg_mock_score=Avg('mock_exam_score')
+        avg_mock_score=Avg('mock_exam_score'),
+        avg_internship=Avg('internship_grade'),
+        avg_age=Avg('age')
     )
     
+    # Review center statistics
     review_center_count = all_predictions.filter(review_center=True).count()
     review_center_rate = (review_center_count / total_predictions * 100) if total_predictions > 0 else 0
     
+    # Scholarship statistics
+    scholarship_count = all_predictions.filter(scholarship=True).count()
+    scholarship_rate = (scholarship_count / total_predictions * 100) if total_predictions > 0 else 0
+    
+    # Most common study hours
     study_hours_list = all_predictions.values_list('study_hours', flat=True)
     study_hours_counter = Counter(study_hours_list)
     most_common_study = study_hours_counter.most_common(1)[0][0] if study_hours_counter else 0
     
+    # Gender distribution
+    gender_counts = all_predictions.values('gender').annotate(count=Count('id'))
+    gender_distribution = {item['gender']: item['count'] for item in gender_counts}
+    
+    # Employment status distribution
+    employment_counts = all_predictions.values('employment_status').annotate(count=Count('id'))
+    employment_distribution = {item['employment_status']: item['count'] for item in employment_counts}
+    
     user_statistics = {
         'average_gpa': round(user_stats['avg_gpa'] or 0, 2),
+        'average_internship_grade': round(user_stats['avg_internship'] or 0, 2),
         'common_study_hours': f"{most_common_study} hours",
+        'average_study_hours': round(user_stats['avg_study'] or 0, 1),
         'average_sleep_hours': round(user_stats['avg_sleep'] or 0, 1),
+        'average_age': round(user_stats['avg_age'] or 0, 1),
         'review_center_rate': round(review_center_rate, 1),
+        'scholarship_rate': round(scholarship_rate, 1),
         'average_confidence': round(user_stats['avg_confidence'] or 0, 1),
         'average_test_anxiety': round(user_stats['avg_test_anxiety'] or 0, 1),
-        'average_mock_score': round(user_stats['avg_mock_score'] or 0, 1)
+        'average_mock_score': round(user_stats['avg_mock_score'] or 0, 1),
+        'gender_distribution': gender_distribution,
+        'employment_distribution': employment_distribution,
+        'total_students': all_predictions.values('user').distinct().count()
     }
     
+    # Calculate trends
     thirty_days_ago = timezone.now() - timedelta(days=30)
     previous_total = all_predictions.filter(created_at__lt=thirty_days_ago).count()
     current_total = all_predictions.filter(created_at__gte=thirty_days_ago).count()
@@ -198,6 +257,7 @@ def calculate_monthly_trends():
         labels.append(month_name)
         values.append(round(data['avg_prob'], 1))
     
+    # Fill missing months with 0
     if len(labels) < 12:
         for i in range(12 - len(labels)):
             month_idx = (now.month - 12 + i) % 12
@@ -231,20 +291,30 @@ def dashboard_stats(request):
                     }
                 },
                 'model_performance': {
-                    'accuracy': 0,
-                    'precision': 0,
-                    'recall': 0,
-                    'f1_score': 0,
-                    'auc': 0
+                    'rmse': 0,
+                    'mae': 0,
+                    'r2_score': 0,
+                    'mse': 0,
+                    'cv_rmse': None,
+                    'cv_std': None,
+                    'model_name': 'No Model',
+                    'model_type': 'N/A',
+                    'trained_at': 'Not trained yet'
                 },
                 'feature_importance': {},
                 'user_statistics': {
                     'average_gpa': 0,
+                    'average_internship_grade': 0,
                     'common_study_hours': '0 hours',
+                    'average_study_hours': 0,
                     'average_sleep_hours': 0,
+                    'average_age': 0,
                     'review_center_rate': 0,
+                    'scholarship_rate': 0,
                     'average_confidence': 0,
-                    'average_test_anxiety': 0
+                    'average_test_anxiety': 0,
+                    'average_mock_score': 0,
+                    'total_students': 0
                 },
                 'trend_data': {
                     'labels': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
@@ -255,6 +325,7 @@ def dashboard_stats(request):
         trend_data = calculate_monthly_trends()
         stats['trend_data'] = trend_data
         
+        # Save to dashboard statistics
         today = timezone.now().date()
         DashboardStatistics.objects.update_or_create(
             date=today,
@@ -289,8 +360,10 @@ def export_csv(request):
         writer = csv.writer(response)
         writer.writerow([
             'Student ID', 'Student Name', 'Email', 'Prediction Result', 
-            'Probability (%)', 'GPA', 'Study Hours', 'Sleep Hours', 
-            'Review Center', 'Confidence', 'Test Anxiety', 'Mock Exam Score', 'Date'
+            'Probability (%)', 'Age', 'Gender', 'GPA', 'Internship Grade',
+            'Study Hours', 'Sleep Hours', 'Review Center', 'Confidence', 
+            'Test Anxiety', 'Mock Exam Score', 'Scholarship', 'Income Level',
+            'Employment Status', 'Date'
         ])
         
         predictions = Prediction.objects.select_related('user').order_by('-created_at')
@@ -302,13 +375,19 @@ def export_csv(request):
                 pred.user.email,
                 pred.prediction_result,
                 f'{pred.probability:.1f}',
+                pred.age,
+                pred.gender,
                 f'{pred.gpa:.2f}',
+                f'{pred.internship_grade:.2f}',
                 pred.study_hours,
                 pred.sleep_hours,
                 'Yes' if pred.review_center else 'No',
                 pred.confidence,
                 pred.test_anxiety,
                 f'{pred.mock_exam_score:.1f}' if pred.mock_exam_score else 'N/A',
+                'Yes' if pred.scholarship else 'No',
+                pred.income_level,
+                pred.employment_status,
                 pred.created_at.strftime('%Y-%m-%d %H:%M:%S')
             ])
         
@@ -392,17 +471,23 @@ def export_pdf(request):
             elements.append(kpi_table)
             elements.append(Spacer(1, 0.3*inch))
             
-            elements.append(Paragraph('Model Performance', heading_style))
+            elements.append(Paragraph('Regression Model Performance', heading_style))
             perf = stats['model_performance']
             
             perf_data = [
                 ['Metric', 'Score'],
-                ['Accuracy', f"{perf['accuracy']:.2f}%"],
-                ['Precision', f"{perf['precision']:.2f}"],
-                ['Recall', f"{perf['recall']:.2f}"],
-                ['F1 Score', f"{perf['f1_score']:.2f}"],
-                ['AUC', f"{perf['auc']:.2f}"]
+                ['Model Name', perf['model_name']],
+                ['Model Type', perf['model_type']],
+                ['RMSE', f"{perf['rmse']:.4f}"],
+                ['MAE', f"{perf['mae']:.4f}"],
+                ['R² Score', f"{perf['r2_score']:.4f}"],
+                ['MSE', f"{perf['mse']:.4f}"],
             ]
+            
+            if perf['cv_rmse']:
+                perf_data.append(['CV RMSE', f"{perf['cv_rmse']:.4f}"])
+            if perf['cv_std']:
+                perf_data.append(['CV Std', f"{perf['cv_std']:.4f}"])
             
             perf_table = Table(perf_data, colWidths=[3*inch, 2*inch])
             perf_table.setStyle(TableStyle([
@@ -424,10 +509,15 @@ def export_pdf(request):
             
             user_data = [
                 ['Metric', 'Value'],
+                ['Total Students', str(user_stats['total_students'])],
                 ['Average GPA', f"{user_stats['average_gpa']:.2f}"],
+                ['Average Internship Grade', f"{user_stats['average_internship_grade']:.2f}"],
+                ['Average Study Hours', f"{user_stats['average_study_hours']:.1f}"],
                 ['Common Study Hours', user_stats['common_study_hours']],
                 ['Average Sleep Hours', f"{user_stats['average_sleep_hours']:.1f}"],
+                ['Average Age', f"{user_stats['average_age']:.1f}"],
                 ['Review Center Rate', f"{user_stats['review_center_rate']:.1f}%"],
+                ['Scholarship Rate', f"{user_stats['scholarship_rate']:.1f}%"],
                 ['Average Confidence', f"{user_stats['average_confidence']:.1f}"],
                 ['Average Test Anxiety', f"{user_stats['average_test_anxiety']:.1f}"],
             ]

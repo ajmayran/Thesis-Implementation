@@ -9,16 +9,73 @@ import sys
 import os
 import traceback
 import pandas as pd
+import pickle
 from .models import PredictionHistory, Prediction
 
 models_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'models')
 sys.path.append(models_path)
 
 from .forms import PredictionForm
-from .utils import load_selected_model, prepare_input_data, generate_recommendations, get_risk_level
+from .utils import prepare_input_data, generate_recommendations, get_risk_level
 
-SELECTED_MODEL_NAME = 'stacking'
-SELECTED_MODEL_TYPE = 'classification_ensemble'
+# Configuration: Change these variables to switch models
+# For base models: 'decision_tree', 'random_forest', 'knn', 'ridge', 'svr'
+# For ensemble models: 'bagging_random_forest', 'boosting_gradient_boost', 'stacking_ridge'
+SELECTED_MODEL_NAME = 'stacking_ridge'
+MODEL_CATEGORY = 'ensemble'  
+
+# Model paths based on directory structure
+BASE_MODELS_DIR = os.path.join(models_path, 'saved_base_models')
+ENSEMBLE_MODELS_DIR = os.path.join(models_path, 'saved_ensemble_models')
+PREPROCESSOR_PATH = os.path.join(models_path, 'regression_processed_data', 'preprocessor.pkl')
+
+def load_selected_model(model_name, model_category='base'):
+    """
+    Load the selected regression model and preprocessor
+    
+    Args:
+        model_name: Name of the model file without extension
+        model_category: 'base' or 'ensemble'
+    
+    Returns:
+        tuple: (model, preprocessor, error_message)
+    """
+    try:
+        # Determine model directory based on category
+        if model_category == 'base':
+            model_dir = BASE_MODELS_DIR
+            model_file = f"{model_name}_model.pkl"
+        elif model_category == 'ensemble':
+            model_dir = ENSEMBLE_MODELS_DIR
+            model_file = f"{model_name}_ensemble.pkl"
+        else:
+            return None, None, f"Invalid model category: {model_category}"
+        
+        model_path = os.path.join(model_dir, model_file)
+        
+        # Check if model file exists
+        if not os.path.exists(model_path):
+            return None, None, f"Model file not found: {model_path}"
+        
+        # Load the model
+        with open(model_path, 'rb') as f:
+            model = pickle.load(f)
+        
+        # Load the preprocessor
+        if not os.path.exists(PREPROCESSOR_PATH):
+            return None, None, f"Preprocessor file not found: {PREPROCESSOR_PATH}"
+        
+        with open(PREPROCESSOR_PATH, 'rb') as f:
+            preprocessor = pickle.load(f)
+        
+        print(f"Successfully loaded {model_category} model: {model_name}")
+        return model, preprocessor, None
+        
+    except Exception as e:
+        error_msg = f"Error loading model: {str(e)}"
+        print(f"[ERROR] {error_msg}")
+        traceback.print_exc()
+        return None, None, error_msg
 
 @login_required
 def predict_view(request):
@@ -29,9 +86,10 @@ def predict_view(request):
             form_data = form.cleaned_data
             input_data = prepare_input_data(form_data)
             
+            # Load the selected model
             model, preprocessor, error = load_selected_model(
                 model_name=SELECTED_MODEL_NAME,
-                model_type=SELECTED_MODEL_TYPE
+                model_category=MODEL_CATEGORY
             )
             
             if error:
@@ -39,11 +97,11 @@ def predict_view(request):
                 return render(request, 'pages/predict.html', {'form': form})
             
             try:
+                # Make prediction
                 prediction_result = make_single_prediction(
                     model=model,
                     preprocessor=preprocessor,
-                    input_data=input_data,
-                    model_type=SELECTED_MODEL_TYPE
+                    input_data=input_data
                 )
                 
                 if not prediction_result:
@@ -53,9 +111,11 @@ def predict_view(request):
                 predicted_class = prediction_result['prediction']
                 pass_probability = prediction_result['pass_probability']
                 
+                # Generate recommendations and risk assessment
                 recommendations = generate_recommendations(input_data, pass_probability)
                 risk_info = get_risk_level(pass_probability)
                 
+                # Save prediction to database
                 prediction = Prediction.objects.create(
                     user=request.user,
                     age=input_data['Age'],
@@ -75,6 +135,7 @@ def predict_view(request):
                     probability=pass_probability * 100
                 )
                 
+                # Save to prediction history
                 PredictionHistory.objects.create(
                     user=request.user,
                     age=input_data['Age'],
@@ -92,17 +153,22 @@ def predict_view(request):
                     employment_status=input_data['EmploymentStatus'],
                     avg_probability=pass_probability * 100,
                     risk_level=risk_info['level'],
-                    base_predictions={'selected_model': prediction_result},
+                    base_predictions={
+                        'model_name': SELECTED_MODEL_NAME,
+                        'model_category': MODEL_CATEGORY,
+                        'prediction': prediction_result
+                    },
                     ensemble_predictions=None,
                     ip_address=request.META.get('REMOTE_ADDR'),
                     user_agent=request.META.get('HTTP_USER_AGENT')
                 )
                 
+                # Store results in session
                 request.session['prediction_results'] = {
                     'input_data': input_data,
                     'prediction': prediction_result,
                     'model_name': SELECTED_MODEL_NAME,
-                    'model_type': SELECTED_MODEL_TYPE,
+                    'model_category': MODEL_CATEGORY,
                     'recommendations': recommendations,
                     'avg_probability': pass_probability * 100,
                     'risk_info': risk_info,
@@ -137,13 +203,14 @@ def result_view(request, prediction_id):
                     'ensemble_models': {}
                 },
                 'model_name': results['model_name'],
-                'model_type': results['model_type'],
+                'model_category': results.get('model_category', MODEL_CATEGORY),
                 'recommendations': results['recommendations'],
                 'avg_probability': results['avg_probability'],
                 'risk_info': results['risk_info'],
                 'prediction': prediction
             }
         else:
+            # Reconstruct data from database
             input_data = {
                 'Age': prediction.age,
                 'Gender': prediction.gender,
@@ -179,7 +246,7 @@ def result_view(request, prediction_id):
                     'ensemble_models': {}
                 },
                 'model_name': SELECTED_MODEL_NAME,
-                'model_type': SELECTED_MODEL_TYPE,
+                'model_category': MODEL_CATEGORY,
                 'recommendations': recommendations,
                 'avg_probability': prediction.probability,
                 'risk_info': risk_info,
@@ -231,7 +298,7 @@ def detail_view(request, prediction_id):
             'ensemble_models': {}
         },
         'model_name': SELECTED_MODEL_NAME,
-        'model_type': SELECTED_MODEL_TYPE,
+        'model_category': MODEL_CATEGORY,
         'recommendations': recommendations,
         'avg_probability': prediction.probability,
         'risk_info': risk_info,
@@ -271,7 +338,7 @@ def predict_exam_result(request):
         
         model, preprocessor, error = load_selected_model(
             model_name=SELECTED_MODEL_NAME,
-            model_type=SELECTED_MODEL_TYPE
+            model_category=MODEL_CATEGORY
         )
         
         if error:
@@ -280,8 +347,7 @@ def predict_exam_result(request):
         prediction_result = make_single_prediction(
             model=model,
             preprocessor=preprocessor,
-            input_data=data,
-            model_type=SELECTED_MODEL_TYPE
+            input_data=data
         )
         
         if not prediction_result:
@@ -291,7 +357,7 @@ def predict_exam_result(request):
         
         return JsonResponse({
             'model_name': SELECTED_MODEL_NAME,
-            'model_type': SELECTED_MODEL_TYPE,
+            'model_category': MODEL_CATEGORY,
             'prediction': prediction_result,
             'recommendations': recommendations,
             'input_data': data
@@ -305,7 +371,7 @@ def model_status(request):
     try:
         model, preprocessor, error = load_selected_model(
             model_name=SELECTED_MODEL_NAME,
-            model_type=SELECTED_MODEL_TYPE
+            model_category=MODEL_CATEGORY
         )
         
         if error:
@@ -317,16 +383,30 @@ def model_status(request):
         return JsonResponse({
             'model_loaded': True,
             'selected_model': SELECTED_MODEL_NAME,
-            'model_type': SELECTED_MODEL_TYPE
+            'model_category': MODEL_CATEGORY,
+            'model_path': ENSEMBLE_MODELS_DIR if MODEL_CATEGORY == 'ensemble' else BASE_MODELS_DIR
         })
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
 
-def make_single_prediction(model, preprocessor, input_data, model_type='base'):
+def make_single_prediction(model, preprocessor, input_data):
+    """
+    Make a single prediction using regression model
+    
+    Args:
+        model: Loaded regression model
+        preprocessor: Loaded preprocessor
+        input_data: Dictionary containing input features
+    
+    Returns:
+        dict: Prediction results with score and pass/fail classification
+    """
     try:
+        # Create DataFrame from input
         df_input = pd.DataFrame([input_data])
         
+        # Define feature columns
         categorical_columns = ['Gender', 'IncomeLevel', 'EmploymentStatus']
         numerical_columns = ['Age', 'StudyHours', 'SleepHours', 'Confidence', 
                            'MockExamScore', 'GPA', 'InternshipGrade', 'TestAnxiety']
@@ -335,55 +415,34 @@ def make_single_prediction(model, preprocessor, input_data, model_type='base'):
         all_feature_columns = categorical_columns + numerical_columns + binary_columns
         X_input = df_input[all_feature_columns].copy()
         
-        if model_type == 'classification_ensemble':
-            if 'MockExamScore' in X_input.columns and X_input['MockExamScore'].isnull().any():
-                X_input.loc[:, 'MockExamScore'] = X_input['MockExamScore'].fillna(77.0)
-            
-            label_encoders = preprocessor['label_encoders']
-            for col in categorical_columns:
-                if col in X_input.columns:
-                    X_input.loc[:, col] = label_encoders[col].transform(X_input[col].astype(str))
-            
-            scaler = preprocessor['label_scaler']
-            X_input_processed = scaler.transform(X_input)
-            
-        elif model_type == 'classification_base':
-            if preprocessor is None:
-                print("[ERROR] Preprocessor is None!")
-                return None
-            X_input_processed = preprocessor.transform(X_input)
-        else:
-            if preprocessor is None:
-                print("[ERROR] Preprocessor is None!")
-                return None
-            X_input_processed = preprocessor.transform(X_input)
+        # Handle missing MockExamScore
+        if 'MockExamScore' in X_input.columns and X_input['MockExamScore'].isnull().any():
+            X_input.loc[:, 'MockExamScore'] = X_input['MockExamScore'].fillna(77.0)
         
-        if model_type in ['classification_ensemble', 'classification_base']:
-            prediction_class = model.predict(X_input_processed)[0]
+        # Preprocess the input data
+        if preprocessor is None:
+            print("[ERROR] Preprocessor is None")
+            return None
             
-            if hasattr(model, 'predict_proba'):
-                probabilities = model.predict_proba(X_input_processed)[0]
-                pass_probability = float(probabilities[1])
-            else:
-                pass_probability = float(prediction_class)
-            
-            return {
-                'prediction': int(prediction_class),
-                'predicted_score': float(pass_probability * 100),
-                'pass_probability': pass_probability,
-                'prediction_label': 'Pass' if prediction_class == 1 else 'Fail'
-            }
-        else:
-            predicted_score = model.predict(X_input_processed)[0]
-            PASSING_SCORE = 75.0
-            prediction_class = 1 if predicted_score >= PASSING_SCORE else 0
-            
-            return {
-                'prediction': prediction_class,
-                'predicted_score': float(predicted_score),
-                'pass_probability': float(predicted_score / 100.0),
-                'prediction_label': 'Pass' if prediction_class == 1 else 'Fail'
-            }
+        X_input_processed = preprocessor.transform(X_input)
+        
+        # Make prediction using regression model
+        predicted_score = model.predict(X_input_processed)[0]
+        
+        # Convert regression score to classification
+        PASSING_SCORE = 70.0
+        prediction_class = 1 if predicted_score >= PASSING_SCORE else 0
+        pass_probability = float(predicted_score / 100.0)
+        
+        # Ensure probability is within valid range
+        pass_probability = max(0.0, min(1.0, pass_probability))
+        
+        return {
+            'prediction': prediction_class,
+            'predicted_score': float(predicted_score),
+            'pass_probability': pass_probability,
+            'prediction_label': 'PASS' if prediction_class == 1 else 'FAIL'
+        }
         
     except Exception as e:
         print(f"[ERROR] Prediction failed: {e}")
