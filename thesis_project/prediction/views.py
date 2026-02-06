@@ -29,7 +29,7 @@ PREPROCESSOR_PATH = os.path.join(models_path, 'saved_ensemble_models', 'preproce
 
 def load_selected_model(model_name, model_category='base'):
     """
-    Load the selected regression model and preprocessor
+    Load the selected regression model and preprocessor with validation
     """
     try:
         if model_category == 'base':
@@ -46,14 +46,31 @@ def load_selected_model(model_name, model_category='base'):
         if not os.path.exists(model_path):
             return None, None, f"Model file not found: {model_path}"
         
-        with open(model_path, 'rb') as f:
-            model = pickle.load(f)
+        # Check file size to detect corrupted files
+        file_size = os.path.getsize(model_path)
+        if file_size < 100:
+            return None, None, f"Model file appears corrupted (size: {file_size} bytes)"
+        
+        # Load with explicit binary mode
+        try:
+            with open(model_path, 'rb') as f:
+                model = pickle.load(f)
+        except pickle.UnpicklingError as e:
+            return None, None, f"Corrupted pickle file: {str(e)}. Please re-train the model."
         
         if not os.path.exists(PREPROCESSOR_PATH):
             return None, None, f"Preprocessor file not found: {PREPROCESSOR_PATH}"
         
-        with open(PREPROCESSOR_PATH, 'rb') as f:
-            preprocessor = pickle.load(f)
+        # Check preprocessor file
+        preprocessor_size = os.path.getsize(PREPROCESSOR_PATH)
+        if preprocessor_size < 100:
+            return None, None, f"Preprocessor file appears corrupted (size: {preprocessor_size} bytes)"
+        
+        try:
+            with open(PREPROCESSOR_PATH, 'rb') as f:
+                preprocessor = pickle.load(f)
+        except pickle.UnpicklingError as e:
+            return None, None, f"Corrupted preprocessor file: {str(e)}. Please re-train the model."
         
         print(f"Successfully loaded {model_category} model: {model_name}")
         return model, preprocessor, None
