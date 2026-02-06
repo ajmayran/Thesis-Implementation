@@ -1,0 +1,20 @@
+{
+  "grade_columns": [
+    "GPA",
+    "InternshipGrade",
+    "MockExamScore"
+  ],
+  "score_columns": [
+    "Age",
+    "StudyHours",
+    "SleepHours",
+    "Confidence",
+    "TestAnxiety",
+    "Scholarship",
+    "EnglishProficiency",
+    "MotivationScore",
+    "SocialSupport"
+  ],
+  "grade_imputer": "IterativeImputer",
+  "score_imputer": "SimpleImputer_median"
+}

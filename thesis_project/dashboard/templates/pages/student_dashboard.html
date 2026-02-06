@@ -199,7 +199,7 @@
                             {% if recent_predictions %}
                                 <div class="space-y-4">
                                     {% for pred in recent_predictions %}
-                                        <div class="prediction-card p-4 bg-gray-50 rounded-lg {% if pred.probability >= 75 %}border-green-500{% elif pred.probability >= 50 %}border-yellow-500{% else %}border-red-500{% endif %}">
+                                        <div class="prediction-card p-4 bg-gray-50 rounded-lg {% if pred.probability >= 70 %}border-green-500{% elif pred.probability >= 50 %}border-yellow-500{% else %}border-red-500{% endif %}">
                                             <div class="flex items-center justify-between mb-2">
                                                 <div>
                                                     <p class="font-semibold text-gray-800">
@@ -208,7 +208,7 @@
                                                     <p class="text-sm text-gray-600">GPA: {{ pred.gpa|floatformat:2 }} | Study: {{ pred.study_hours }}hrs</p>
                                                 </div>
                                                 <div class="text-right">
-                                                    <span class="status-badge {% if pred.probability >= 75 %}badge-high{% elif pred.probability >= 50 %}badge-medium{% else %}badge-low{% endif %}">
+                                                    <span class="status-badge {% if pred.probability >= 70 %}badge-high{% elif pred.probability >= 50 %}badge-medium{% else %}badge-low{% endif %}">
                                                         {{ pred.probability|floatformat:0 }}% Pass Rate
                                                     </span>
                                                 </div>
