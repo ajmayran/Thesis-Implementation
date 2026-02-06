@@ -11,10 +11,106 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        .glass {
-            background: rgba(255, 255, 255, 0.9);
-            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+        .result-card {
+            background: white;
             border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 24px;
+            color: white;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .badge-pass {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            display: inline-block;
+            font-size: 14px;
+        }
+        
+        .badge-fail {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            display: inline-block;
+            font-size: 14px;
+        }
+        
+        .probability-bar {
+            height: 30px;
+            background: #e5e7eb;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .probability-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #059669);
+            transition: width 1s ease-out;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 12px;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .risk-low {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+        }
+        
+        .risk-medium {
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+        }
+        
+        .risk-high {
+            background: linear-gradient(90deg, #10b981, #059669);
+        }
+        
+        .recommendation-item {
+            background: #f9fafb;
+            border-left: 4px solid #667eea;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #6b7280;
+        }
+        
+        .info-value {
+            color: #111827;
         }
         
         .sidebar {
@@ -29,113 +125,42 @@
             background: rgba(255, 255, 255, 0.05);
         }
         
-        .result-badge {
-            padding: 8px 20px;
-            border-radius: 25px;
-            font-weight: 600;
-            font-size: 14px;
-            display: inline-block;
+        .section-header {
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
         }
         
-        .badge-success {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-        }
-        
-        .badge-warning {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: white;
-        }
-        
-        .badge-danger {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: white;
-        }
-        
-        .probability-circle {
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 48px;
-            font-weight: 700;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            margin: 0 auto;
-        }
-        
-        .model-result-card {
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 16px;
-            transition: all 0.3s;
-        }
-        
-        .model-result-card:hover {
-            border-color: #3b82f6;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
-        }
-        
-        .recommendation-card {
-            border-left: 4px solid;
-            padding: 16px;
+        .action-btn {
+            padding: 12px 24px;
             border-radius: 8px;
-            margin-bottom: 12px;
-        }
-        
-        .recommendation-red {
-            border-color: #ef4444;
-            background: #fef2f2;
-        }
-        
-        .recommendation-orange {
-            border-color: #f59e0b;
-            background: #fffbeb;
-        }
-        
-        .recommendation-green {
-            border-color: #10b981;
-            background: #f0fdf4;
-        }
-        
-        .recommendation-blue {
-            border-color: #3b82f6;
-            background: #eff6ff;
-        }
-        
-        .recommendation-purple {
-            border-color: #8b5cf6;
-            background: #f5f3ff;
-        }
-        
-        .progress-bar {
-            height: 24px;
-            background: #e5e7eb;
-            border-radius: 12px;
-            overflow: hidden;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
             font-weight: 600;
-            font-size: 12px;
-            transition: width 1s ease;
+            transition: all 0.3s;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
         
-        .input-summary-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid #e5e7eb;
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
         }
         
-        .input-summary-item:last-child {
-            border-bottom: none;
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #374151;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .btn-secondary:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
         }
     </style>
 </head>
@@ -158,8 +183,11 @@
                 <a href="{% url 'dashboard:home' %}" class="flex items-center p-3 nav-item rounded text-sm">
                     <i class="fa-solid fa-house-chimney mr-3 w-5"></i>Dashboard
                 </a>
-                <a href="{% url 'prediction:predict' %}" class="flex items-center p-3 nav-item rounded text-sm bg-white/10">
+                <a href="{% url 'prediction:predict' %}" class="flex items-center p-3 nav-item rounded text-sm">
                     <i class="fa-solid fa-brain mr-3 w-5"></i>Predictions
+                </a>
+                <a href="{% url 'prediction:history' %}" class="flex items-center p-3 nav-item rounded text-sm bg-white/10">
+                    <i class="fa-solid fa-clock-rotate-left mr-3 w-5"></i>History
                 </a>
                 <a href="#" class="flex items-center p-3 nav-item rounded text-sm">
                     <i class="fa-solid fa-chart-line mr-3 w-5"></i>Reports
@@ -180,195 +208,300 @@
             <header class="bg-white p-4 md:pl-8 md:pr-8 flex items-center justify-between shadow-sm">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-800">Prediction Results</h1>
-                    <p class="text-sm text-gray-600">Your personalized exam likelihood analysis</p>
+                    <p class="text-sm text-gray-600">Social Work Licensure Examination</p>
                 </div>
                 <div class="flex gap-3">
-                    <button onclick="window.print()" class="flex items-center bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm transition">
-                        <i class="fa-solid fa-print mr-2"></i> Print
-                    </button>
-                    <a href="{% url 'prediction:predict' %}" class="flex items-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition">
-                        <i class="fa-solid fa-rotate mr-2"></i> New Prediction
+                    <a href="{% url 'prediction:predict' %}" class="action-btn btn-secondary">
+                        <i class="fa-solid fa-plus"></i> New Prediction
+                    </a>
+                    <a href="{% url 'prediction:history' %}" class="action-btn btn-secondary">
+                        <i class="fa-solid fa-clock-rotate-left"></i> View History
                     </a>
                 </div>
             </header>
 
             <main class="p-6 md:p-8 max-w-7xl mx-auto">
                 
-                <div class="glass p-8 mb-6 text-center">
-                    <div class="mb-4">
-                        {% if avg_probability >= 75 %}
-                            <i class="fa-solid fa-circle-check text-green-500 text-6xl"></i>
-                        {% elif avg_probability >= 50 %}
-                            <i class="fa-solid fa-triangle-exclamation text-yellow-500 text-6xl"></i>
-                        {% else %}
-                            <i class="fa-solid fa-circle-xmark text-red-500 text-6xl"></i>
-                        {% endif %}
+                <div class="result-card">
+                    <div class="section-header">
+                        <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                            <i class="fa-solid fa-chart-pie mr-3 text-purple-600"></i>
+                            Overall Prediction Summary
+                        </h2>
                     </div>
-                    
-                    <h2 class="text-3xl font-bold text-gray-800 mb-2">
-                        {{ risk_info.level }}
-                    </h2>
-                    
-                    <p class="text-gray-600 text-lg mb-6">{{ risk_info.message }}</p>
-                    
-                    <div class="probability-circle {% if avg_probability >= 75 %}bg-gradient-to-br from-green-400 to-green-600{% elif avg_probability >= 50 %}bg-gradient-to-br from-yellow-400 to-yellow-600{% else %}bg-gradient-to-br from-red-400 to-red-600{% endif %} text-white">
-                        {{ avg_probability|floatformat:2 }}%
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="stat-card">
+                            <div class="text-4xl mb-2">
+                                <i class="fa-solid fa-bullseye"></i>
+                            </div>
+                            <div class="text-lg font-semibold mb-1">Prediction</div>
+                            <div class="text-3xl font-bold">
+                                {% if predictions.base_models %}
+                                    {% for model_name, result in predictions.base_models.items %}
+                                        {{ result.prediction_label }}
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="text-4xl mb-2">
+                                <i class="fa-solid fa-percent"></i>
+                            </div>
+                            <div class="text-lg font-semibold mb-1">Pass Probability</div>
+                            <div class="text-3xl font-bold">{{ avg_probability|floatformat:1 }}%</div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="text-4xl mb-2">
+                                <i class="fa-solid fa-gauge-high"></i>
+                            </div>
+                            <div class="text-lg font-semibold mb-1">Risk Level</div>
+                            <div class="text-3xl font-bold">{{ risk_info.level|upper }}</div>
+                        </div>
                     </div>
-                    
-                    <p class="text-sm text-gray-600 mt-4">Average Pass Probability</p>
+
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Pass Probability Distribution</h3>
+                        <div class="probability-bar">
+                            <div class="probability-fill risk-{{ risk_info.level }}" style="width: {{ avg_probability }}%">
+                                {{ avg_probability|floatformat:1 }}%
+                            </div>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-600 mt-2">
+                            <span>0%</span>
+                            <span>50%</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    
-                    <div class="glass p-6">
-                        <h3 class="text-xl font-bold text-gray-800 mb-4">
-                            <i class="fa-solid fa-lightbulb text-yellow-500 mr-2"></i>
-                            Personalized Recommendations
-                        </h3>
-                        
-                        <div class="space-y-3">
-                            {% for rec in recommendations %}
-                                <div class="recommendation-card recommendation-{{ rec.color }}">
-                                    <div class="flex items-start">
-                                        <div class="flex-shrink-0 mr-3">
-                                            <i class="fa-solid {{ rec.icon }} text-2xl {% if rec.color == 'red' %}text-red-600{% elif rec.color == 'orange' %}text-orange-600{% elif rec.color == 'blue' %}text-blue-600{% elif rec.color == 'purple' %}text-purple-600{% else %}text-green-600{% endif %}"></i>
-                                        </div>
-                                        <div class="flex-1">
-                                            <h4 class="font-semibold {% if rec.color == 'red' %}text-red-800{% elif rec.color == 'orange' %}text-orange-800{% elif rec.color == 'blue' %}text-blue-800{% elif rec.color == 'purple' %}text-purple-800{% else %}text-green-800{% endif %} mb-1">
-                                                {{ rec.title }}
-                                            </h4>
-                                            <p class="text-sm text-gray-700">{{ rec.message }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endfor %}
+                <div class="result-card">
+                    <div class="section-header">
+                        <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                            <i class="fa-solid fa-robot mr-3 text-purple-600"></i>
+                            Model Performance Details
+                        </h2>
+                    </div>
+
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <div class="flex items-center">
+                            <i class="fa-solid fa-circle-info text-blue-600 text-xl mr-3"></i>
+                            <div>
+                                <p class="text-sm text-blue-800">
+                                    <strong>Model Used:</strong> {{ model_name|title }} ({{ model_category|title }})
+                                </p>
+                            </div>
                         </div>
-                        
-                        <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                            <div class="flex items-start">
-                                <i class="fa-solid fa-circle-info text-blue-600 text-xl mr-3 mt-1"></i>
+                    </div>
+
+                    {% if predictions.base_models %}
+                    <div class="space-y-4">
+                        {% for model_name, result in predictions.base_models.items %}
+                        <div class="bg-gray-50 rounded-lg p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-gray-800">{{ model_name|title }}</h3>
+                                <span class="{% if result.prediction == 1 %}badge-pass{% else %}badge-fail{% endif %}">
+                                    {{ result.prediction_label }}
+                                </span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
-                                    <p class="text-sm text-blue-900 font-semibold mb-1">Need More Help?</p>
-                                    <p class="text-xs text-blue-800">
-                                        Consider consulting with academic advisors or enrolling in review centers for personalized guidance.
-                                    </p>
+                                    <div class="text-sm text-gray-600">Predicted Score</div>
+                                    <div class="text-2xl font-bold text-gray-800">{{ result.predicted_score|floatformat:2 }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-sm text-gray-600">Pass Probability</div>
+                                    <div class="text-2xl font-bold text-gray-800">{{ result.pass_probability|floatformat:3 }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-sm text-gray-600">Classification</div>
+                                    <div class="text-2xl font-bold text-gray-800">{{ result.prediction }}</div>
                                 </div>
                             </div>
                         </div>
+                        {% endfor %}
                     </div>
-                    
-                    <div class="glass p-6">
-                        <h3 class="text-xl font-bold text-gray-800 mb-4">
-                            <i class="fa-solid fa-clipboard-list text-blue-600 mr-2"></i>
-                            Your Input Summary
-                        </h3>
-                        
-                        <div class="space-y-0">
-                            <div class="input-summary-item">
-                                <span class="text-gray-600">Age</span>
-                                <span class="font-semibold text-gray-800">{{ input_data.Age }} years</span>
-                            </div>
-                            
-                            <div class="input-summary-item">
-                                <span class="text-gray-600">Gender</span>
-                                <span class="font-semibold text-gray-800">{{ input_data.Gender }}</span>
-                            </div>
-                            
-                            <div class="input-summary-item">
-                                <span class="text-gray-600">GPA</span>
-                                <span class="font-semibold text-gray-800">{{ input_data.GPA|floatformat:2 }}</span>
-                            </div>
-                            
-                            <div class="input-summary-item">
-                                <span class="text-gray-600">Internship Grade</span>
-                                <span class="font-semibold text-gray-800">{{ input_data.InternshipGrade|floatformat:2 }}</span>
-                            </div>
-                            
-                            <div class="input-summary-item">
-                                <span class="text-gray-600">Study Hours/Day</span>
-                                <span class="font-semibold text-gray-800">{{ input_data.StudyHours }} hours</span>
-                            </div>
-                            
-                            <div class="input-summary-item">
-                                <span class="text-gray-600">Sleep Hours/Day</span>
-                                <span class="font-semibold text-gray-800">{{ input_data.SleepHours }} hours</span>
-                            </div>
-                            
-                            <div class="input-summary-item">
-                                <span class="text-gray-600">Review Center</span>
-                                <span class="font-semibold text-gray-800">
-                                    {% if input_data.ReviewCenter == 1 %}
-                                        <i class="fa-solid fa-check text-green-600"></i> Yes
-                                    {% else %}
-                                        <i class="fa-solid fa-xmark text-red-600"></i> No
-                                    {% endif %}
-                                </span>
-                            </div>
-                            
-                            <div class="input-summary-item">
-                                <span class="text-gray-600">Confidence Level</span>
-                                <span class="font-semibold text-gray-800">{{ input_data.Confidence }}/10</span>
-                            </div>
-                            
-                            <div class="input-summary-item">
-                                <span class="text-gray-600">Test Anxiety Level</span>
-                                <span class="font-semibold text-gray-800">{{ input_data.TestAnxiety }}/10</span>
-                            </div>
-
-                            {% if input_data.MockExamScore %}
-                                <div class="input-summary-item">
-                                    <span class="text-gray-600">Mock Exam Score</span>
-                                    <span class="font-semibold text-gray-800">{{ input_data.MockExamScore|floatformat:1 }}%</span>
-                                </div>
-                            {% endif %}
-                            
-                            <div class="input-summary-item">
-                                <span class="text-gray-600">Scholarship</span>
-                                <span class="font-semibold text-gray-800">
-                                    {% if input_data.Scholarship == 1 %}
-                                        <i class="fa-solid fa-check text-green-600"></i> Yes
-                                    {% else %}
-                                        <i class="fa-solid fa-xmark text-red-600"></i> No
-                                    {% endif %}
-                                </span>
-                            </div>
-                            
-                            <div class="input-summary-item">
-                                <span class="text-gray-600">Income Level</span>
-                                <span class="font-semibold text-gray-800">{{ input_data.IncomeLevel }}</span>
-                            </div>
-                            
-                            <div class="input-summary-item">
-                                <span class="text-gray-600">Employment Status</span>
-                                <span class="font-semibold text-gray-800">{{ input_data.EmploymentStatus }}</span>
-                            </div>
-                        </div>
-                    </div>
-                    
+                    {% endif %}
                 </div>
 
-                <div class="flex gap-4 mt-6">
-                    <a href="{% url 'prediction:predict' %}" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-lg font-semibold text-center transition flex items-center justify-center">
-                        <i class="fa-solid fa-plus mr-2"></i>
+                <div class="result-card">
+                    <div class="section-header">
+                        <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                            <i class="fa-solid fa-user-check mr-3 text-purple-600"></i>
+                            Your Input Data
+                        </h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="font-semibold text-gray-700 mb-3 flex items-center">
+                                <i class="fa-solid fa-user mr-2 text-purple-600"></i>
+                                Personal Information
+                            </h3>
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <div class="info-row">
+                                    <span class="info-label">Age:</span>
+                                    <span class="info-value">{{ input_data.Age }} years</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Gender:</span>
+                                    <span class="info-value">{{ input_data.Gender }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="font-semibold text-gray-700 mb-3 flex items-center">
+                                <i class="fa-solid fa-graduation-cap mr-2 text-purple-600"></i>
+                                Academic Background
+                            </h3>
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <div class="info-row">
+                                    <span class="info-label">GPA:</span>
+                                    <span class="info-value">{{ input_data.GPA|floatformat:2 }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Internship Grade:</span>
+                                    <span class="info-value">{{ input_data.InternshipGrade|floatformat:2 }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Scholarship:</span>
+                                    <span class="info-value">{% if input_data.Scholarship == 1 %}Yes{% else %}No{% endif %}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="font-semibold text-gray-700 mb-3 flex items-center">
+                                <i class="fa-solid fa-book mr-2 text-purple-600"></i>
+                                Study Habits
+                            </h3>
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <div class="info-row">
+                                    <span class="info-label">Study Hours:</span>
+                                    <span class="info-value">{{ input_data.StudyHours }} hours/day</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Sleep Hours:</span>
+                                    <span class="info-value">{{ input_data.SleepHours }} hours/day</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Review Center:</span>
+                                    <span class="info-value">{% if input_data.ReviewCenter == 1 %}Yes{% else %}No{% endif %}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="font-semibold text-gray-700 mb-3 flex items-center">
+                                <i class="fa-solid fa-brain mr-2 text-purple-600"></i>
+                                Psychological Factors
+                            </h3>
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <div class="info-row">
+                                    <span class="info-label">Confidence:</span>
+                                    <span class="info-value">{{ input_data.Confidence }}/10</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Test Anxiety:</span>
+                                    <span class="info-value">{{ input_data.TestAnxiety }}/10</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Motivation:</span>
+                                    <span class="info-value">{{ input_data.MotivationScore }}/10</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="font-semibold text-gray-700 mb-3 flex items-center">
+                                <i class="fa-solid fa-clipboard-check mr-2 text-purple-600"></i>
+                                Exam Preparation
+                            </h3>
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <div class="info-row">
+                                    <span class="info-label">Mock Exam Score:</span>
+                                    <span class="info-value">{{ input_data.MockExamScore|floatformat:2 }}%</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">English Proficiency:</span>
+                                    <span class="info-value">{{ input_data.EnglishProficiency }}/10</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="font-semibold text-gray-700 mb-3 flex items-center">
+                                <i class="fa-solid fa-people-group mr-2 text-purple-600"></i>
+                                Socioeconomic Background
+                            </h3>
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <div class="info-row">
+                                    <span class="info-label">Income Level:</span>
+                                    <span class="info-value">{{ input_data.IncomeLevel }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Employment:</span>
+                                    <span class="info-value">{{ input_data.EmploymentStatus }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Social Support:</span>
+                                    <span class="info-value">{{ input_data.SocialSupport }}/10</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="section-header">
+                        <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                            <i class="fa-solid fa-lightbulb mr-3 text-purple-600"></i>
+                            Personalized Recommendations
+                        </h2>
+                    </div>
+
+                    <div class="bg-{{ risk_info.color }}-50 border border-{{ risk_info.color }}-200 rounded-lg p-6 mb-6">
+                        <div class="flex items-start">
+                            <i class="fa-solid fa-{{ risk_info.icon }} text-{{ risk_info.color }}-600 text-2xl mr-4 mt-1"></i>
+                            <div>
+                                <h3 class="text-lg font-semibold text-{{ risk_info.color }}-900 mb-2">
+                                    Risk Assessment: {{ risk_info.level|upper }}
+                                </h3>
+                                <p class="text-{{ risk_info.color }}-800">{{ risk_info.message }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if recommendations %}
+                    <div class="space-y-3">
+                        {% for recommendation in recommendations %}
+                        <div class="recommendation-item">
+                            <div class="flex items-start">
+                                <i class="fa-solid fa-circle-check text-purple-600 mr-3 mt-1"></i>
+                                <p class="text-gray-700">{{ recommendation }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="flex justify-center gap-4 mt-8">
+                    <a href="{% url 'prediction:predict' %}" class="action-btn btn-primary">
+                        <i class="fa-solid fa-rotate-right"></i>
                         Make Another Prediction
                     </a>
-                    <button onclick="window.print()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-4 rounded-lg font-semibold transition flex items-center justify-center">
-                        <i class="fa-solid fa-download mr-2"></i>
-                        Save as PDF
-                    </button>
-                </div>
-
-                <div class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <div class="flex items-start">
-                        <i class="fa-solid fa-triangle-exclamation text-yellow-600 text-xl mr-3 mt-1"></i>
-                        <div>
-                            <p class="text-sm font-semibold text-yellow-900 mb-1">Important Disclaimer</p>
-                            <p class="text-xs text-yellow-800">
-                                This prediction is based on machine learning models trained on historical data and should be used as a guide only. 
-                                Actual exam results may vary. Continue to study diligently and maintain a positive mindset.
-                            </p>
-                        </div>
-                    </div>
+                    <a href="{% url 'prediction:history' %}" class="action-btn btn-secondary">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                        View Prediction History
+                    </a>
+                    <a href="{% url 'dashboard:home' %}" class="action-btn btn-secondary">
+                        <i class="fa-solid fa-house"></i>
+                        Back to Dashboard
+                    </a>
                 </div>
 
             </main>
@@ -377,15 +510,15 @@
     </div>
 
     <script>
-        window.addEventListener('load', function() {
-            const progressFills = document.querySelectorAll('.progress-fill');
-            progressFills.forEach(fill => {
-                const width = fill.style.width;
-                fill.style.width = '0%';
+        document.addEventListener('DOMContentLoaded', function() {
+            const probabilityFill = document.querySelector('.probability-fill');
+            if (probabilityFill) {
+                const targetWidth = probabilityFill.style.width;
+                probabilityFill.style.width = '0%';
                 setTimeout(() => {
-                    fill.style.width = width;
+                    probabilityFill.style.width = targetWidth;
                 }, 100);
-            });
+            }
         });
     </script>
 

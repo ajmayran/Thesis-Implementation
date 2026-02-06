@@ -1,180 +1,163 @@
 from django import forms
 
 class PredictionForm(forms.Form):
-    """Form for collecting student data for prediction"""
-    
     # Personal Information
     age = forms.IntegerField(
-        label='Age',
-        min_value=21,
-        max_value=65,
+        min_value=18,
+        max_value=100,
         widget=forms.NumberInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Enter age',
-            'required': True
-        })
+            'placeholder': 'Enter your age'
+        }),
+        help_text='Your current age'
     )
     
     gender = forms.ChoiceField(
-        label='Gender',
-        choices=[('', 'Select Gender'), ('Male', 'Male'), ('Female', 'Female')],
-        widget=forms.Select(attrs={
-            'class': 'form-control',
-            'required': True
-        })
+        choices=[
+            ('', 'Select Gender'),
+            ('Male', 'Male'),
+            ('Female', 'Female')
+        ],
+        widget=forms.Select(attrs={'class': 'form-control'})
     )
     
-    # Academic Information
+    # Academic Background
     gpa = forms.FloatField(
-        label='GPA (Grade Point Average)',
         min_value=1.0,
-        max_value=4.0,
+        max_value=5.0,
         widget=forms.NumberInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Enter GPA',
-            'step': '0.01',
-            'required': True
+            'placeholder': 'e.g., 1.5',
+            'step': '0.01'
         }),
-        help_text='Your cumulative GPA'
+        help_text='Your General Weighted Average (1.0 - 5.0, lower is better)'
     )
     
     internship_grade = forms.FloatField(
-        label='Internship Grade',
         min_value=1.0,
-        max_value=3.0,
+        max_value=5.0,
         widget=forms.NumberInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Enter internship grade (1.0-3.0)',
-            'step': '0.25',
-            'required': True
+            'placeholder': 'e.g., 1.75',
+            'step': '0.01'
         }),
-        help_text='Your field internship grade'
+        help_text='Your internship grade (1.0 - 5.0)'
     )
     
-    scholarship = forms.ChoiceField(
-        label='Scholarship Holder',
-        choices=[('', 'Select'), ('0', 'No'), ('1', 'Yes')],
-        widget=forms.Select(attrs={
-            'class': 'form-control',
-            'required': True
-        }),
-        help_text='Do you have a scholarship?'
+    scholarship = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        help_text='Check if you received any scholarship during your studies'
     )
     
-    # Study Habits
+    # Study Habits & Preparation
     study_hours = forms.IntegerField(
-        label='Daily Study Hours',
         min_value=0,
         max_value=24,
         widget=forms.NumberInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Enter daily study hours (0-24)',
-            'required': True
+            'placeholder': 'Hours per day'
         }),
-        help_text='Average hours spent studying per day'
+        help_text='Average daily study hours for exam preparation'
     )
     
     sleep_hours = forms.IntegerField(
-        label='Daily Sleep Hours',
         min_value=0,
         max_value=24,
         widget=forms.NumberInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Enter daily sleep hours (0-24)',
-            'required': True
+            'placeholder': 'Hours per day'
         }),
-        help_text='Average hours of sleep per night'
+        help_text='Average daily sleep hours'
     )
     
-    review_center = forms.ChoiceField(
-        label='Review Center Attendance',
-        choices=[('', 'Select'), ('0', 'No'), ('1', 'Yes')],
-        widget=forms.Select(attrs={
-            'class': 'form-control',
-            'required': True
-        }),
-        help_text='Are you attending a review center?'
+    review_center = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        help_text='Check if you are enrolled in a review center'
     )
     
-    # Preparedness Indicators
     confidence = forms.IntegerField(
-        label='Confidence Level',
         min_value=1,
         max_value=10,
         widget=forms.NumberInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Rate 1-10 (1=Very Low, 10=Very High)',
-            'required': True
+            'placeholder': '1-10'
         }),
-        help_text='How confident are you about passing? (1-10 scale)'
+        help_text='Your confidence level about passing the exam (1=Low, 10=High)'
     )
     
     test_anxiety = forms.IntegerField(
-        label='Test Anxiety Level',
         min_value=1,
         max_value=10,
         widget=forms.NumberInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Rate 1-10 (1=No Anxiety, 10=Extreme Anxiety)',
-            'required': True
+            'placeholder': '1-10'
         }),
-        help_text='How anxious do you feel about the exam? (1-10 scale)'
+        help_text='Your test anxiety level (1=Low, 10=High)'
     )
     
     mock_exam_score = forms.FloatField(
-        label='Mock Exam Score (%)',
+        required=False,
         min_value=0,
         max_value=100,
-        required=False,
         widget=forms.NumberInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Enter mock exam score (optional)',
-            'step': '0.01'
+            'placeholder': 'e.g., 75.5',
+            'step': '0.1'
         }),
-        help_text='Your latest mock/practice exam score (optional)'
+        help_text='Your most recent mock exam score (0-100)'
     )
     
-    # Socioeconomic Factors
+    # New Fields
+    english_proficiency = forms.IntegerField(
+        min_value=1,
+        max_value=10,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': '1-10'
+        }),
+        help_text='Your English proficiency level (1=Poor, 10=Excellent)'
+    )
+    
+    motivation_score = forms.IntegerField(
+        min_value=1,
+        max_value=10,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': '1-10'
+        }),
+        help_text='Your motivation level for exam preparation (1=Low, 10=High)'
+    )
+    
+    social_support = forms.IntegerField(
+        min_value=1,
+        max_value=10,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': '1-10'
+        }),
+        help_text='Level of support from family and friends (1=Low, 10=High)'
+    )
+    
+    # Socioeconomic Background
     income_level = forms.ChoiceField(
-        label='Family Income Level',
         choices=[
             ('', 'Select Income Level'),
-            ('Low', 'Low'),
-            ('Middle', 'Middle'),
-            ('High', 'High')
+            ('Low', 'Low Income'),
+            ('Middle', 'Middle Income'),
+            ('High', 'High Income')
         ],
-        widget=forms.Select(attrs={
-            'class': 'form-control',
-            'required': True
-        })
+        widget=forms.Select(attrs={'class': 'form-control'})
     )
     
     employment_status = forms.ChoiceField(
-        label='Employment Status',
         choices=[
             ('', 'Select Employment Status'),
             ('Unemployed', 'Unemployed'),
-            ('Unskilled', 'Unskilled Worker'),
             ('Skilled', 'Skilled Worker'),
             ('Professional', 'Professional')
         ],
-        widget=forms.Select(attrs={
-            'class': 'form-control',
-            'required': True
-        }),
-        help_text='Current employment status'
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        help_text='Your current employment status'
     )
-    
-    def clean(self):
-        """Additional validation"""
-        cleaned_data = super().clean()
-        
-        study_hours = cleaned_data.get('study_hours', 0)
-        sleep_hours = cleaned_data.get('sleep_hours', 0)
-        
-        if study_hours + sleep_hours > 24:
-            raise forms.ValidationError(
-                'Total study hours and sleep hours cannot exceed 24 hours per day.'
-            )
-        
-        return cleaned_data

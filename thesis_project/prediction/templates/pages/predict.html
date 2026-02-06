@@ -256,7 +256,7 @@
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="form-group">
-                                <label class="form-label" for="id_gpa">{{ form.gpa.label }}</label>
+                                <label class="form-label" for="id_gpa">GPA</label>
                                 {{ form.gpa }}
                                 {% if form.gpa.errors %}
                                     <ul class="errorlist">
@@ -383,6 +383,59 @@
                                 {% endif %}
                                 {% if form.mock_exam_score.help_text %}
                                     <p class="help-text">{{ form.mock_exam_score.help_text }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="flex items-center mb-6">
+                            <div class="section-icon">
+                                <i class="fa-solid fa-lightbulb"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-800">Personal Factors</h2>
+                                <p class="text-sm text-gray-600">Skills and support system assessment</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="form-group">
+                                <label class="form-label" for="id_english_proficiency">{{ form.english_proficiency.label }}</label>
+                                {{ form.english_proficiency }}
+                                {% if form.english_proficiency.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.english_proficiency.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.english_proficiency.help_text %}
+                                    <p class="help-text">{{ form.english_proficiency.help_text }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="id_motivation_score">{{ form.motivation_score.label }}</label>
+                                {{ form.motivation_score }}
+                                {% if form.motivation_score.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.motivation_score.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.motivation_score.help_text %}
+                                    <p class="help-text">{{ form.motivation_score.help_text }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="id_social_support">{{ form.social_support.label }}</label>
+                                {{ form.social_support }}
+                                {% if form.social_support.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.social_support.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.social_support.help_text %}
+                                    <p class="help-text">{{ form.social_support.help_text }}</p>
                                 {% endif %}
                             </div>
                         </div>

@@ -10,6 +10,7 @@ from .models import DashboardStatistics, MonthlyTrend
 from django.utils import timezone
 import json
 import csv
+import os
 from datetime import datetime, timedelta
 from collections import Counter
 
@@ -57,70 +58,101 @@ def student_profile(request):
 
 def load_feature_importance_from_json():
     """Load feature importance from the analysis JSON file"""
-    import os
     
+    # Get the project root directory
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
     json_path = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+        base_dir,
         'models',
         'regression_processed_data',
         'feature_importance_analysis.json'
     )
     
+    print(f"[DEBUG] Looking for feature importance at: {json_path}")
+    
     try:
+        if not os.path.exists(json_path):
+            print(f"[WARNING] Feature importance file not found at: {json_path}")
+            return get_default_feature_importance()
+        
         with open(json_path, 'r') as f:
             data = json.load(f)
-            
+        
+        print("[DEBUG] Successfully loaded feature importance JSON")
+        
         # Use combined ranking average rank (lower is better)
         combined = data.get('combined_ranking', [])
         
+        if not combined:
+            print("[WARNING] No combined_ranking found in JSON")
+            return get_default_feature_importance()
+        
         # Convert to importance scores (inverse of rank, normalized)
         feature_importance = {}
-        if combined:
-            max_rank = max(item['Avg_Rank'] for item in combined)
-            for item in combined:
-                # Inverse ranking: lower rank = higher importance
-                importance = (max_rank - item['Avg_Rank'] + 1) / max_rank
-                feature_importance[item['Feature']] = round(importance, 4)
+        max_rank = max(item['Avg_Rank'] for item in combined)
         
+        for item in combined:
+            # Inverse ranking: lower rank = higher importance
+            importance = (max_rank - item['Avg_Rank'] + 1) / max_rank
+            feature_importance[item['Feature']] = round(importance, 4)
+        
+        print(f"[DEBUG] Processed {len(feature_importance)} features")
         return feature_importance
+        
     except Exception as e:
-        print(f"Error loading feature importance: {e}")
-        # Fallback to default values
-        return {
-            'Age': 0.85,
-            'TestAnxiety': 0.72,
-            'SleepHours': 0.68,
-            'StudyHours': 0.58,
-            'GPA': 0.52,
-            'EnglishProficiency': 0.48
-        }
+        print(f"[ERROR] Error loading feature importance: {e}")
+        import traceback
+        traceback.print_exc()
+        return get_default_feature_importance()
+
+def get_default_feature_importance():
+    """Return default feature importance values"""
+    return {
+        'Age': 0.85,
+        'TestAnxiety': 0.72,
+        'SleepHours': 0.68,
+        'StudyHours': 0.58,
+        'GPA': 0.52,
+        'EnglishProficiency': 0.48,
+        'ReviewCenter': 0.35,
+        'Gender': 0.28
+    }
 
 def calculate_dashboard_statistics():
-    all_predictions = Prediction.objects.all()
+    """Calculate all dashboard statistics"""
     
+    print("[DEBUG] Starting calculate_dashboard_statistics")
+    
+    all_predictions = Prediction.objects.all()
     total_predictions = all_predictions.count()
     
+    print(f"[DEBUG] Total predictions: {total_predictions}")
+    
     if total_predictions == 0:
+        print("[DEBUG] No predictions found, returning None")
         return None
     
+    # Calculate KPI metrics
     avg_probability = all_predictions.aggregate(Avg('probability'))['probability__avg'] or 0
-    
-    # At-risk: probability < 50%
     at_risk_students = all_predictions.filter(probability__lt=50).values('user').distinct().count()
-    # Likely to pass: probability >= 75%
     likely_to_pass = all_predictions.filter(probability__gte=75).values('user').distinct().count()
-    
     pass_rate = (all_predictions.filter(probability__gte=50).count() / total_predictions * 100) if total_predictions > 0 else 0
+    
+    print(f"[DEBUG] KPI calculated - Avg prob: {avg_probability}, At risk: {at_risk_students}")
     
     # Load feature importance from JSON file
     feature_importance = load_feature_importance_from_json()
+    print(f"[DEBUG] Feature importance loaded: {len(feature_importance)} features")
     
     # Get latest regression model performance
     latest_model = RegressionModelPerformance.objects.filter(
         is_active=True
     ).order_by('-trained_at').first()
     
+    print(f"[DEBUG] Latest model query result: {latest_model}")
+    
     if latest_model:
+        print(f"[DEBUG] Model found: {latest_model.model_name}")
         model_performance = {
             'rmse': round(latest_model.rmse, 4),
             'mae': round(latest_model.mae, 4),
@@ -132,8 +164,9 @@ def calculate_dashboard_statistics():
             'model_type': latest_model.model_type,
             'trained_at': latest_model.trained_at.strftime('%Y-%m-%d %H:%M:%S')
         }
+        print(f"[DEBUG] Model performance: {model_performance}")
     else:
-        # No model available
+        print("[DEBUG] No model found in database")
         model_performance = {
             'rmse': 0,
             'mae': 0,
@@ -158,11 +191,10 @@ def calculate_dashboard_statistics():
         avg_age=Avg('age')
     )
     
-    # Review center statistics
+    # Review center and scholarship statistics
     review_center_count = all_predictions.filter(review_center=True).count()
     review_center_rate = (review_center_count / total_predictions * 100) if total_predictions > 0 else 0
     
-    # Scholarship statistics
     scholarship_count = all_predictions.filter(scholarship=True).count()
     scholarship_rate = (scholarship_count / total_predictions * 100) if total_predictions > 0 else 0
     
@@ -215,7 +247,7 @@ def calculate_dashboard_statistics():
     current_likely = all_predictions.filter(created_at__gte=thirty_days_ago, probability__gte=75).count()
     trend_likely = ((current_likely - previous_likely) / previous_likely * 100) if previous_likely > 0 else 0
     
-    return {
+    result = {
         'kpi_metrics': {
             'total_predictions': total_predictions,
             'average_likelihood': round(avg_probability, 1),
@@ -233,8 +265,12 @@ def calculate_dashboard_statistics():
         'feature_importance': feature_importance,
         'user_statistics': user_statistics
     }
+    
+    print(f"[DEBUG] Returning statistics with {len(feature_importance)} features")
+    return result
 
 def calculate_monthly_trends():
+    """Calculate monthly prediction trends"""
     now = timezone.now()
     twelve_months_ago = now - timedelta(days=365)
     
@@ -272,10 +308,14 @@ def calculate_monthly_trends():
 @require_http_methods(["GET"])
 @login_required
 def dashboard_stats(request):
+    """API endpoint for dashboard statistics"""
     try:
+        print("[DEBUG] dashboard_stats endpoint called")
+        
         stats = calculate_dashboard_statistics()
         
         if not stats:
+            print("[DEBUG] No stats available, returning empty data")
             return JsonResponse({
                 'kpi_metrics': {
                     'total_predictions': 0,
@@ -325,6 +365,8 @@ def dashboard_stats(request):
         trend_data = calculate_monthly_trends()
         stats['trend_data'] = trend_data
         
+        print(f"[DEBUG] Returning stats with {len(stats['feature_importance'])} features")
+        
         # Save to dashboard statistics
         today = timezone.now().date()
         DashboardStatistics.objects.update_or_create(
@@ -345,6 +387,10 @@ def dashboard_stats(request):
         return JsonResponse(stats)
         
     except Exception as e:
+        print(f"[ERROR] dashboard_stats error: {e}")
+        import traceback
+        traceback.print_exc()
+        
         return JsonResponse({
             'error': str(e),
             'message': 'Failed to load dashboard statistics'
@@ -353,6 +399,7 @@ def dashboard_stats(request):
 @require_http_methods(["GET"])
 @login_required
 def export_csv(request):
+    """Export predictions to CSV"""
     try:
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = f'attachment; filename="predictions_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv"'
@@ -402,13 +449,14 @@ def export_csv(request):
 @require_http_methods(["GET"])
 @login_required
 def export_pdf(request):
+    """Generate PDF report"""
     try:
-        from reportlab.lib.pagesizes import letter, A4
+        from reportlab.lib.pagesizes import letter
         from reportlab.lib import colors
         from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
         from reportlab.lib.units import inch
-        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
-        from reportlab.lib.enums import TA_CENTER, TA_LEFT
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+        from reportlab.lib.enums import TA_CENTER
         from io import BytesIO
         
         buffer = BytesIO()
@@ -553,6 +601,9 @@ def export_pdf(request):
             'message': 'Please install reportlab: pip install reportlab'
         }, status=500)
     except Exception as e:
+        print(f"[ERROR] PDF generation error: {e}")
+        import traceback
+        traceback.print_exc()
         return JsonResponse({
             'error': str(e),
             'message': 'Failed to generate PDF'
