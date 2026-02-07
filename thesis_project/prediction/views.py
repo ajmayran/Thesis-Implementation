@@ -94,7 +94,7 @@ def admin_predict_view(request):
     """
     Admin-specific prediction view
     """
-    return handle_prediction(request, 'pages/admin_predict.html', 'prediction:result')
+    return handle_prediction(request, 'pages/admin_predict.html', 'prediction:admin_result')
 
 
 @login_required
