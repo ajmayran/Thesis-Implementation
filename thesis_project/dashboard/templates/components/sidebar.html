@@ -13,7 +13,7 @@
         <a href="{% url 'dashboard:home' %}" class="nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
             <i class="fa-solid fa-house-chimney"></i>Dashboard
         </a>
-        <a href="{% url 'prediction:predict' %}" class="nav-item {% if request.resolver_match.url_name == 'predict' %}active{% endif %}">
+        <a href="{% url 'prediction:admin_predict' %}" class="nav-item {% if request.resolver_match.url_name == 'predict' %}active{% endif %}">
             <i class="fa-solid fa-brain"></i>Predictions
         </a>
         <a href="{% url 'dashboard:reports' %}" class="nav-item {% if request.resolver_match.url_name == 'reports' %}active{% endif %}">

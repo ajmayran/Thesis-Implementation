@@ -13,6 +13,10 @@ import csv
 import os
 from datetime import datetime, timedelta
 from collections import Counter
+from django.contrib import messages
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
+from prediction.models import Prediction
 
 @login_required
 def dashboard_home(request):
@@ -1201,3 +1205,45 @@ def export_reports_csv(request):
             'error': str(e),
             'message': 'Failed to export CSV'
         }, status=500)
+    
+@login_required
+def student_profile(request):
+    return render(request, 'pages/student_profile.html')
+
+@login_required
+def update_profile(request):
+    if request.method == 'POST':
+        user = request.user
+        
+        # Update user information
+        user.first_name = request.POST.get('first_name', '').strip()
+        user.last_name = request.POST.get('last_name', '').strip()
+        user.email = request.POST.get('email', '').strip()
+        
+        try:
+            user.save()
+            messages.success(request, 'Profile updated successfully!')
+        except Exception as e:
+            messages.error(request, f'Error updating profile: {str(e)}')
+        
+        return redirect('dashboard:student_profile')
+    
+    return redirect('dashboard:student_profile')
+
+@login_required
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        
+        if form.is_valid():
+            user = form.save()
+            # Update session to prevent logout
+            update_session_auth_hash(request, user)
+            messages.success(request, 'Password changed successfully!')
+        else:
+            for error in form.errors.values():
+                messages.error(request, error)
+        
+        return redirect('dashboard:student_profile')
+    
+    return redirect('dashboard:student_profile')

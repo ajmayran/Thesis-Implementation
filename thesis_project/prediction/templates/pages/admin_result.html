@@ -1,0 +1,350 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Results - Social Work Predictor</title>
+    
+    <link rel="stylesheet" href="{% static 'style/css/main.css' %}">
+    <link rel="stylesheet" href="{% static 'style/css/sidebar.css' %}">
+    <link rel="stylesheet" href="{% static 'style/css/result.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+</head>
+
+<body>
+    <div class="main-container">
+        
+        {% include 'components/sidebar.html' %}
+
+        <div class="content-wrapper">
+            
+            <header class="header">
+                <div class="header-title">
+                    <h1>Prediction Results</h1>
+                    <p>Social Work Licensure Examination</p>
+                </div>
+                <div class="header-actions">
+                    <a href="{% url 'prediction:admin_predict' %}" class="btn btn-primary">
+                        <i class="fa-solid fa-plus"></i>
+                        New Prediction
+                    </a>
+                    <a href="{% url 'prediction:history' %}" class="btn btn-secondary">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                        History
+                    </a>
+                </div>
+            </header>
+
+            <main class="main-content">
+                
+                <div class="result-card">
+                    <div class="section-header">
+                        <h2>
+                            <i class="fa-solid fa-chart-pie"></i>
+                            Overall Prediction Summary
+                        </h2>
+                    </div>
+
+                    <div class="stat-cards-grid">
+                        <div class="result-stat-card">
+                            <div class="stat-icon">
+                                <i class="fa-solid fa-bullseye"></i>
+                            </div>
+                            <div class="stat-label">Prediction</div>
+                            <div class="stat-value">
+                                {% if predictions.base_models %}
+                                    {% for model_name, result in predictions.base_models.items %}
+                                        {{ result.prediction_label }}
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="result-stat-card">
+                            <div class="stat-icon">
+                                <i class="fa-solid fa-percent"></i>
+                            </div>
+                            <div class="stat-label">Pass Probability</div>
+                            <div class="stat-value">{{ avg_probability|floatformat:1 }}%</div>
+                        </div>
+
+                        <div class="result-stat-card">
+                            <div class="stat-icon">
+                                <i class="fa-solid fa-gauge-high"></i>
+                            </div>
+                            <div class="stat-label">Risk Level</div>
+                            <div class="stat-value">{{ risk_info.level|upper }}</div>
+                        </div>
+                    </div>
+
+                    <div class="probability-bar-container">
+                        <h3>Pass Probability Distribution</h3>
+                        <div class="probability-bar">
+                            <div class="probability-fill risk-{{ risk_info.level }}" style="width: {{ avg_probability }}%">
+                                {{ avg_probability|floatformat:1 }}%
+                            </div>
+                        </div>
+                        <div class="probability-labels">
+                            <span>0%</span>
+                            <span>50%</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="section-header">
+                        <h2>
+                            <i class="fa-solid fa-robot"></i>
+                            Model Performance Details
+                        </h2>
+                    </div>
+
+                    <div class="info-box">
+                        <div class="info-content">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <p>
+                                <strong>Model Used:</strong> {{ model_name|title }} ({{ model_category|title }})
+                            </p>
+                        </div>
+                    </div>
+
+                    {% if predictions.base_models %}
+                    <div class="model-performance-grid">
+                        {% for model_name, result in predictions.base_models.items %}
+                        <div class="model-performance-item">
+                            <div class="model-header">
+                                <h3>{{ model_name|title }}</h3>
+                                <span class="{% if result.prediction == 1 %}badge-pass{% else %}badge-fail{% endif %}">
+                                    {{ result.prediction_label }}
+                                </span>
+                            </div>
+                            <div class="model-stats">
+                                <div class="model-stat-item">
+                                    <div class="label">Predicted Score</div>
+                                    <div class="value">{{ result.predicted_score|floatformat:2 }}</div>
+                                </div>
+                                <div class="model-stat-item">
+                                    <div class="label">Pass Probability</div>
+                                    <div class="value">{{ result.pass_probability|floatformat:3 }}</div>
+                                </div>
+                                <div class="model-stat-item">
+                                    <div class="label">Classification</div>
+                                    <div class="value">{{ result.prediction }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="result-card">
+                    <div class="section-header">
+                        <h2>
+                            <i class="fa-solid fa-user-check"></i>
+                            Your Input Data
+                        </h2>
+                    </div>
+
+                    <div class="input-data-grid">
+                        <div class="input-data-section">
+                            <h3>
+                                <i class="fa-solid fa-user"></i>
+                                Personal Information
+                            </h3>
+                            <div class="input-data-box">
+                                <div class="info-row">
+                                    <span class="info-label">Age:</span>
+                                    <span class="info-value">{{ input_data.Age }} years</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Gender:</span>
+                                    <span class="info-value">{{ input_data.Gender }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="input-data-section">
+                            <h3>
+                                <i class="fa-solid fa-graduation-cap"></i>
+                                Academic Background
+                            </h3>
+                            <div class="input-data-box">
+                                <div class="info-row">
+                                    <span class="info-label">GPA:</span>
+                                    <span class="info-value">{{ input_data.GPA|floatformat:2 }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Internship Grade:</span>
+                                    <span class="info-value">{{ input_data.InternshipGrade|floatformat:2 }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Scholarship:</span>
+                                    <span class="info-value">{% if input_data.Scholarship == 1 %}Yes{% else %}No{% endif %}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="input-data-section">
+                            <h3>
+                                <i class="fa-solid fa-book"></i>
+                                Study Habits
+                            </h3>
+                            <div class="input-data-box">
+                                <div class="info-row">
+                                    <span class="info-label">Study Hours:</span>
+                                    <span class="info-value">{{ input_data.StudyHours }} hours/day</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Sleep Hours:</span>
+                                    <span class="info-value">{{ input_data.SleepHours }} hours/day</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Review Center:</span>
+                                    <span class="info-value">{% if input_data.ReviewCenter == 1 %}Yes{% else %}No{% endif %}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="input-data-section">
+                            <h3>
+                                <i class="fa-solid fa-brain"></i>
+                                Psychological Factors
+                            </h3>
+                            <div class="input-data-box">
+                                <div class="info-row">
+                                    <span class="info-label">Confidence:</span>
+                                    <span class="info-value">{{ input_data.Confidence }}/10</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Test Anxiety:</span>
+                                    <span class="info-value">{{ input_data.TestAnxiety }}/10</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Motivation:</span>
+                                    <span class="info-value">{{ input_data.MotivationScore }}/10</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="input-data-section">
+                            <h3>
+                                <i class="fa-solid fa-clipboard-check"></i>
+                                Exam Preparation
+                            </h3>
+                            <div class="input-data-box">
+                                <div class="info-row">
+                                    <span class="info-label">Mock Exam Score:</span>
+                                    <span class="info-value">{{ input_data.MockExamScore|floatformat:2 }}%</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">English Proficiency:</span>
+                                    <span class="info-value">{{ input_data.EnglishProficiency }}/10</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="input-data-section">
+                            <h3>
+                                <i class="fa-solid fa-people-group"></i>
+                                Socioeconomic Background
+                            </h3>
+                            <div class="input-data-box">
+                                <div class="info-row">
+                                    <span class="info-label">Income Level:</span>
+                                    <span class="info-value">{{ input_data.IncomeLevel }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Employment:</span>
+                                    <span class="info-value">{{ input_data.EmploymentStatus }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">Social Support:</span>
+                                    <span class="info-value">{{ input_data.SocialSupport }}/10</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-card">
+                    <div class="section-header">
+                        <h2>
+                            <i class="fa-solid fa-lightbulb"></i>
+                            Personalized Recommendations
+                        </h2>
+                    </div>
+
+                    <div class="risk-assessment-box {{ risk_info.level }}">
+                        <div class="risk-assessment-content">
+                            <i class="fa-solid fa-{{ risk_info.icon }}"></i>
+                            <div>
+                                <h3>Risk Assessment: {{ risk_info.level|upper }}</h3>
+                                <p>{{ risk_info.message }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if recommendations %}
+                    <p class="recommendations-intro">
+                        Based on your profile and predicted performance, here are personalized recommendations 
+                        to help you improve your chances of passing the Social Work Licensure Examination:
+                    </p>
+                    
+                    <div class="recommendations-list">
+                        {% for recommendation in recommendations %}
+                        <div class="recommendation-item">
+                            <div class="recommendation-content">
+                                <i class="fa-solid fa-circle-check"></i>
+                                <p>{{ recommendation }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-recommendations">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <p>No specific recommendations available at this time. Please ensure all input data is provided correctly.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="action-buttons">
+                    <a href="{% url 'prediction:student_predict' %}" class="action-btn btn-primary-action">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        Make Another Prediction
+                    </a>
+                    <a href="{% url 'prediction:history' %}" class="action-btn btn-secondary-action">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                        View Prediction History
+                    </a>
+                    <a href="{% url 'dashboard:student_dashboard' %}" class="action-btn btn-secondary-action">
+                        <i class="fa-solid fa-house"></i>
+                        Back to Dashboard
+                    </a>
+                </div>
+
+            </main>
+
+        </div>
+    </div>
+
+    <script>
+        // Animate probability bar on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const probabilityFill = document.querySelector('.probability-fill');
+            if (probabilityFill) {
+                const targetWidth = probabilityFill.style.width;
+                probabilityFill.style.width = '0%';
+                setTimeout(() => {
+                    probabilityFill.style.width = targetWidth;
+                }, 100);
+            }
+        });
+    </script>
+
+</body>
+</html>

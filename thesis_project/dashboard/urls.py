@@ -7,6 +7,8 @@ urlpatterns = [
     path('', views.dashboard_home, name='home'),
     path('student/', views.student_dashboard, name='student_dashboard'),
     path('student/profile/', views.student_profile, name='student_profile'),
+    path('student/profile/update/', views.update_profile, name='update_profile'),
+    path('student/profile/change-password/', views.change_password, name='change_password'),
     path('reports/', views.reports_view, name='reports'),
     
     # API endpoints for dashboard
