@@ -33,9 +33,27 @@ function setupEventListeners() {
     document.getElementById('resetFiltersBtn')?.addEventListener('click', resetFilters);
     document.getElementById('exportPdfBtn')?.addEventListener('click', exportToPDF);
     document.getElementById('exportCsvBtn')?.addEventListener('click', exportToCSV);
-    document.getElementById('printReportBtn')?.addEventListener('click', printReport);
+    
+    // Print button with proper header handling
+    document.getElementById('printReportBtn')?.addEventListener('click', function() {
+        // Set print date
+        const printDate = document.getElementById('printDate');
+        if (printDate) {
+            printDate.textContent = new Date().toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        // Trigger print
+        window.print();
+    });
 }
 
+// Rest of the existing code remains the same
 function applyFilters() {
     const filters = {
         dateFrom: document.getElementById('dateFrom')?.value,

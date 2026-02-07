@@ -966,7 +966,7 @@ def export_reports_pdf(request):
         )
         
         # Title
-        elements.append(Paragraph('CPA Licensure Exam Predictor', title_style))
+        elements.append(Paragraph('Social Work Licensure Exam Predictor', title_style))
         elements.append(Paragraph(f'{report_type.title()} Report', styles['Heading2']))
         elements.append(Paragraph(f'Generated: {datetime.now().strftime("%B %d, %Y %H:%M:%S")}', styles['Normal']))
         
