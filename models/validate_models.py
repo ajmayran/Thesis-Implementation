@@ -1,5 +1,5 @@
 import os
-import pickle
+import joblib
 import sys
 
 def validate_pickle_file(filepath):
@@ -14,8 +14,8 @@ def validate_pickle_file(filepath):
         if file_size < 100:
             return False, f"File too small ({file_size} bytes)"
         
-        with open(filepath, 'rb') as f:
-            obj = pickle.load(f)
+        # Use joblib.load instead of pickle.load
+        obj = joblib.load(filepath)
         
         return True, "Valid"
     except Exception as e:

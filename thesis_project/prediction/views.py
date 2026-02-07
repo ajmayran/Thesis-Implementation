@@ -9,7 +9,7 @@ import sys
 import os
 import traceback
 import pandas as pd
-import pickle
+import joblib  # Changed from pickle to joblib
 from .models import PredictionHistory, Prediction
 
 models_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'models')
@@ -51,12 +51,12 @@ def load_selected_model(model_name, model_category='base'):
         if file_size < 100:
             return None, None, f"Model file appears corrupted (size: {file_size} bytes)"
         
-        # Load with explicit binary mode
+        # Load model using joblib instead of pickle
         try:
-            with open(model_path, 'rb') as f:
-                model = pickle.load(f)
-        except pickle.UnpicklingError as e:
-            return None, None, f"Corrupted pickle file: {str(e)}. Please re-train the model."
+            model = joblib.load(model_path)
+            print(f"Model loaded successfully: {model_path} ({file_size:,} bytes)")
+        except Exception as e:
+            return None, None, f"Failed to load model: {str(e)}. Please re-train the model."
         
         if not os.path.exists(PREPROCESSOR_PATH):
             return None, None, f"Preprocessor file not found: {PREPROCESSOR_PATH}"
@@ -66,13 +66,16 @@ def load_selected_model(model_name, model_category='base'):
         if preprocessor_size < 100:
             return None, None, f"Preprocessor file appears corrupted (size: {preprocessor_size} bytes)"
         
+        # Load preprocessor using joblib instead of pickle
         try:
-            with open(PREPROCESSOR_PATH, 'rb') as f:
-                preprocessor = pickle.load(f)
-        except pickle.UnpicklingError as e:
-            return None, None, f"Corrupted preprocessor file: {str(e)}. Please re-train the model."
+            preprocessor = joblib.load(PREPROCESSOR_PATH)
+            print(f"Preprocessor loaded successfully: {PREPROCESSOR_PATH} ({preprocessor_size:,} bytes)")
+        except Exception as e:
+            return None, None, f"Failed to load preprocessor: {str(e)}. Please re-train the model."
         
         print(f"Successfully loaded {model_category} model: {model_name}")
+        print(f"Preprocessor details: {preprocessor}")
+        
         return model, preprocessor, None
         
     except Exception as e:
@@ -427,10 +430,13 @@ def make_single_prediction(model, preprocessor, input_data):
         if preprocessor is None:
             print("[ERROR] Preprocessor is None")
             return None
-            
+        
+        print(f"Preprocessing input with {len(all_feature_columns)} features")
         X_input_processed = preprocessor.transform(X_input)
+        print(f"Preprocessed shape: {X_input_processed.shape}")
         
         predicted_score = model.predict(X_input_processed)[0]
+        print(f"Predicted score: {predicted_score}")
         
         PASSING_SCORE = 70.0
         prediction_class = 1 if predicted_score >= PASSING_SCORE else 0

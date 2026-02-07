@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -6,178 +7,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Exam Pass Prediction - Social Work Licensure</title>
     
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'admin_dashboard/css/sidebar.css' %}">
+    <link rel="stylesheet" href="{% static 'admin_dashboard/css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'prediction/css/predict.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-    
-    <style>
-        .form-section {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-control {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: all 0.3s;
-        }
-        
-        .form-control:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-        
-        .form-label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #374151;
-            font-size: 14px;
-        }
-        
-        .help-text {
-            font-size: 12px;
-            color: #6b7280;
-            margin-top: 4px;
-        }
-        
-        .btn-predict {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 16px 48px;
-            border-radius: 8px;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 16px;
-        }
-        
-        .btn-predict:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-        }
-        
-        .btn-predict:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        
-        .alert {
-            padding: 16px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .alert-error {
-            background: #fee2e2;
-            border: 1px solid #fecaca;
-            color: #991b1b;
-        }
-        
-        .alert-warning {
-            background: #fef3c7;
-            border: 1px solid #fde68a;
-            color: #92400e;
-        }
-        
-        .errorlist {
-            color: #dc2626;
-            font-size: 13px;
-            margin-top: 4px;
-            list-style: none;
-            padding: 0;
-        }
-        
-        .section-icon {
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 20px;
-            margin-right: 16px;
-        }
-        
-        .sidebar {
-            background: linear-gradient(180deg, #1f2937, #111827);
-        }
-        
-        .nav-item {
-            transition: background 0.2s;
-        }
-        
-        .nav-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-    </style>
 </head>
 
-<body class="bg-gray-100">
+<body>
     
     <div class="flex min-h-screen">
         
-        <aside class="sidebar w-64 text-white p-6 hidden md:block">
-            <div class="flex items-center mb-8">
-                <div class="mr-3 bg-white/10 p-2 rounded-lg">
-                    <i class="fa-solid fa-user-graduate text-xl"></i>
-                </div>
-                <div>
-                    <h1 class="text-lg font-bold">Social Work<br />Predictor</h1>
-                </div>
-            </div>
+        {% include 'components/sidebar.html' %}
 
-            <nav class="space-y-2">
-                <a href="{% url 'dashboard:home' %}" class="flex items-center p-3 nav-item rounded text-sm">
-                    <i class="fa-solid fa-house-chimney mr-3 w-5"></i>Dashboard
-                </a>
-                <a href="{% url 'prediction:predict' %}" class="flex items-center p-3 nav-item rounded text-sm bg-white/10">
-                    <i class="fa-solid fa-brain mr-3 w-5"></i>Predictions
-                </a>
-                <a href="#" class="flex items-center p-3 nav-item rounded text-sm">
-                    <i class="fa-solid fa-chart-line mr-3 w-5"></i>Reports
-                </a>
-                <a href="#" class="flex items-center p-3 nav-item rounded text-sm">
-                    <i class="fa-solid fa-gear mr-3 w-5"></i>Settings
-                </a>
-            </nav>
-
-            <div class="mt-10 text-xs text-gray-300">
-                <div>© 2024 Thesis Project</div>
-                <div class="mt-1">Version 1.0.0</div>
-            </div>
-        </aside>
-
-        <div class="flex-1">
+        <div class="flex-1 main-content">
             
-            <header class="bg-white p-4 md:pl-8 md:pr-8 flex items-center justify-between shadow-sm">
+            <!-- Page Header -->
+            <header class="page-header">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-800">Exam Pass Prediction</h1>
-                    <p class="text-sm text-gray-600">Social Work Licensure Examination</p>
+                    <h1>Exam Pass Prediction</h1>
+                    <p>Social Work Licensure Examination</p>
                 </div>
-                <a href="{% url 'dashboard:home' %}" class="flex items-center bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm transition">
-                    <i class="fa-solid fa-arrow-left mr-2"></i> Back to Dashboard
+                <a href="{% url 'dashboard:home' %}" class="back-btn">
+                    <i class="fa-solid fa-arrow-left"></i>Back to Dashboard
                 </a>
             </header>
 
-            <main class="p-6 md:p-8 max-w-5xl mx-auto">
+            <!-- Main Content -->
+            <main>
                 
+                <!-- Alert Messages -->
                 {% if messages %}
                     {% for message in messages %}
                         <div class="alert alert-{{ message.tags }}">
@@ -187,14 +45,15 @@
                     {% endfor %}
                 {% endif %}
 
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+                <!-- Info Box -->
+                <div class="info-box">
                     <div class="flex items-start">
                         <div class="flex-shrink-0">
-                            <i class="fa-solid fa-circle-info text-blue-600 text-2xl"></i>
+                            <i class="fa-solid fa-circle-info info-icon"></i>
                         </div>
                         <div class="ml-4">
-                            <h3 class="text-lg font-semibold text-blue-900 mb-2">About This Prediction Tool</h3>
-                            <p class="text-blue-800 text-sm">
+                            <h3>About This Prediction Tool</h3>
+                            <p>
                                 This AI-powered tool analyzes your academic background, study habits, and preparation level 
                                 to predict your likelihood of passing the Social Work Licensure Examination. 
                                 Fill out all fields accurately for the most reliable prediction.
@@ -203,21 +62,23 @@
                     </div>
                 </div>
 
+                <!-- Prediction Form -->
                 <form method="POST" id="predictionForm">
                     {% csrf_token %}
 
+                    <!-- Personal Information Section -->
                     <div class="form-section">
-                        <div class="flex items-center mb-6">
+                        <div class="section-header">
                             <div class="section-icon">
                                 <i class="fa-solid fa-user"></i>
                             </div>
-                            <div>
-                                <h2 class="text-xl font-bold text-gray-800">Personal Information</h2>
-                                <p class="text-sm text-gray-600">Basic demographic information</p>
+                            <div class="section-info">
+                                <h2>Personal Information</h2>
+                                <p>Basic demographic information</p>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="form-grid form-grid-2">
                             <div class="form-group">
                                 <label class="form-label" for="id_age">{{ form.age.label }}</label>
                                 {{ form.age }}
@@ -243,20 +104,21 @@
                         </div>
                     </div>
 
+                    <!-- Academic Background Section -->
                     <div class="form-section">
-                        <div class="flex items-center mb-6">
+                        <div class="section-header">
                             <div class="section-icon">
                                 <i class="fa-solid fa-graduation-cap"></i>
                             </div>
-                            <div>
-                                <h2 class="text-xl font-bold text-gray-800">Academic Background</h2>
-                                <p class="text-sm text-gray-600">Your academic performance indicators</p>
+                            <div class="section-info">
+                                <h2>Academic Background</h2>
+                                <p>Your academic performance indicators</p>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="form-grid form-grid-2">
                             <div class="form-group">
-                                <label class="form-label" for="id_gpa">GPA</label>
+                                <label class="form-label" for="id_gpa">{{ form.gpa.label }}</label>
                                 {{ form.gpa }}
                                 {% if form.gpa.errors %}
                                     <ul class="errorlist">
@@ -296,18 +158,19 @@
                         </div>
                     </div>
 
+                    <!-- Study Habits & Preparation Section -->
                     <div class="form-section">
-                        <div class="flex items-center mb-6">
+                        <div class="section-header">
                             <div class="section-icon">
                                 <i class="fa-solid fa-book"></i>
                             </div>
-                            <div>
-                                <h2 class="text-xl font-bold text-gray-800">Study Habits & Preparation</h2>
-                                <p class="text-sm text-gray-600">Your current preparation routine</p>
+                            <div class="section-info">
+                                <h2>Study Habits & Preparation</h2>
+                                <p>Your current preparation routine</p>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="form-grid form-grid-2">
                             <div class="form-group">
                                 <label class="form-label" for="id_study_hours">{{ form.study_hours.label }}</label>
                                 {{ form.study_hours }}
@@ -388,18 +251,19 @@
                         </div>
                     </div>
 
+                    <!-- Personal Factors Section -->
                     <div class="form-section">
-                        <div class="flex items-center mb-6">
+                        <div class="section-header">
                             <div class="section-icon">
                                 <i class="fa-solid fa-lightbulb"></i>
                             </div>
-                            <div>
-                                <h2 class="text-xl font-bold text-gray-800">Personal Factors</h2>
-                                <p class="text-sm text-gray-600">Skills and support system assessment</p>
+                            <div class="section-info">
+                                <h2>Personal Factors</h2>
+                                <p>Skills and support system assessment</p>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="form-grid form-grid-2">
                             <div class="form-group">
                                 <label class="form-label" for="id_english_proficiency">{{ form.english_proficiency.label }}</label>
                                 {{ form.english_proficiency }}
@@ -441,18 +305,19 @@
                         </div>
                     </div>
 
+                    <!-- Socioeconomic Background Section -->
                     <div class="form-section">
-                        <div class="flex items-center mb-6">
+                        <div class="section-header">
                             <div class="section-icon">
                                 <i class="fa-solid fa-briefcase"></i>
                             </div>
-                            <div>
-                                <h2 class="text-xl font-bold text-gray-800">Socioeconomic Background</h2>
-                                <p class="text-sm text-gray-600">Family and employment information</p>
+                            <div class="section-info">
+                                <h2>Socioeconomic Background</h2>
+                                <p>Family and employment information</p>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="form-grid form-grid-2">
                             <div class="form-group">
                                 <label class="form-label" for="id_income_level">{{ form.income_level.label }}</label>
                                 {{ form.income_level }}
@@ -478,6 +343,7 @@
                         </div>
                     </div>
 
+                    <!-- Non-field Errors -->
                     {% if form.non_field_errors %}
                         <div class="alert alert-error mb-6">
                             <i class="fa-solid fa-circle-exclamation"></i>
@@ -489,13 +355,14 @@
                         </div>
                     {% endif %}
 
-                    <div class="text-center mt-8">
+                    <!-- Submit Button -->
+                    <div class="submit-section">
                         <button type="submit" class="btn-predict" id="submitBtn">
-                            <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
                             Generate Prediction
                         </button>
-                        <p class="text-sm text-gray-600 mt-4">
-                            <i class="fa-solid fa-shield-halved mr-1"></i>
+                        <p class="security-note">
+                            <i class="fa-solid fa-shield-halved security-icon"></i>
                             Your data is processed securely and not stored permanently
                         </p>
                     </div>
@@ -508,12 +375,14 @@
     </div>
 
     <script>
+        // Form submission handler
         document.getElementById('predictionForm').addEventListener('submit', function(e) {
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Processing...';
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
         });
 
+        // Validate study hours and sleep hours total
         const studyHours = document.getElementById('id_study_hours');
         const sleepHours = document.getElementById('id_sleep_hours');
 

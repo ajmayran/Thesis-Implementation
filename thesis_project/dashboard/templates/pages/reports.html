@@ -1,0 +1,128 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - Social Work Licensure Exam Predictor</title>
+    <link rel="stylesheet" href="{% static 'admin_dashboard/css/sidebar.css' %}">
+        <link rel="stylesheet" href="{% static 'admin_dashboard/css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'admin_dashboard/css/reports.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div id="messageContainer"></div>
+    <div class="flex min-h-screen">
+        
+        {% include 'components/sidebar.html' %}
+
+        <!-- Main Content -->
+        <div class="flex-1">
+            <!-- Header -->
+            <header class="no-print">
+                <div class="title">Reports & Analytics</div>
+                <div class="header-actions">
+                    <span id="lastUpdated">Updated: Today</span>
+                    <div class="user-avatar">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main>
+
+                <!-- Reports Header -->
+                <div class="reports-header">
+                    <h1>Reports & Analytics</h1>
+                    <p>Generate comprehensive reports and analyze prediction data</p>
+                </div>
+
+                <!-- Filters Section -->
+                <div class="filters-section no-print">
+                    <h2>Filters</h2>
+                    <div class="filters-grid">
+                        <div class="filter-group">
+                            <label for="dateFrom">Date From</label>
+                            <input type="date" id="dateFrom" class="form-control">
+                        </div>
+                        <div class="filter-group">
+                            <label for="dateTo">Date To</label>
+                            <input type="date" id="dateTo" class="form-control">
+                        </div>
+                        <div class="filter-group">
+                            <label for="riskLevel">Risk Level</label>
+                            <select id="riskLevel" class="form-control">
+                                <option value="all">All Levels</option>
+                                <option value="high">High Risk</option>
+                                <option value="medium">Medium Risk</option>
+                                <option value="low">Low Risk</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="department">Department</label>
+                            <select id="department" class="form-control">
+                                <option value="all">All Departments</option>
+                                <option value="social_work">Social Work</option>
+                                <option value="psychology">Psychology</option>
+                                <option value="sociology">Sociology</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="filter-actions">
+                        <button id="applyFiltersBtn" class="btn btn-primary">
+                            Apply Filters
+                        </button>
+                        <button id="resetFiltersBtn" class="btn btn-secondary">
+                            Reset Filters
+                        </button>
+                        <button id="exportPdfBtn" class="btn btn-success">
+                            Export PDF
+                        </button>
+                        <button id="exportCsvBtn" class="btn btn-info">
+                            Export CSV
+                        </button>
+                        <button id="printReportBtn" class="btn btn-secondary">
+                            Print Report
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Report Type Selection -->
+                <div class="report-type-section no-print">
+                    <h2>Report Type</h2>
+                    <div class="report-types-grid">
+                        <div class="report-type-card active" data-type="overview">
+                            <h3>Overview Report</h3>
+                            <p>General system statistics and trends</p>
+                        </div>
+                        <div class="report-type-card" data-type="performance">
+                            <h3>Performance Report</h3>
+                            <p>Model performance metrics and analysis</p>
+                        </div>
+                        <div class="report-type-card" data-type="predictions">
+                            <h3>Predictions Report</h3>
+                            <p>Detailed prediction data and distribution</p>
+                        </div>
+                        <div class="report-type-card" data-type="risk">
+                            <h3>Risk Analysis</h3>
+                            <p>Risk assessment and student categorization</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Report Content -->
+                <div class="report-content" id="reportContent">
+                    <div class="empty-state">
+                        <h3>Loading Report Data...</h3>
+                        <p>Please wait while we fetch the report information</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="{% static 'admin_dashboard/js/reports.js' %}"></script>
+</body>
+</html>
