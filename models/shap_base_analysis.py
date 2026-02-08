@@ -1,11 +1,13 @@
+import os
+import warnings
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import seaborn as sns
-import joblib
-import os
 import shap
-import warnings
+from sklearn.neural_network import MLPClassifier
+
 from base_models import SocialWorkPredictorModels
 
 warnings.filterwarnings('ignore')
@@ -19,6 +21,7 @@ class BaseModelsSHAPAnalysis:
         self.X_train = None
         self.X_test = None
         self.X_test_subset = None
+        self.y_train = None
         self.y_test = None
 
     def load_data_and_models(
@@ -28,7 +31,7 @@ class BaseModelsSHAPAnalysis:
         approach: str = 'label'
     ) -> bool:
         print("\n" + "=" * 70)
-        print("LOADING DATA AND TRAINED NEURAL NETWORK MODEL")
+        print("LOADING DATA FOR NEURAL NETWORK SHAP ANALYSIS")
         print("=" * 70)
 
         predictor = SocialWorkPredictorModels()
@@ -40,22 +43,30 @@ class BaseModelsSHAPAnalysis:
 
         self.X_train = data['X_train']
         self.X_test = data['X_test']
+        self.y_train = data['y_train']
         self.y_test = data['y_test']
         self.feature_names = data['feature_names']
 
         print(f"\n[DATA] Loaded successfully")
-        print(f"   Training samples: {self.X_train.shape[0]}")
-        print(f"   Test samples: {self.X_test.shape[0]}")
-        print(f"   Features: {len(self.feature_names)}")
+        print(f"   X_train shape: {self.X_train.shape}")
+        print(f"   X_test shape:  {self.X_test.shape}")
+        print(f"   y_train shape: {self.y_train.shape}")
+        print(f"   y_test shape:  {self.y_test.shape}")
+        print(f"   Features (len(feature_names)): {len(self.feature_names)}")
+        print(f"   Feature names: {self.feature_names}")
 
-        model_path = os.path.join(models_dir, 'neural_network_model.pkl')
-        if os.path.exists(model_path):
-            self.models['neural_network'] = joblib.load(model_path)
-            print(f"[LOADED] NEURAL_NETWORK from {model_path}")
-        else:
-            print(f"[ERROR] neural_network model not found at {model_path}")
+        if self.X_train.shape[1] != len(self.feature_names):
+            print("[ERROR] X_train feature count does not match feature_names length")
             return False
 
+        if self.X_train.shape[1] <= 2:
+            print("\n[ERROR] Only "
+                  f"{self.X_train.shape[1]} feature(s) detected in X_train.")
+            print("        That is why you only see 2 SHAP features.")
+            print("        Fix classification_processed_data so it contains all features.")
+            return False
+
+        print("\n[INFO] Will train a fresh neural network in-memory for SHAP analysis.")
         return True
 
     def _to_2d(self, arr: np.ndarray) -> np.ndarray:
@@ -63,35 +74,52 @@ class BaseModelsSHAPAnalysis:
         if arr.ndim == 1:
             return arr.reshape(1, -1)
         if arr.ndim == 3:
-            if arr.shape[0] > 1:
-                arr = arr[1]
-            else:
-                arr = arr[0]
+            raise ValueError("_to_2d should not receive 3D array")
         return arr
 
     def _feature_importance_from_shap(self, shap_values: np.ndarray) -> np.ndarray:
         sv = self._to_2d(shap_values)
         fi = np.abs(sv).mean(axis=0)
         fi = np.array(fi).reshape(-1)
+        print(f"[DEBUG] feature_importance_from_shap: fi shape = {fi.shape}, "
+              f"len(feature_names) = {len(self.feature_names)}")
         if fi.shape[0] != len(self.feature_names):
             print(
-                f"[WARNING] Feature importance length {fi.shape[0]} "
-                f"!= feature_names length {len(self.feature_names)}; clipping to min length"
+                f"[ERROR] Feature importance length {fi.shape[0]} "
+                f"!= feature_names length {len(self.feature_names)}"
             )
-            m = min(fi.shape[0], len(self.feature_names))
-            fi = fi[:m]
-            self.feature_names = self.feature_names[:m]
         return fi
+
+    def _train_neural_network(self):
+        print("\n" + "=" * 70)
+        print("TRAINING IN-MEMORY NEURAL NETWORK FOR SHAP")
+        print("=" * 70)
+
+        clf = MLPClassifier(
+            hidden_layer_sizes=(50,),
+            activation='relu',
+            solver='adam',
+            max_iter=300,
+            random_state=42
+        )
+
+        print("[INFO] Fitting MLPClassifier on full training data...")
+        clf.fit(self.X_train, self.y_train)
+
+        train_acc = clf.score(self.X_train, self.y_train)
+        test_acc = clf.score(self.X_test, self.y_test)
+        print(f"[INFO] In-memory NN accuracy - Train: {train_acc:.3f}, Test: {test_acc:.3f}")
+
+        self.models['neural_network'] = clf
 
     def compute_shap_values(self) -> bool:
         print("\n" + "=" * 70)
-        print("COMPUTING SHAP VALUES FOR NEURAL NETWORK ONLY")
+        print("COMPUTING SHAP VALUES FOR IN-MEMORY NEURAL NETWORK")
         print("=" * 70)
         print("\nThis may take several minutes...")
 
         if 'neural_network' not in self.models:
-            print("[ERROR] Neural network model not loaded")
-            return False
+            self._train_neural_network()
 
         name = 'neural_network'
         model = self.models[name]
@@ -100,38 +128,67 @@ class BaseModelsSHAPAnalysis:
 
         try:
             background = shap.sample(self.X_train, 100)
+            print(f"[DEBUG] background shape: {background.shape}")
+
             explainer = shap.KernelExplainer(model.predict_proba, background)
 
             sample_size = min(100, self.X_test.shape[0])
             self.X_test_subset = self.X_test[:sample_size]
-            
+            print(f"[DEBUG] X_test_subset shape: {self.X_test_subset.shape}")
+
             shap_values_full = explainer.shap_values(self.X_test_subset)
+            print("[DEBUG] Raw shap_values_full type:", type(shap_values_full))
 
             if isinstance(shap_values_full, list):
-                shap_values = shap_values_full[1 if len(shap_values_full) > 1 else 0]
+                for i, arr in enumerate(shap_values_full):
+                    print(f"   shap_values_full[{i}] shape: {np.array(arr).shape}")
+                if len(shap_values_full) == 2:
+                    sv_pos = np.array(shap_values_full[1])
+                else:
+                    sv_pos = np.array(shap_values_full[0])
             else:
-                shap_values = shap_values_full
+                sv_pos = np.array(shap_values_full)
+                print(f"   shap_values_full shape: {sv_pos.shape}")
 
-            shap_values = np.array(shap_values)
-            if shap_values.ndim == 3:
-                shap_values = shap_values[1] if shap_values.shape[0] > 1 else shap_values[0]
+            if sv_pos.ndim == 3:
+                print(f"[DEBUG] 3D array detected with shape: {sv_pos.shape}")
+                if sv_pos.shape[2] == 2:
+                    sv_pos = sv_pos[:, :, 1]
+                    print(f"[DEBUG] Extracted positive class ([:, :, 1]). New shape: {sv_pos.shape}")
+                else:
+                    sv_pos = sv_pos[:, :, 0]
+                    print(f"[DEBUG] Extracted first class ([:, :, 0]). New shape: {sv_pos.shape}")
 
-            if shap_values.shape[0] != self.X_test_subset.shape[0]:
-                print(f"[WARNING] SHAP values samples {shap_values.shape[0]} != X_test_subset samples {self.X_test_subset.shape[0]}")
-                min_samples = min(shap_values.shape[0], self.X_test_subset.shape[0])
-                shap_values = shap_values[:min_samples]
+            if sv_pos.ndim != 2:
+                raise ValueError(f"Unexpected SHAP array shape: {sv_pos.shape}")
+
+            print(f"[DEBUG] shap_values (positive class) shape before align: {sv_pos.shape}")
+
+            if sv_pos.shape[0] != self.X_test_subset.shape[0]:
+                print(f"[WARNING] SHAP values samples {sv_pos.shape[0]} "
+                    f"!= X_test_subset samples {self.X_test_subset.shape[0]}")
+                min_samples = min(sv_pos.shape[0], self.X_test_subset.shape[0])
+                sv_pos = sv_pos[:min_samples]
                 self.X_test_subset = self.X_test_subset[:min_samples]
 
-            if shap_values.shape[1] != self.X_test_subset.shape[1]:
-                print(f"[WARNING] SHAP values features {shap_values.shape[1]} != X_test_subset features {self.X_test_subset.shape[1]}")
-                min_features = min(shap_values.shape[1], self.X_test_subset.shape[1])
-                shap_values = shap_values[:, :min_features]
-                self.X_test_subset = self.X_test_subset[:, :min_features]
-                self.feature_names = self.feature_names[:min_features]
+            if sv_pos.shape[1] != self.X_test_subset.shape[1]:
+                raise ValueError(
+                    f"Feature mismatch: shap_values has {sv_pos.shape[1]} features "
+                    f"but X_test_subset has {self.X_test_subset.shape[1]}"
+                )
+
+            if sv_pos.shape[1] != len(self.feature_names):
+                raise ValueError(
+                    f"Feature mismatch: shap_values has {sv_pos.shape[1]} features "
+                    f"but feature_names has {len(self.feature_names)}"
+                )
+
+            shap_values = sv_pos
 
             print(f"   [DEBUG] Final SHAP values shape: {shap_values.shape}")
             print(f"   [DEBUG] Final X_test_subset shape: {self.X_test_subset.shape}")
             print(f"   [DEBUG] Feature names count: {len(self.feature_names)}")
+            print(f"   [DEBUG] Feature names: {self.feature_names}")
 
             feature_importance = self._feature_importance_from_shap(shap_values)
 
@@ -150,7 +207,6 @@ class BaseModelsSHAPAnalysis:
             return False
 
         return True
-
     def print_feature_rankings(self) -> pd.DataFrame:
         print("\n" + "=" * 70)
         print("SHAP FEATURE IMPORTANCE RANKINGS - NEURAL NETWORK")
@@ -160,16 +216,19 @@ class BaseModelsSHAPAnalysis:
         shap_data = self.shap_results[name]
         fi = np.array(shap_data['feature_importance']).reshape(-1)
 
+        print(f"[DEBUG] print_feature_rankings: fi shape = {fi.shape}")
+        print(f"[DEBUG] feature_names length = {len(self.feature_names)}")
+
         importance_df = pd.DataFrame({
             'Feature': self.feature_names,
             'SHAP_Importance': fi
         }).sort_values('SHAP_Importance', ascending=False)
 
-        print(f"\n{name.replace('_', ' ').upper()} - Top 10 Features by SHAP:")
+        print(f"\n{name.replace('_', ' ').upper()} - All Features by SHAP:")
         print(f"{'Rank':<6}{'Feature':<25}{'SHAP Importance':<20}")
         print("-" * 51)
 
-        for i, (_, row) in enumerate(importance_df.head(10).iterrows(), 1):
+        for i, (_, row) in enumerate(importance_df.iterrows(), 1):
             print(f"{i:<6}{row['Feature']:<25}{row['SHAP_Importance']:<20.6f}")
 
         return importance_df
@@ -188,7 +247,7 @@ class BaseModelsSHAPAnalysis:
 
         sns.set_style("whitegrid")
 
-        top_df = importance_df.head(15)
+        top_df = importance_df.head(len(importance_df))
 
         plt.figure(figsize=(10, 6))
         plt.barh(top_df['Feature'], top_df['SHAP_Importance'],
@@ -267,11 +326,11 @@ class BaseModelsSHAPAnalysis:
         try:
             print(f"\n3. SHAP Waterfall Plot (First Prediction)")
             plt.figure(figsize=(12, 8))
-            
+
             base_value = explainer.expected_value
             if isinstance(base_value, (list, np.ndarray)):
                 base_value = base_value[1] if len(base_value) > 1 else base_value[0]
-            
+
             shap.waterfall_plot(
                 shap.Explanation(
                     values=shap_values[0],
@@ -298,27 +357,35 @@ class BaseModelsSHAPAnalysis:
 
         try:
             fi = np.abs(shap_values).mean(axis=0)
-            top_idx = np.argsort(fi)[::-1][:3]
+            sorted_idx = np.argsort(fi)[::-1]
 
-            print(f"\n4. SHAP Dependence Plots (Top 3 Features)")
-            fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+            print(f"\n4. SHAP Dependence Plots (ALL Features, ordered by importance)")
+            n_features = len(sorted_idx)
+            cols = 3
+            rows = int(np.ceil(n_features / cols))
+            fig, axes = plt.subplots(rows, cols, figsize=(6 * cols, 4 * rows))
+            axes = np.array(axes).reshape(-1)
 
-            for ax_idx, feat_idx in enumerate(top_idx):
+            for ax_idx, feat_idx in enumerate(sorted_idx):
+                ax = axes[ax_idx]
                 shap.dependence_plot(
                     feat_idx,
                     shap_values,
                     self.X_test_subset,
                     feature_names=self.feature_names,
-                    ax=axes[ax_idx],
+                    ax=ax,
                     show=False
                 )
-                axes[ax_idx].set_title(
+                ax.set_title(
                     f"SHAP Dependence: {self.feature_names[feat_idx]}",
                     fontweight='bold'
                 )
 
+            for extra_ax in axes[len(sorted_idx):]:
+                extra_ax.axis('off')
+
             plt.tight_layout()
-            out_path = os.path.join(output_dir, 'neural_network_dependence_plots.png')
+            out_path = os.path.join(output_dir, 'neural_network_dependence_plots_all_features.png')
             plt.savefig(out_path, dpi=300, bbox_inches='tight')
             print(f"[SAVED] {out_path}")
             plt.close()
@@ -338,28 +405,31 @@ class BaseModelsSHAPAnalysis:
         csv_path = os.path.join(output_dir, 'neural_network_shap_importance.csv')
         importance_df.to_csv(csv_path, index=False)
 
+        full_csv_path = os.path.join(output_dir, 'neural_network_shap_full_importance.csv')
+        importance_df.to_csv(full_csv_path, index=False)
+
         print("\n" + "=" * 70)
         print("SHAP ANALYSIS COMPLETE - NEURAL NETWORK")
         print("=" * 70)
         print(f"\nSHAP importance data saved to: {output_dir}/")
-        print("Files created:")
         print("   neural_network_shap_importance.csv")
+        print("   neural_network_shap_full_importance.csv")
         print("   neural_network_shap_importance_bar.png")
         print("   neural_network_summary_plot.png")
         print("   neural_network_bar_plot.png")
         print("   neural_network_waterfall_plot.png")
-        print("   neural_network_dependence_plots.png")
+        print("   neural_network_dependence_plots_all_features.png")
 
 
 def main():
     analyzer = BaseModelsSHAPAnalysis()
 
     print("=" * 70)
-    print("BASE MODELS SHAP ANALYSIS - NEURAL NETWORK ONLY")
+    print("BASE MODELS SHAP ANALYSIS - IN-MEMORY NEURAL NETWORK")
     print("=" * 70)
 
     if not analyzer.load_data_and_models():
-        print("\n[ERROR] Failed to load data and neural network model")
+        print("\n[ERROR] Failed to load data")
         return
 
     if not analyzer.compute_shap_values():

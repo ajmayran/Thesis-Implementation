@@ -1,0 +1,48 @@
+{
+  "categorical_columns": [
+    "Gender",
+    "IncomeLevel",
+    "EmploymentStatus"
+  ],
+  "numerical_columns": [
+    "Age",
+    "StudyHours",
+    "SleepHours",
+    "Confidence",
+    "TestAnxiety",
+    "MockExamScore",
+    "GPA",
+    "Scholarship",
+    "InternshipGrade",
+    "EnglishProficiency",
+    "MotivationScore",
+    "SocialSupport"
+  ],
+  "binary_columns": [
+    "ReviewCenter"
+  ],
+  "grade_columns": [
+    "GPA",
+    "InternshipGrade",
+    "MockExamScore"
+  ],
+  "score_columns": [
+    "Age",
+    "StudyHours",
+    "SleepHours",
+    "Confidence",
+    "TestAnxiety",
+    "Scholarship",
+    "EnglishProficiency",
+    "MotivationScore",
+    "SocialSupport"
+  ],
+  "grade_imputer": "IterativeImputer",
+  "score_imputer": "SimpleImputer_median",
+  "scaler": "StandardScaler",
+  "test_size": 0.2,
+  "random_state": 42,
+  "n_features": 16,
+  "n_train_samples": 832,
+  "n_test_samples": 209
+}

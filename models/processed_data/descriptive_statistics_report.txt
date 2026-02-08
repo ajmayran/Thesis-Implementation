@@ -1,22 +1,25 @@
 DESCRIPTIVE STATISTICS REPORT
 ================================================================================
 
-Dataset: social_work_exam_dataset.csv
-Total Records: 546
-Total Features: 15
+Dataset: sdv_swed.csv
+Total Records: 1041
+Total Features: 18
 
 NUMERICAL FEATURES STATISTICS
 --------------------------------------------------------------------------------
-          Feature      Mean  Std. Dev.  Min   Max
-              Age 22.023810   1.065463 21.0 27.00
-       StudyHours  4.459707   2.606137  1.0 15.00
-       SleepHours  6.368132   1.685886  4.0  9.00
-       Confidence  7.503663   1.612163  1.0 10.00
-      TestAnxiety  5.119048   2.950124  1.0 10.00
-    MockExamScore 75.601286  13.529723 50.0 99.00
-              GPA  2.104212   0.701408  1.0  3.90
-      Scholarship  0.532967   0.499369  0.0  1.00
-  InternshipGrade  2.058150   0.686490  1.0  3.75
-     ReviewCenter  0.540293   0.498831  0.0  1.00
-ExamResultPercent 72.417582  17.643711 40.0 99.00
+           Feature      Mean  Std. Dev.   Min  Max
+               Age 22.484150   1.077742 21.00 26.0
+        StudyHours  5.629203   2.186689  1.00 12.0
+        SleepHours  6.855908   1.249764  4.00 10.0
+        Confidence  7.137368   1.697667  2.00 10.0
+       TestAnxiety  6.219020   2.625332  1.00 10.0
+     MockExamScore 75.257549   5.432808 55.00 87.0
+               GPA  1.683718   0.306071  1.25  2.5
+       Scholarship  0.371758   0.483507  0.00  1.0
+   InternshipGrade  1.569807   0.449068  1.00  2.5
+      ReviewCenter  0.760807   0.426796  0.00  1.0
+EnglishProficiency  6.793468   1.527503  4.00 10.0
+   MotivationScore  7.814601   1.602047  3.00 10.0
+     SocialSupport  7.053794   1.851451  2.00 10.0
+ ExamResultPercent 76.514601   2.483313 63.80 81.8
 

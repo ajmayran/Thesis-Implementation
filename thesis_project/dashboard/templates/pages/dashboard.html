@@ -1,692 +1,229 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Social Work Licensure Predictor</title>
+    <title>Social Work Licensure Exam Predictor - Dashboard</title>
     
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{% static 'admin_dashboard/css/sidebar.css' %}">
+    <link rel="stylesheet" href="{% static 'admin_dashboard/css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'admin_dashboard/css/dashboard.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-    
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <style>
-        /* Modern Design System */
-        * {
-            font-family: 'Inter', sans-serif;
-        }
-
-        :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-            --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            --dark-gradient: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
-            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
-        }
-
-        body {
-            background: var(--bg-gradient);
-            min-height: 100vh;
-            font-family: 'Inter', sans-serif;
-            color: #1f2937;
-        }
-
-        /* Stat Cards with Modern Design */
-        .stat-card {
-            border-radius: 20px;
-            animation: slideInUp 0.6s ease-out backwards;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
-            overflow: hidden;
-            background: white;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--primary-gradient);
-            transform: scaleX(0);
-            transform-origin: left;
-            transition: transform 0.4s ease;
-        }
-
-        .stat-card:hover::before {
-            transform: scaleX(1);
-        }
-
-        .stat-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 16px 32px rgba(102, 126, 234, 0.15);
-        }
-
-        .stat-card:nth-child(1) { animation-delay: 0.1s; }
-        .stat-card:nth-child(2) { animation-delay: 0.2s; }
-        .stat-card:nth-child(3) { animation-delay: 0.3s; }
-        .stat-card:nth-child(4) { animation-delay: 0.4s; }
-
-        /* Gradient Icon Backgrounds */
-        .icon-gradient-purple {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .icon-gradient-green {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        }
-
-        .icon-gradient-pink {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-
-        .icon-gradient-blue {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
-
-        /* Modern Card Design */
-        .modern-card {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
-            transition: all 0.3s ease;
-            animation: fadeIn 0.6s ease-out;
-            border: 1px solid rgba(0, 0, 0, 0.03);
-        }
-
-        .modern-card:hover {
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-        }
-
-        /* Chart Container */
-        .chart-container {
-            position: relative;
-            height: 280px;
-        }
-
-        @media (min-width: 640px) {
-            .chart-container {
-                height: 320px;
-            }
-        }
-
-        @media (min-width: 1024px) {
-            .chart-container {
-                height: 360px;
-            }
-        }
-
-        /* Sidebar Design */
-        .sidebar {
-            background: linear-gradient(180deg, #1e293b, #0f172a);
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100vh;
-            overflow-y: auto;
-            z-index: 40;
-            display: flex;
-            flex-direction: column;
-            padding: 1.5rem;
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .sidebar > div:first-child {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .sidebar-footer {
-            margin-top: auto;
-            padding-top: 1.5rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            flex-shrink: 0;
-        }
-        
-        .nav-item {
-            transition: all 0.2s ease;
-            border-radius: 12px;
-            position: relative;
-        }
-
-        .nav-item::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 3px;
-            height: 0;
-            background: linear-gradient(180deg, #667eea, #764ba2);
-            transition: height 0.2s ease;
-            border-radius: 0 3px 3px 0;
-        }
-        
-        .nav-item:hover {
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-        .nav-item.active {
-            background: rgba(102, 126, 234, 0.15);
-            color: #a5b4fc;
-        }
-
-        .nav-item.active::before {
-            height: 24px;
-        }
-
-        /* Fixed Header */
-        .fixed-header {
-            position: fixed;
-            top: 0;
-            right: 0;
-            left: 256px;
-            z-index: 30;
-            backdrop-filter: blur(12px);
-            background: rgba(255, 255, 255, 0.95);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-        }
-
-        @media (max-width: 768px) {
-            .fixed-header {
-                left: 0;
-            }
-        }
-
-        /* Main content margin for fixed header */
-        .main-content {
-            margin-top: 100px;
-            padding: 2rem;
-            max-width: 1400px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                padding: 1.5rem;
-                margin-top: 80px;
-            }
-        }
-        /* Mobile menu */
-        .mobile-menu {
-            position: fixed;
-            top: 0;
-            left: -100%;
-            width: 85%;
-            max-width: 300px;
-            height: 100vh;
-            z-index: 1000;
-            transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow-y: auto;
-            box-shadow: 4px 0 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .mobile-menu.active {
-            left: 0;
-        }
-
-        .mobile-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(4px);
-            z-index: 999;
-            display: none;
-            transition: opacity 0.3s ease;
-        }
-
-        .mobile-overlay.active {
-            display: block;
-        }
-
-        /* Animations */
-        @keyframes slideInUp {
-            from {
-                opacity: 0;
-                transform: translateY(40px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeIn {
-            from { 
-                opacity: 0;
-                transform: scale(0.95);
-            }
-            to { 
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-
-        @keyframes slideInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-
-        /* Loading & Utility Styles */
-        .loading {
-            display: inline-block;
-            width: 18px;
-            height: 18px;
-            border: 2.5px solid rgba(102, 126, 234, 0.2);
-            border-radius: 50%;
-            border-top-color: #667eea;
-            animation: spin 0.8s linear infinite;
-        }
-
-        .error-message {
-            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-            border-left: 4px solid #ef4444;
-            color: #991b1b;
-            padding: 1rem 1.25rem;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            animation: slideInDown 0.4s ease-out;
-            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.1);
-        }
-
-        .success-message {
-            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-            border-left: 4px solid #10b981;
-            color: #065f46;
-            padding: 1rem 1.25rem;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            animation: slideInDown 0.4s ease-out;
-            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
-        }
-
-        /* Feature Importance Bar */
-        .feature-bar {
-            position: relative;
-            height: 8px;
-            background: #e5e7eb;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .feature-fill {
-            height: 100%;
-            border-radius: 8px;
-            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .feature-fill::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        /* Stat Trend Indicators */
-        .stat-trend {
-            font-size: 0.75rem;
-            margin-top: 0.5rem;
-            font-weight: 600;
-        }
-
-        .stat-trend.up {
-            color: #10b981;
-        }
-
-        .stat-trend.down {
-            color: #ef4444;
-        }
-
-        /* Scrollbar Styling */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.05);
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: rgba(102, 126, 234, 0.3);
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(102, 126, 234, 0.5);
-        }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body class="bg-gray-100 font-sans text-gray-800">
+<body>
     
     <div class="flex min-h-screen">
         
-        <!-- Sidebar -->
-        <aside class="sidebar w-64 text-white hidden md:block">
-            <div>
-                <div class="flex items-center mb-10">
-                    <div class="mr-3 bg-gradient-to-br from-purple-500 to-blue-500 p-3 rounded-xl shadow-lg">
-                        <i class="fa-solid fa-user-graduate text-2xl text-white"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-xl font-bold text-white leading-tight">Social Work</h1>
-                        <p class="text-sm text-gray-400 font-medium">Predictor</p>
-                    </div>
-                </div>
+        {% include 'components/sidebar.html' %}
 
-                <nav class="space-y-1.5">
-                    <a href="{% url 'dashboard:home' %}" class="flex items-center px-4 py-3 nav-item text-sm font-medium active">
-                        <i class="fa-solid fa-house-chimney mr-3 w-5 text-base"></i>
-                        <span>Dashboard</span>
-                    </a>
-                    <a href="{% url 'prediction:predict' %}" class="flex items-center px-4 py-3 nav-item text-sm font-medium">
-                        <i class="fa-solid fa-brain mr-3 w-5 text-base"></i>
-                        <span>Predictions</span>
-                    </a>
-                    <a href="#" class="flex items-center px-4 py-3 nav-item text-sm font-medium">
-                        <i class="fa-solid fa-chart-line mr-3 w-5 text-base"></i>
-                        <span>Reports</span>
-                    </a>
-                    <a href="#" class="flex items-center px-4 py-3 nav-item text-sm font-medium">
-                        <i class="fa-solid fa-file-export mr-3 w-5 text-base"></i>
-                        <span>Export</span>
-                    </a>
-                    <a href="#" class="flex items-center px-4 py-3 nav-item text-sm font-medium">
-                        <i class="fa-solid fa-gear mr-3 w-5 text-base"></i>
-                        <span>Settings</span>
-                    </a>
-                </nav>
-            </div>
-
-            <div class="sidebar-footer text-xs text-gray-400 font-medium">
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-copyright text-xs"></i>
-                    <span>2024 Thesis Project</span>
-                </div>
-                <div class="mt-2 flex items-center gap-2">
-                    <i class="fa-solid fa-code-branch text-xs"></i>
-                    <span>Version 1.0.0</span>
-                </div>
-            </div>
-        </aside>
-
-        <!-- Mobile Menu Overlay -->
-        <div class="mobile-overlay" id="mobileOverlay"></div>
-
-        <!-- Mobile Sidebar -->
-        <aside class="mobile-menu sidebar text-white" id="mobileSidebar">
-            <div>
-                <div class="flex items-center justify-between mb-10">
-                    <div class="flex items-center">
-                        <div class="mr-3 bg-gradient-to-br from-purple-500 to-blue-500 p-3 rounded-xl shadow-lg">
-                            <i class="fa-solid fa-user-graduate text-xl text-white"></i>
-                        </div>
-                        <div>
-                            <h1 class="text-lg font-bold text-white leading-tight">Social Work</h1>
-                            <p class="text-xs text-gray-400 font-medium">Predictor</p>
-                        </div>
-                    </div>
-                    <button id="closeMobileMenu" class="text-gray-400 hover:text-white text-2xl transition-colors">
-                        <i class="fa-solid fa-times"></i>
-                    </button>
-                </div>
-
-                <nav class="space-y-1.5">
-                    <a href="{% url 'dashboard:home' %}" class="flex items-center px-4 py-3 nav-item text-sm font-medium active">
-                        <i class="fa-solid fa-house-chimney mr-3 w-5 text-base"></i>
-                        <span>Dashboard</span>
-                    </a>
-                    <a href="{% url 'prediction:predict' %}" class="flex items-center px-4 py-3 nav-item text-sm font-medium">
-                        <i class="fa-solid fa-brain mr-3 w-5 text-base"></i>
-                        <span>Predictions</span>
-                    </a>
-                    <a href="#" class="flex items-center px-4 py-3 nav-item text-sm font-medium">
-                        <i class="fa-solid fa-chart-line mr-3 w-5 text-base"></i>
-                        <span>Reports</span>
-                    </a>
-                    <a href="#" class="flex items-center px-4 py-3 nav-item text-sm font-medium">
-                        <i class="fa-solid fa-file-export mr-3 w-5 text-base"></i>
-                        <span>Export</span>
-                    </a>
-                    <a href="#" class="flex items-center px-4 py-3 nav-item text-sm font-medium">
-                        <i class="fa-solid fa-gear mr-3 w-5 text-base"></i>
-                        <span>Settings</span>
-                    </a>
-                </nav>
-            </div>
-
-            <div class="sidebar-footer text-xs text-gray-400 font-medium">
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-copyright text-xs"></i>
-                    <span>2024 Thesis Project</span>
-                </div>
-                <div class="mt-2 flex items-center gap-2">
-                    <i class="fa-solid fa-code-branch text-xs"></i>
-                    <span>Version 1.0.0</span>
-                </div>
-            </div>
-        </aside>
-
-        <!-- Main content wrapper -->
-        <div class="flex-1 lg:ml-64">
+        <!-- Main Content -->
+        <div class="flex-1">
             
-            <!-- Modern Header -->
-            <header class="fixed-header p-5 md:px-8 flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <!-- Mobile menu button -->
-                    <button id="mobileMenuBtn" class="lg:hidden text-gray-600 hover:text-gray-900 text-xl p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                        <i class="fa-solid fa-bars"></i>
+            <!-- Header -->
+            <header>
+                <div class="title">Social Work Licensure Exam Predictor</div>
+                <div class="header-actions">
+                    <button id="refreshBtn" class="btn btn-primary inline-flex-md hidden-md">
+                        <i class="fa-solid fa-arrows-rotate mr-2"></i>Refresh
                     </button>
-                    <div>
-                        <h1 class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                            Dashboard
-                        </h1>
-                        <p class="text-xs md:text-sm text-gray-500 mt-0.5 font-medium">Social Work Licensure Exam Insights</p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2 md:gap-3">
-                    <button id="refreshBtn" class="inline-flex items-center bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-sm font-semibold text-white transition-all shadow-md hover:shadow-xl transform hover:scale-105" title="Refresh Data">
-                        <i class="fa-solid fa-arrows-rotate text-sm"></i>
-                        <span class="hidden md:inline ml-2">Refresh</span>
-                    </button>
-                    <div class="relative group">
-                        <div class="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center cursor-pointer shadow-md hover:shadow-xl transition-all transform hover:scale-105">
-                            <i class="fa-solid fa-user text-white text-sm"></i>
-                        </div>
+                    <div class="user-avatar">
+                        <i class="fa-solid fa-user"></i>
                     </div>
                 </div>
             </header>
 
-        
-
-            <main class="main-content p-6 md:p-8">
+            <!-- Main Content Area -->
+            <main class="p-6">
                 
+                <!-- Message Container -->
                 <div id="messageContainer"></div>
 
-                <!-- Main Grid Layout -->
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- KPI Cards -->
+                <div class="grid grid-cols-1 grid-cols-md-2 grid-cols-lg-4 gap-6 mb-6">
                     
-                    <!-- Left Column - Charts & Model Performance (70%) -->
-                    <div class="lg:col-span-8 space-y-6">
-                        
-                        <!-- Model Performance Metrics -->
-                        <div class="modern-card p-6">
-                            <h2 class="text-xl font-bold text-gray-800 mb-6">Model Performance Metrics</h2>
-                            <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
-                                <div class="text-center">
-                                    <div class="text-3xl font-bold text-purple-600" id="modelAccuracy">--</div>
-                                    <div class="text-sm text-gray-500 mt-2">Accuracy</div>
+                    <div class="kpi-card kpi-card-green">
+                        <div class="label">Total Predictions Made</div>
+                        <div class="value" id="totalPredictions">
+                            <span class="loading"></span>
+                        </div>
+                        <div class="stat-trend up" id="totalPredictionsTrend"></div>
+                    </div>
+
+                    <div class="kpi-card kpi-card-blue">
+                        <div class="label">Average Likelihood of Passing</div>
+                        <div class="value" id="avgLikelihood">
+                            <span class="loading"></span>
+                        </div>
+                        <div class="stat-trend" id="avgLikelihoodTrend"></div>
+                    </div>
+
+                    <div class="kpi-card kpi-card-red">
+                        <div class="label">At-Risk Students</div>
+                        <div class="value" id="atRiskStudents">
+                            <span class="loading"></span>
+                        </div>
+                        <div class="stat-trend down" id="atRiskTrend"></div>
+                    </div>
+
+                    <div class="kpi-card kpi-card-emerald">
+                        <div class="label">Likely to Pass</div>
+                        <div class="value" id="likelyToPass">
+                            <span class="loading"></span>
+                        </div>
+                        <div class="stat-trend up" id="likelyToPassTrend"></div>
+                    </div>
+
+                </div>
+
+                <!-- Main Grid -->
+                <div class="grid grid-cols-1 grid-cols-lg-3 gap-6">
+
+                    <!-- Left Column -->
+                    <div class="lg-col-span-2 space-y-6">
+
+                        <!-- Model Performance -->
+                        <div class="glass">
+                            <div class="flex items-center justify-between mb-4">
+                                <h2>Model Performance</h2>
+                                <div class="text-sm text-gray-500" id="lastUpdated">Loading...</div>
+                            </div>
+
+                            <div class="metrics-grid">
+                                <div class="metric-item">
+                                    <div class="value" id="modelRMSE">--</div>
+                                    <div class="label">RMSE</div>
                                 </div>
-                                <div class="text-center">
-                                    <div class="text-3xl font-bold text-blue-600" id="modelPrecision">--</div>
-                                    <div class="text-sm text-gray-500 mt-2">Precision</div>
+                                <div class="metric-item">
+                                    <div class="value" id="modelMAE">--</div>
+                                    <div class="label">MAE</div>
                                 </div>
-                                <div class="text-center">
-                                    <div class="text-3xl font-bold text-green-600" id="modelRecall">--</div>
-                                    <div class="text-sm text-gray-500 mt-2">Recall</div>
+                                <div class="metric-item">
+                                    <div class="value" id="modelR2">--</div>
+                                    <div class="label">R² Score</div>
                                 </div>
-                                <div class="text-center">
-                                    <div class="text-3xl font-bold text-orange-600" id="modelF1Score">--</div>
-                                    <div class="text-sm text-gray-500 mt-2">F1-Score</div>
+                                <div class="metric-item">
+                                    <div class="value" id="modelMSE">--</div>
+                                    <div class="label">MSE</div>
                                 </div>
-                                <div class="text-center">
-                                    <div class="text-3xl font-bold text-pink-600" id="modelAUC">--</div>
-                                    <div class="text-sm text-gray-500 mt-2">AUC</div>
+                            </div>
+                            
+                            <div class="mt-4 grid grid-cols-2 gap-4 text-center hidden" id="cvMetrics">
+                                <div class="metric-item">
+                                    <div class="value" id="modelCVRMSE">--</div>
+                                    <div class="label">CV RMSE</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="value" id="modelCVStd">--</div>
+                                    <div class="label">CV Std</div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Prediction Trends Chart -->
-                        <div class="modern-card p-6">
-                            <h3 class="text-xl font-bold text-gray-800 mb-6">Prediction Trends</h3>
+                        <div class="glass">
+                            <div class="chart-header">
+                                <h3>Prediction Trends</h3>
+                                <div class="dropdown-wrapper">
+                                    <select id="trendPeriod" class="dropdown-select">
+                                        <option value="weekly">Weekly</option>
+                                        <option value="monthly" selected>Monthly</option>
+                                        <option value="yearly">Yearly</option>
+                                    </select>
+                                </div>
+                            </div>
                             <div class="chart-container">
                                 <canvas id="trendChart"></canvas>
                             </div>
                         </div>
 
-                        <!-- Combined Key Statistics & System Status -->
-                        <div class="modern-card p-6">
-                            <div class="flex items-center justify-between mb-6">
-                                <h2 class="text-xl font-bold text-gray-800">Key Statistics & System Status</h2>
-                                <div class="text-sm text-gray-500" id="lastUpdated">Loading...</div>
-                            </div>
-
-                            <!-- 2x2 Grid for Statistics -->
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                <!-- Average GPA -->
-                                <div class="stat-card p-6">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex-1">
-                                            <div class="text-sm font-medium text-gray-500 mb-2">Average GPA</div>
-                                            <div class="text-3xl font-bold text-gray-800" id="avgGpa">
-                                                <span class="loading"></span>
-                                            </div>
-                                        </div>
-                                        <div class="w-14 h-14 rounded-2xl icon-gradient-purple flex items-center justify-center shadow-lg">
-                                            <i class="fas fa-graduation-cap text-white text-2xl"></i>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Study Hours -->
-                                <div class="stat-card p-6">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex-1">
-                                            <div class="text-sm font-medium text-gray-500 mb-2">Avg Study Hours</div>
-                                            <div class="text-3xl font-bold text-gray-800" id="avgStudyHours">
-                                                <span class="loading"></span>
-                                            </div>
-                                        </div>
-                                        <div class="w-14 h-14 rounded-2xl icon-gradient-green flex items-center justify-center shadow-lg">
-                                            <i class="fas fa-book-open text-white text-2xl"></i>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Sleep Hours -->
-                                <div class="stat-card p-6">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex-1">
-                                            <div class="text-sm font-medium text-gray-500 mb-2">Avg Sleep Hours</div>
-                                            <div class="text-3xl font-bold text-gray-800" id="avgSleepHours">
-                                                <span class="loading"></span>
-                                            </div>
-                                        </div>
-                                        <div class="w-14 h-14 rounded-2xl icon-gradient-pink flex items-center justify-center shadow-lg">
-                                            <i class="fas fa-bed text-white text-2xl"></i>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Attendance Rate -->
-                                <div class="stat-card p-6">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex-1">
-                                            <div class="text-sm font-medium text-gray-500 mb-2">Attendance Rate</div>
-                                            <div class="text-3xl font-bold text-gray-800" id="avgAttendance">
-                                                <span class="loading"></span>
-                                            </div>
-                                        </div>
-                                        <div class="w-14 h-14 rounded-2xl icon-gradient-blue flex items-center justify-center shadow-lg">
-                                            <i class="fas fa-user-check text-white text-2xl"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <!-- Export Buttons -->
+                        <div class="flex gap-4">
+                            <button id="downloadCsvBtn" class="btn btn-secondary w-full">
+                                <i class="fa-solid fa-file-csv mr-2"></i>Download CSV
+                            </button>
+                            <button id="generatePdfBtn" class="btn btn-dark w-full">
+                                <i class="fa-solid fa-file-pdf mr-2"></i>Generate PDF Report
+                            </button>
                         </div>
+
                     </div>
 
-                    <!-- Right Column - Quick Actions & Feature Importance (30%) -->
-                    <div class="lg:col-span-4 space-y-6">
-
-                        <!-- Quick Actions -->
-                        <div class="modern-card p-6">
-                            <h3 class="text-xl font-bold text-gray-800 mb-6">Quick Actions</h3>
-                            <div class="space-y-3">
-                                <button id="generatePdfBtn" class="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white py-3.5 rounded-xl font-medium transition shadow-md hover:shadow-lg transform hover:scale-105 flex items-center justify-center">
-                                    <i class="fa-solid fa-file-pdf mr-2"></i>Generate PDF Report
-                                </button>
-                                <button id="downloadCsvBtn" class="w-full bg-white border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50 text-gray-700 py-3.5 rounded-xl font-medium transition flex items-center justify-center">
-                                    <i class="fa-solid fa-file-csv mr-2 text-green-600"></i>Download CSV Data
-                                </button>
-                            </div>
-                        </div>
+                    <!-- Right Column -->
+                    <div class="space-y-6">
 
                         <!-- Feature Importance -->
-                        <div class="modern-card p-6">
-                            <h3 class="text-xl font-bold text-gray-800 mb-6">Top Predictive Features</h3>
+                        <div class="glass">
+                            <h3>Feature Importance</h3>
                             <div id="featureImportanceContainer">
                                 <div class="text-center text-gray-500 py-8">
                                     <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i>
                                     <p>Loading feature importance...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- User Input Statistics -->
+                        <div class="glass">
+                            <h3>User Input Statistics</h3>
+                            <div id="userStatsContainer">
+                                <div class="stat-row">
+                                    <span class="stat-label">Total Students</span>
+                                    <span class="stat-value" id="totalStudents">--</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Average GPA</span>
+                                    <span class="stat-value" id="avgGPA">--</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Average Internship Grade</span>
+                                    <span class="stat-value" id="avgInternship">--</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Average Study Hours</span>
+                                    <span class="stat-value" id="avgStudyHours">--</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Average Sleep Hours</span>
+                                    <span class="stat-value" id="avgSleepHours">--</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Average Age</span>
+                                    <span class="stat-value" id="avgAge">--</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Review Center Rate</span>
+                                    <span class="stat-value" id="reviewCenterRate">--</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Scholarship Rate</span>
+                                    <span class="stat-value" id="scholarshipRate">--</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Model Status -->
+                        <div class="glass">
+                            <h3>Model Status</h3>
+                            <div id="modelStatusContainer">
+                                <div class="stat-row">
+                                    <span class="stat-label">Active Model</span>
+                                    <span class="status-badge" style="background: #dbeafe; color: #1e40af;" id="activeModel">Loading...</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Model Type</span>
+                                    <span class="status-badge" style="background: #e9d5ff; color: #6b21a8;" id="modelType">--</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Status</span>
+                                    <span class="status-badge status-ready" id="modelStatus">READY</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Last Trained</span>
+                                    <span class="stat-value" id="lastTrained">--</span>
                                 </div>
                             </div>
                         </div>
@@ -700,354 +237,7 @@
         </div>
     </div>
 
-    <script>
-        function getCsrfToken() {
-            return document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
-                   document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
-        }
-
-        const API_URLS = {
-            dashboardStats: '/dashboard/api/dashboard/stats/',
-            exportCSV: '/dashboard/api/dashboard/export-csv/',
-            exportPDF: '/dashboard/api/dashboard/export-pdf/'
-        };
-
-        let trendChart = null;
-        let dashboardData = null;
-
-        document.addEventListener('DOMContentLoaded', function() {
-            loadDashboardData();
-            setupEventListeners();
-        });
-
-        function setupEventListeners() {
-            document.getElementById('refreshBtn')?.addEventListener('click', loadDashboardData);
-            document.getElementById('downloadCsvBtn')?.addEventListener('click', downloadCSV);
-            document.getElementById('generatePdfBtn')?.addEventListener('click', generatePDF);
-        }
-
-        async function loadDashboardData() {
-            try {
-                showLoading();
-                
-                const response = await fetch(API_URLS.dashboardStats);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                
-                const data = await response.json();
-                dashboardData = data;
-                
-                updateKPICards(data);
-                updateModelMetrics(data);
-                updateFeatureImportance(data);
-                updateTrendChart(data);
-                updateLastUpdated();
-                
-                showMessage('Dashboard data loaded successfully', 'success');
-                
-            } catch (error) {
-                console.error('Error loading dashboard:', error);
-                showMessage('Failed to load dashboard data. Please try again.', 'error');
-            } finally {
-                hideLoading();
-            }
-        }
-
-        // Update KPI Cards - Combined Key Statistics
-        function updateKPICards(data) {
-            const stats = data.user_statistics || {};
-            
-            // Update key statistics in the combined section
-            document.getElementById('avgGpa').textContent = 
-                stats.average_gpa ? stats.average_gpa.toFixed(2) : '--';
-            document.getElementById('avgStudyHours').textContent = 
-                stats.common_study_hours ? `${stats.common_study_hours}h` : '--';
-            document.getElementById('avgSleepHours').textContent = 
-                stats.average_sleep_hours ? `${stats.average_sleep_hours.toFixed(1)}h` : '--';
-            document.getElementById('avgAttendance').textContent = 
-                stats.review_center_rate ? `${stats.review_center_rate}%` : '--';
-        }
-
-        function updateModelMetrics(data) {
-            const perf = data.model_performance || {};
-            
-            document.getElementById('modelAccuracy').textContent = 
-                perf.accuracy ? `${perf.accuracy}%` : '--';
-            document.getElementById('modelPrecision').textContent = 
-                perf.precision ? perf.precision.toFixed(2) : '--';
-            document.getElementById('modelRecall').textContent = 
-                perf.recall ? perf.recall.toFixed(2) : '--';
-            document.getElementById('modelF1Score').textContent = 
-                perf.f1_score ? perf.f1_score.toFixed(2) : '--';
-            document.getElementById('modelAUC').textContent = 
-                perf.auc ? perf.auc.toFixed(2) : '--';
-        }
-
-        function updateFeatureImportance(data) {
-            const container = document.getElementById('featureImportanceContainer');
-            const features = data.feature_importance || {};
-            
-            if (Object.keys(features).length === 0) {
-                container.innerHTML = '<p class="text-center text-gray-500 py-4">No feature importance data available</p>';
-                return;
-            }
-            
-            const sortedFeatures = Object.entries(features)
-                .sort(([,a], [,b]) => b - a)
-                .slice(0, 5);
-            
-            const colors = [
-                'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
-                'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
-            ];
-            
-            let html = '<div class="space-y-4">';
-            
-            sortedFeatures.forEach(([feature, importance], index) => {
-                const percentage = (importance * 100).toFixed(1);
-                html += `
-                    <div class="group">
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="text-sm font-semibold text-gray-700">${formatFeatureName(feature)}</div>
-                            <div class="text-sm font-bold text-purple-600">${percentage}%</div>
-                        </div>
-                        <div class="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
-                            <div class="h-full rounded-full transition-all duration-1000 ease-out" 
-                                 style="width: ${percentage}%; background: ${colors[index % colors.length]}"></div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            html += '</div>';
-            container.innerHTML = html;
-        }
-
-        // Initialize trend chart
-        function initializeTrendChart() {
-            const ctx = document.getElementById('trendChart').getContext('2d');
-            trendChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                    datasets: [{
-                        label: 'Pass Likelihood (%)',
-                        data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                        borderColor: 'rgba(102, 126, 234, 1)',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        pointRadius: 6,
-                        pointBackgroundColor: 'rgba(102, 126, 234, 1)',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 3,
-                        pointHoverRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: {
-                        duration: 2000,
-                        easing: 'easeInOutQuart',
-                        delay: (context) => {
-                            let delay = 0;
-                            if (context.type === 'data' && context.mode === 'default') {
-                                delay = context.dataIndex * 100;
-                            }
-                            return delay;
-                        }
-                    },
-                    transitions: {
-                        active: {
-                            animation: {
-                                duration: 400
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: 'rgba(31, 41, 55, 0.95)',
-                            padding: 16,
-                            titleFont: { size: 14, weight: 'bold' },
-                            bodyFont: { size: 13 },
-                            cornerRadius: 12,
-                            displayColors: false,
-                            callbacks: {
-                                label: function(context) {
-                                    return 'Pass Likelihood: ' + context.parsed.y + '%';
-                                }
-                            }
-                        }
-                    },
-                    interaction: {
-                        mode: 'index',
-                        intersect: false
-                    },
-                    scales: {
-                        x: {
-                            grid: { 
-                                display: false 
-                            },
-                            ticks: { 
-                                font: { size: 11 },
-                                color: '#6B7280'
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: {
-                                stepSize: 20,
-                                callback: value => value + '%',
-                                font: { size: 11 },
-                                color: '#6B7280'
-                            },
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.05)',
-                                drawBorder: false
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        // Update trend chart
-        function updateTrendChart(data) {
-            if (!trendChart || !data.trend_data) return;
-            
-            trendChart.data.labels = data.trend_data.labels || trendChart.data.labels;
-            trendChart.data.datasets[0].data = data.trend_data.values || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-            trendChart.update('show');
-        }
-
-        // Update last updated timestamp
-        function updateLastUpdated() {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-            });
-            document.getElementById('lastUpdated').textContent = `Updated: Today, ${timeStr}`;
-            
-            const latestModelPerformance = dashboardData?.model_performance;
-            if (latestModelPerformance) {
-                document.getElementById('lastTrained').textContent = 'Recently';
-            }
-        }
-
-        async function downloadCSV() {
-            try {
-                const response = await fetch(API_URLS.exportCSV);
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `predictions_${new Date().toISOString().split('T')[0]}.csv`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-            } catch (error) {
-                console.error('Error downloading CSV:', error);
-                showMessage('Failed to download CSV file', 'error');
-            }
-        }
-
-        async function generatePDF() {
-            try {
-                const response = await fetch(API_URLS.exportPDF);
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `dashboard_report_${new Date().toISOString().split('T')[0]}.pdf`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-            } catch (error) {
-                console.error('Error generating PDF:', error);
-                showMessage('Failed to generate PDF report', 'error');
-            }
-        }
-
-        function formatFeatureName(name) {
-            return name.replace(/_/g, ' ')
-                .split(' ')
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                .join(' ');
-        }
-
-        function showLoading() {
-        }
-
-        function hideLoading() {
-        }
-
-        function showMessage(message, type = 'info') {
-            const container = document.getElementById('messageContainer');
-            const messageClass = type === 'error' ? 'error-message' : 
-                               type === 'success' ? 'success-message' : 'success-message';
-            
-            const messageEl = document.createElement('div');
-            messageEl.className = messageClass;
-            messageEl.innerHTML = `
-                <div class="flex items-center justify-between">
-                    <span>${message}</span>
-                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-lg">&times;</button>
-                </div>
-            `;
-            
-            container.appendChild(messageEl);
-            
-            setTimeout(() => {
-                messageEl.remove();
-            }, 5000);
-        }
-
-        // Mobile menu functionality
-        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-        const closeMobileMenu = document.getElementById('closeMobileMenu');
-        const mobileSidebar = document.getElementById('mobileSidebar');
-        const mobileOverlay = document.getElementById('mobileOverlay');
-
-        function openMobileMenu() {
-            mobileSidebar.classList.add('active');
-            mobileOverlay.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeMobileMenuHandler() {
-            mobileSidebar.classList.remove('active');
-            mobileOverlay.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-
-        if (mobileMenuBtn) {
-            mobileMenuBtn.addEventListener('click', openMobileMenu);
-        }
-
-        if (closeMobileMenu) {
-            closeMobileMenu.addEventListener('click', closeMobileMenuHandler);
-        }
-
-        if (mobileOverlay) {
-            mobileOverlay.addEventListener('click', closeMobileMenuHandler);
-        }
-
-        // Close mobile menu when clicking on a nav link
-        document.querySelectorAll('.mobile-menu .nav-item').forEach(link => {
-            link.addEventListener('click', closeMobileMenuHandler);
-        });
-
-        // Auto-refresh every 60 seconds
-        setInterval(loadDashboardData, 60000);
-    </script>
+    <script src="{% static 'admin_dashboard/js/dashboard.js' %}"></script>
 
 </body>
 </html>

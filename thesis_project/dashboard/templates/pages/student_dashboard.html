@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -6,311 +7,216 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Dashboard - Social Work Predictor</title>
     
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'style/css/main.css' %}">
+    <link rel="stylesheet" href="{% static 'style/css/sidebar.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <style>
-        .glass {
-            background: rgba(255, 255, 255, 0.9);
-            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
-            border-radius: 12px;
-        }
-        
-        .sidebar {
-            background: linear-gradient(180deg, #1f2937, #111827);
-        }
-        
-        .nav-item {
-            transition: background 0.2s;
-        }
-        
-        .nav-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-        
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        
-        .prediction-card {
-            border-left: 4px solid;
-            transition: all 0.3s;
-        }
-        
-        .prediction-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-        }
-        
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        
-        .badge-high {
-            background: #d1fae5;
-            color: #065f46;
-        }
-        
-        .badge-medium {
-            background: #fef3c7;
-            color: #92400e;
-        }
-        
-        .badge-low {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-    </style>
 </head>
 
-<body class="bg-gray-100">
-    
-    <div class="flex min-h-screen">
+<body>
+    <div class="main-container">
         
-        <aside class="sidebar w-64 text-white p-6 hidden md:block">
-            <div class="flex items-center mb-8">
-                <div class="mr-3 bg-white/10 p-2 rounded-lg">
-                    <i class="fa-solid fa-user-graduate text-xl"></i>
-                </div>
-                <div>
-                    <h1 class="text-lg font-bold">Social Work<br />Predictor</h1>
-                </div>
-            </div>
+        {% include 'components/student_sidebar.html' %}
 
-            <nav class="space-y-2">
-                <a href="{% url 'dashboard:student_dashboard' %}" class="flex items-center p-3 nav-item rounded text-sm bg-white/10">
-                    <i class="fa-solid fa-house-chimney mr-3 w-5"></i>Dashboard
-                </a>
-                <a href="{% url 'prediction:predict' %}" class="flex items-center p-3 nav-item rounded text-sm">
-                    <i class="fa-solid fa-brain mr-3 w-5"></i>New Prediction
-                </a>
-                <a href="{% url 'prediction:history' %}" class="flex items-center p-3 nav-item rounded text-sm">
-                    <i class="fa-solid fa-clock-rotate-left mr-3 w-5"></i>History
-                </a>
-                <a href="{% url 'dashboard:student_profile' %}" class="flex items-center p-3 nav-item rounded text-sm">
-                    <i class="fa-solid fa-user mr-3 w-5"></i>Profile
-                </a>
-            </nav>
-
-            <div class="mt-auto pt-6">
-                <a href="{% url 'accounts:logout' %}" class="flex items-center p-3 nav-item rounded text-sm text-red-300 hover:bg-red-900/20">
-                    <i class="fa-solid fa-right-from-bracket mr-3 w-5"></i>Logout
-                </a>
-            </div>
-
-            <div class="mt-10 text-xs text-gray-300">
-                <div>© 2024 Thesis Project</div>
-                <div class="mt-1">Version 1.0.0</div>
-            </div>
-        </aside>
-
-        <div class="flex-1">
+        <div class="content-wrapper">
             
-            <header class="bg-white p-4 md:pl-8 md:pr-8 flex items-center justify-between shadow-sm">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-800">Welcome, {{ request.user.first_name }}!</h1>
-                    <p class="text-sm text-gray-600">Student ID: {{ request.user.student_id }}</p>
+            <header class="header">
+                <div class="header-title">
+                    <h1>Welcome, {{ request.user.first_name }}!</h1>
+                    <p>Student ID: {{ request.user.student_id }}</p>
                 </div>
-                <div class="flex items-center gap-3">
-                    <div class="text-right hidden md:block">
-                        <p class="text-sm font-semibold text-gray-700">{{ request.user.get_full_name }}</p>
-                        <p class="text-xs text-gray-500">{{ request.user.email }}</p>
+                <div class="header-user">
+                    <div class="user-info">
+                        <p>{{ request.user.get_full_name }}</p>
+                        <span>{{ request.user.email }}</span>
                     </div>
-                    <div class="w-10 h-10 rounded-full gradient-bg flex items-center justify-center text-white font-bold">
+                    <div class="user-avatar">
                         {{ request.user.first_name.0 }}{{ request.user.last_name.0 }}
                     </div>
                 </div>
             </header>
 
-            <main class="p-6 md:p-8">
+            <main class="main-content">
                 
                 {% if messages %}
                     {% for message in messages %}
-                        <div class="mb-4 p-4 rounded-lg {% if message.tags == 'error' %}bg-red-50 border border-red-200 text-red-800{% else %}bg-green-50 border border-green-200 text-green-800{% endif %}">
-                            <div class="flex items-center">
-                                <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% else %}fa-circle-check{% endif %} mr-3"></i>
-                                <span>{{ message }}</span>
-                            </div>
+                        <div class="message {% if message.tags == 'error' %}error{% else %}success{% endif %}">
+                            <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% else %}fa-circle-check{% endif %}"></i>
+                            <span>{{ message }}</span>
                         </div>
                     {% endfor %}
                 {% endif %}
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="grid grid-cols-3">
                     
-                    <div class="glass p-6 gradient-bg text-white">
-                        <div class="flex items-center justify-between mb-4">
-                            <div>
-                                <p class="text-sm opacity-90">Total Predictions</p>
-                                <p class="text-4xl font-bold mt-2">{{ total_predictions }}</p>
+                    <div class="stat-card">
+                        <div class="stat-card-content">
+                            <div class="stat-card-info">
+                                <p>Total Predictions</p>
+                                <h2>{{ total_predictions }}</h2>
                             </div>
-                            <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                                <i class="fa-solid fa-chart-line text-3xl"></i>
+                            <div class="stat-card-icon">
+                                <i class="fa-solid fa-chart-line"></i>
                             </div>
                         </div>
                     </div>
 
-                    <div class="glass p-6 bg-gradient-to-br from-green-500 to-green-600 text-white">
-                        <div class="flex items-center justify-between mb-4">
-                            <div>
-                                <p class="text-sm opacity-90">Latest Result</p>
-                                <p class="text-4xl font-bold mt-2">
+                    <div class="stat-card green">
+                        <div class="stat-card-content">
+                            <div class="stat-card-info">
+                                <p>Latest Result</p>
+                                <h2>
                                     {% if latest_prediction %}
                                         {{ latest_prediction.probability|floatformat:0 }}%
                                     {% else %}
                                         --
                                     {% endif %}
-                                </p>
+                                </h2>
                             </div>
-                            <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                                <i class="fa-solid fa-trophy text-3xl"></i>
+                            <div class="stat-card-icon">
+                                <i class="fa-solid fa-trophy"></i>
                             </div>
                         </div>
                     </div>
 
-                    <div class="glass p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-                        <div class="flex items-center justify-between mb-4">
-                            <div>
-                                <p class="text-sm opacity-90">Average Score</p>
-                                <p class="text-4xl font-bold mt-2">{{ average_probability|floatformat:0 }}%</p>
+                    <div class="stat-card blue">
+                        <div class="stat-card-content">
+                            <div class="stat-card-info">
+                                <p>Average Score</p>
+                                <h2>{{ average_probability|floatformat:0 }}%</h2>
                             </div>
-                            <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                                <i class="fa-solid fa-chart-simple text-3xl"></i>
+                            <div class="stat-card-icon">
+                                <i class="fa-solid fa-chart-simple"></i>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="grid grid-cols-3">
                     
-                    <div class="lg:col-span-2">
-                        <div class="glass p-6 mb-6">
-                            <div class="flex items-center justify-between mb-4">
-                                <h2 class="text-xl font-bold text-gray-800">
-                                    <i class="fa-solid fa-clock-rotate-left text-blue-600 mr-2"></i>
+                    <div class="lg-col-span-2">
+                        <div class="card" style="margin-bottom: 1.5rem;">
+                            <div class="card-header">
+                                <h2>
+                                    <i class="fa-solid fa-clock-rotate-left"></i>
                                     Recent Predictions
                                 </h2>
-                                <a href="{% url 'prediction:history' %}" class="text-sm text-blue-600 hover:text-blue-800">View All</a>
+                                <a href="{% url 'prediction:history' %}">View All</a>
                             </div>
 
                             {% if recent_predictions %}
-                                <div class="space-y-4">
+                                <div class="prediction-list">
                                     {% for pred in recent_predictions %}
-                                        <div class="prediction-card p-4 bg-gray-50 rounded-lg {% if pred.probability >= 75 %}border-green-500{% elif pred.probability >= 50 %}border-yellow-500{% else %}border-red-500{% endif %}">
-                                            <div class="flex items-center justify-between mb-2">
+                                        <div class="prediction-item {% if pred.probability >= 70 %}high{% elif pred.probability >= 50 %}medium{% else %}low{% endif %}">
+                                            <div class="prediction-header">
                                                 <div>
-                                                    <p class="font-semibold text-gray-800">
+                                                    <p class="prediction-date">
                                                         {{ pred.created_at|date:"M d, Y - h:i A" }}
                                                     </p>
-                                                    <p class="text-sm text-gray-600">GPA: {{ pred.gpa|floatformat:2 }} | Study: {{ pred.study_hours }}hrs</p>
+                                                    <p class="prediction-details">GPA: {{ pred.gpa|floatformat:2 }} | Study: {{ pred.study_hours }}hrs</p>
                                                 </div>
-                                                <div class="text-right">
-                                                    <span class="status-badge {% if pred.probability >= 75 %}badge-high{% elif pred.probability >= 50 %}badge-medium{% else %}badge-low{% endif %}">
-                                                        {{ pred.probability|floatformat:0 }}% Pass Rate
-                                                    </span>
-                                                </div>
+                                                <span class="badge {% if pred.probability >= 70 %}high{% elif pred.probability >= 50 %}medium{% else %}low{% endif %}">
+                                                    {{ pred.probability|floatformat:0 }}% Pass Rate
+                                                </span>
                                             </div>
-                                            <div class="flex items-center justify-between text-sm">
-                                                <span class="text-gray-600">
-                                                    <i class="fa-solid fa-{{ pred.review_center|yesno:'check,xmark' }} mr-1"></i>
+                                            <div class="prediction-footer">
+                                                <span>
+                                                    <i class="fa-solid fa-{{ pred.review_center|yesno:'check,xmark' }}"></i>
                                                     Review Center
                                                 </span>
-                                                <a href="{% url 'prediction:detail' pred.id %}" class="text-blue-600 hover:text-blue-800">
-                                                    View Details <i class="fa-solid fa-arrow-right ml-1"></i>
+                                                <a href="{% url 'prediction:detail' pred.id %}">
+                                                    View Details <i class="fa-solid fa-arrow-right"></i>
                                                 </a>
                                             </div>
                                         </div>
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                <div class="text-center py-12">
-                                    <i class="fa-solid fa-chart-line text-gray-300 text-6xl mb-4"></i>
-                                    <p class="text-gray-600 mb-4">No predictions yet</p>
-                                    <a href="{% url 'prediction:predict' %}" class="inline-flex items-center gradient-bg text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90">
-                                        <i class="fa-solid fa-plus mr-2"></i>
+                                <div class="empty-state">
+                                    <i class="fa-solid fa-chart-line"></i>
+                                    <p>No predictions yet</p>
+                                    <a href="{% url 'prediction:predict' %}" class="btn btn-primary">
+                                        <i class="fa-solid fa-plus"></i>
                                         Create Your First Prediction
                                     </a>
                                 </div>
                             {% endif %}
                         </div>
 
-                        <div class="glass p-6">
-                            <h2 class="text-xl font-bold text-gray-800 mb-4">
-                                <i class="fa-solid fa-chart-area text-blue-600 mr-2"></i>
+                        <div class="card">
+                            <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center;">
+                                <i class="fa-solid fa-chart-area" style="color: #3b82f6; margin-right: 0.5rem;"></i>
                                 Progress Chart
                             </h2>
                             <canvas id="progressChart" height="100"></canvas>
                         </div>
                     </div>
 
-                    <div class="space-y-6">
+                    <div>
                         
-                        <div class="glass p-6">
-                            <h3 class="text-lg font-bold text-gray-800 mb-4">
-                                <i class="fa-solid fa-lightbulb text-yellow-500 mr-2"></i>
+                        <div class="card" style="margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center;">
+                                <i class="fa-solid fa-lightbulb" style="color: #eab308; margin-right: 0.5rem;"></i>
                                 Quick Actions
                             </h3>
-                            <div class="space-y-3">
-                                <a href="{% url 'prediction:predict' %}" class="block w-full gradient-bg text-white px-4 py-3 rounded-lg font-semibold text-center hover:opacity-90 transition">
-                                    <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>
+                            <div class="quick-actions">
+                                <a href="{% url 'prediction:predict' %}" class="btn btn-primary">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i>
                                     New Prediction
                                 </a>
-                                <a href="{% url 'prediction:history' %}" class="block w-full bg-gray-700 text-white px-4 py-3 rounded-lg font-semibold text-center hover:bg-gray-600 transition">
-                                    <i class="fa-solid fa-history mr-2"></i>
+                                <a href="{% url 'prediction:history' %}" class="btn btn-secondary">
+                                    <i class="fa-solid fa-history"></i>
                                     View History
                                 </a>
-                                <a href="{% url 'dashboard:student_profile' %}" class="block w-full bg-blue-600 text-white px-4 py-3 rounded-lg font-semibold text-center hover:bg-blue-700 transition">
-                                    <i class="fa-solid fa-user-pen mr-2"></i>
+                                <a href="{% url 'dashboard:student_profile' %}" class="btn btn-blue">
+                                    <i class="fa-solid fa-user-pen"></i>
                                     Update Profile
                                 </a>
                             </div>
                         </div>
 
-                        <div class="glass p-6">
-                            <h3 class="text-lg font-bold text-gray-800 mb-4">
-                                <i class="fa-solid fa-graduation-cap text-blue-600 mr-2"></i>
+                        <div class="card" style="margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center;">
+                                <i class="fa-solid fa-graduation-cap" style="color: #3b82f6; margin-right: 0.5rem;"></i>
                                 Study Tips
                             </h3>
-                            <div class="space-y-3 text-sm">
-                                <div class="flex items-start">
-                                    <i class="fa-solid fa-circle-check text-green-600 mt-1 mr-2"></i>
-                                    <p class="text-gray-700">Study 3-4 hours daily for optimal retention</p>
+                            <div class="tips-list">
+                                <div class="tip-item">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    <p>Study 3-4 hours daily for optimal retention</p>
                                 </div>
-                                <div class="flex items-start">
-                                    <i class="fa-solid fa-circle-check text-green-600 mt-1 mr-2"></i>
-                                    <p class="text-gray-700">Get 7-8 hours of sleep for better focus</p>
+                                <div class="tip-item">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    <p>Get 7-8 hours of sleep for better focus</p>
                                 </div>
-                                <div class="flex items-start">
-                                    <i class="fa-solid fa-circle-check text-green-600 mt-1 mr-2"></i>
-                                    <p class="text-gray-700">Take practice exams regularly</p>
+                                <div class="tip-item">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    <p>Take practice exams regularly</p>
                                 </div>
-                                <div class="flex items-start">
-                                    <i class="fa-solid fa-circle-check text-green-600 mt-1 mr-2"></i>
-                                    <p class="text-gray-700">Join study groups for better understanding</p>
+                                <div class="tip-item">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    <p>Join study groups for better understanding</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="glass p-6 bg-gradient-to-br from-purple-50 to-blue-50">
-                            <h3 class="text-lg font-bold text-gray-800 mb-2">
-                                <i class="fa-solid fa-star text-yellow-500 mr-2"></i>
+                        <div class="stats-box">
+                            <h3>
+                                <i class="fa-solid fa-star"></i>
                                 Your Stats
                             </h3>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Member Since</span>
-                                    <span class="font-semibold">{{ request.user.date_joined|date:"M Y" }}</span>
+                            <div class="stats-list">
+                                <div class="stats-item">
+                                    <span>Member Since</span>
+                                    <span>{{ request.user.date_joined|date:"M Y" }}</span>
                                 </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Predictions Made</span>
-                                    <span class="font-semibold">{{ total_predictions }}</span>
+                                <div class="stats-item">
+                                    <span>Predictions Made</span>
+                                    <span>{{ total_predictions }}</span>
                                 </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Highest Score</span>
-                                    <span class="font-semibold">{{ highest_probability|floatformat:0 }}%</span>
+                                <div class="stats-item">
+                                    <span>Highest Score</span>
+                                    <span>{{ highest_probability|floatformat:0 }}%</span>
                                 </div>
                             </div>
                         </div>

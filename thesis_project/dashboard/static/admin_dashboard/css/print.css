@@ -1,0 +1,295 @@
+/* Print styles for reports */
+@media print {
+    /* Hide elements that should not be printed */
+    .no-print,
+    .sidebar,
+    .sidebar-toggle,
+    .sidebar-overlay,
+    header,
+    .filters-section,
+    .report-type-section,
+    .filter-actions,
+    button,
+    .header-actions {
+        display: none !important;
+    }
+    
+    /* Reset layout for print */
+    body {
+        margin: 0;
+        padding: 0;
+        background: white;
+    }
+    
+    .flex,
+    .main-container {
+        display: block;
+    }
+    
+    .flex-1,
+    .content-wrapper {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+    
+    main {
+        padding: 0;
+        margin: 0;
+    }
+    
+    /* Print header - visible only when printing */
+    .print-header {
+        display: block !important;
+        text-align: center;
+        margin-bottom: 30px;
+        padding: 20px;
+        border-bottom: 2px solid #667eea;
+        page-break-after: avoid;
+    }
+    
+    .print-header h1 {
+        font-size: 24px;
+        color: #1f2937;
+        margin: 0 0 10px 0;
+        font-weight: bold;
+    }
+    
+    .print-header p {
+        font-size: 14px;
+        color: #6b7280;
+        margin: 5px 0;
+    }
+    
+    /* Report sections */
+    .report-section {
+        page-break-inside: avoid;
+        margin-bottom: 30px;
+    }
+    
+    .report-section h2 {
+        font-size: 18px;
+        color: #1f2937;
+        margin-bottom: 15px;
+        page-break-after: avoid;
+    }
+    
+    /* Stats grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        page-break-inside: avoid;
+        margin-bottom: 20px;
+    }
+    
+    .stat-card {
+        border: 1px solid #e5e7eb;
+        padding: 15px;
+        border-radius: 8px;
+        background: white !important;
+        color: #1f2937 !important;
+    }
+    
+    .stat-card .label {
+        font-size: 12px;
+        color: #6b7280;
+        margin-bottom: 5px;
+    }
+    
+    .stat-card .value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #1f2937;
+        margin-bottom: 5px;
+    }
+    
+    .stat-card .description {
+        font-size: 11px;
+        color: #9ca3af;
+    }
+    
+    /* Tables */
+    .report-table,
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        page-break-inside: avoid;
+        margin: 15px 0;
+    }
+    
+    .report-table th,
+    .report-table td,
+    table th,
+    table td {
+        border: 1px solid #d1d5db;
+        padding: 8px;
+        text-align: left;
+        font-size: 12px;
+    }
+    
+    .report-table th,
+    table th {
+        background-color: #f3f4f6;
+        font-weight: 600;
+        color: #1f2937;
+    }
+    
+    /* Charts - hide canvas, show data instead */
+    .chart-container {
+        page-break-inside: avoid;
+        margin: 20px 0;
+    }
+    
+    canvas {
+        max-height: 400px;
+        page-break-inside: avoid;
+    }
+    
+    /* Summary boxes */
+    .summary-box {
+        border: 1px solid #e5e7eb;
+        padding: 15px;
+        border-radius: 8px;
+        page-break-inside: avoid;
+        margin: 15px 0;
+    }
+    
+    .summary-box h3 {
+        font-size: 16px;
+        margin-bottom: 10px;
+        color: #1f2937;
+    }
+    
+    .summary-box ul {
+        list-style-position: inside;
+        margin: 0;
+        padding-left: 20px;
+    }
+    
+    .summary-box li {
+        margin-bottom: 8px;
+        font-size: 12px;
+        color: #374151;
+    }
+    
+    /* Typography */
+    h1, h2, h3, h4, h5, h6 {
+        color: #1f2937;
+        page-break-after: avoid;
+    }
+    
+    p {
+        orphans: 3;
+        widows: 3;
+    }
+    
+    /* Links */
+    a {
+        color: #1f2937;
+        text-decoration: none;
+    }
+    
+    a[href]:after {
+        content: none;
+    }
+    
+    /* Page breaks */
+    .page-break {
+        page-break-before: always;
+    }
+    
+    .no-break {
+        page-break-inside: avoid;
+    }
+    
+    /* Footer */
+    .print-footer {
+        display: block !important;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        text-align: center;
+        font-size: 10px;
+        color: #6b7280;
+        border-top: 1px solid #e5e7eb;
+        padding: 10px 0;
+        background: white;
+    }
+    
+    .print-footer p {
+        margin: 2px 0;
+    }
+    
+    /* Risk badges */
+    .risk-badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    .risk-badge.risk-high {
+        background-color: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fca5a5;
+    }
+    
+    .risk-badge.risk-medium {
+        background-color: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fcd34d;
+    }
+    
+    .risk-badge.risk-low {
+        background-color: #d1fae5;
+        color: #065f46;
+        border: 1px solid #86efac;
+    }
+    
+    /* Hide empty states */
+    .empty-state {
+        display: none !important;
+    }
+    
+    /* Report content */
+    .report-content {
+        padding: 20px;
+    }
+    
+    /* Model performance grid */
+    .model-performance-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 15px;
+        page-break-inside: avoid;
+    }
+    
+    .model-performance-item {
+        border: 1px solid #e5e7eb;
+        padding: 15px;
+        border-radius: 8px;
+    }
+    
+    /* Ensure content starts at top */
+    @page {
+        margin: 2cm;
+    }
+    
+    body {
+        padding-top: 0 !important;
+        margin-top: 0 !important;
+    }
+}
+
+/* Print-specific content visibility */
+.print-only {
+    display: none;
+}
+
+@media print {
+    .print-only {
+        display: block !important;
+    }
+}

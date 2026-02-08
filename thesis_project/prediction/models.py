@@ -19,6 +19,10 @@ class Prediction(models.Model):
     income_level = models.CharField(max_length=20)
     employment_status = models.CharField(max_length=20)
     
+    english_proficiency = models.IntegerField()
+    motivation_score = models.IntegerField()
+    social_support = models.IntegerField()
+    
     prediction_result = models.CharField(max_length=10)
     probability = models.FloatField()
     
@@ -49,6 +53,10 @@ class PredictionHistory(models.Model):
     internship_grade = models.FloatField()
     income_level = models.CharField(max_length=20)
     employment_status = models.CharField(max_length=20)
+    
+    english_proficiency = models.IntegerField()
+    motivation_score = models.IntegerField()
+    social_support = models.IntegerField()
     
     avg_probability = models.FloatField()
     risk_level = models.CharField(max_length=20)

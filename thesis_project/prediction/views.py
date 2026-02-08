@@ -9,19 +9,109 @@ import sys
 import os
 import traceback
 import pandas as pd
+import joblib
 from .models import PredictionHistory, Prediction
 
 models_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'models')
 sys.path.append(models_path)
 
 from .forms import PredictionForm
-from .utils import load_selected_model, prepare_input_data, generate_recommendations, get_risk_level
+from .utils import prepare_input_data, generate_recommendations, get_risk_level
 
-SELECTED_MODEL_NAME = 'stacking_ridge'  
-SELECTED_MODEL_TYPE = 'ensemble'  
+# Configuration
+SELECTED_MODEL_NAME = 'stacking_ridge'
+MODEL_CATEGORY = 'ensemble'
+
+# Model paths
+BASE_MODELS_DIR = os.path.join(models_path, 'saved_base_models')
+ENSEMBLE_MODELS_DIR = os.path.join(models_path, 'saved_ensemble_models')
+PREPROCESSOR_PATH = os.path.join(models_path, 'saved_ensemble_models', 'preprocessor.pkl')
+
+def load_selected_model(model_name, model_category='base'):
+    """
+    Load the selected regression model and preprocessor with validation
+    """
+    try:
+        if model_category == 'base':
+            model_dir = BASE_MODELS_DIR
+            model_file = f"{model_name}_model.pkl"
+        elif model_category == 'ensemble':
+            model_dir = ENSEMBLE_MODELS_DIR
+            model_file = f"{model_name}_ensemble.pkl"
+        else:
+            return None, None, f"Invalid model category: {model_category}"
+        
+        model_path = os.path.join(model_dir, model_file)
+        
+        if not os.path.exists(model_path):
+            return None, None, f"Model file not found: {model_path}"
+        
+        file_size = os.path.getsize(model_path)
+        if file_size < 100:
+            return None, None, f"Model file appears corrupted (size: {file_size} bytes)"
+        
+        try:
+            model = joblib.load(model_path)
+            print(f"Model loaded successfully: {model_path} ({file_size:,} bytes)")
+        except Exception as e:
+            return None, None, f"Failed to load model: {str(e)}. Please re-train the model."
+        
+        if not os.path.exists(PREPROCESSOR_PATH):
+            return None, None, f"Preprocessor file not found: {PREPROCESSOR_PATH}"
+        
+        preprocessor_size = os.path.getsize(PREPROCESSOR_PATH)
+        if preprocessor_size < 100:
+            return None, None, f"Preprocessor file appears corrupted (size: {preprocessor_size} bytes)"
+        
+        try:
+            preprocessor = joblib.load(PREPROCESSOR_PATH)
+            print(f"Preprocessor loaded successfully: {PREPROCESSOR_PATH} ({preprocessor_size:,} bytes)")
+        except Exception as e:
+            return None, None, f"Failed to load preprocessor: {str(e)}. Please re-train the model."
+        
+        print(f"Successfully loaded {model_category} model: {model_name}")
+        print(f"Preprocessor details: {preprocessor}")
+        
+        return model, preprocessor, None
+        
+    except Exception as e:
+        error_msg = f"Error loading model: {str(e)}"
+        print(f"[ERROR] {error_msg}")
+        traceback.print_exc()
+        return None, None, error_msg
+
+
+@login_required
+def student_predict_view(request):
+    """
+    Student-specific prediction view
+    """
+    return handle_prediction(request, 'pages/student_predict.html', 'prediction:result')
+
+
+@login_required
+def admin_predict_view(request):
+    """
+    Admin-specific prediction view
+    """
+    return handle_prediction(request, 'pages/admin_predict.html', 'prediction:admin_result')
+
 
 @login_required
 def predict_view(request):
+    """
+    Legacy prediction view - redirects based on user role
+    """
+    if request.user.role == 'student':
+        return student_predict_view(request)
+    else:
+        return admin_predict_view(request)
+
+
+def handle_prediction(request, template_name, redirect_url_name):
+    """
+    Common prediction handling logic for both student and admin views
+    """
     if request.method == 'POST':
         form = PredictionForm(request.POST)
         
@@ -31,12 +121,12 @@ def predict_view(request):
             
             model, preprocessor, error = load_selected_model(
                 model_name=SELECTED_MODEL_NAME,
-                model_type=SELECTED_MODEL_TYPE
+                model_category=MODEL_CATEGORY
             )
             
             if error:
                 messages.error(request, error)
-                return render(request, 'pages/predict.html', {'form': form})
+                return render(request, template_name, {'form': form})
             
             try:
                 prediction_result = make_single_prediction(
@@ -47,7 +137,7 @@ def predict_view(request):
                 
                 if not prediction_result:
                     messages.error(request, 'Failed to make prediction. Please try again.')
-                    return render(request, 'pages/predict.html', {'form': form})
+                    return render(request, template_name, {'form': form})
                 
                 predicted_class = prediction_result['prediction']
                 pass_probability = prediction_result['pass_probability']
@@ -55,6 +145,7 @@ def predict_view(request):
                 recommendations = generate_recommendations(input_data, pass_probability)
                 risk_info = get_risk_level(pass_probability)
                 
+                # Save prediction to database
                 prediction = Prediction.objects.create(
                     user=request.user,
                     age=input_data['Age'],
@@ -70,10 +161,14 @@ def predict_view(request):
                     scholarship=bool(input_data['Scholarship']),
                     income_level=input_data['IncomeLevel'],
                     employment_status=input_data['EmploymentStatus'],
+                    english_proficiency=input_data['EnglishProficiency'],
+                    motivation_score=input_data['MotivationScore'],
+                    social_support=input_data['SocialSupport'],
                     prediction_result='PASS' if predicted_class == 1 else 'FAIL',
                     probability=pass_probability * 100
                 )
                 
+                # Save to prediction history
                 PredictionHistory.objects.create(
                     user=request.user,
                     age=input_data['Age'],
@@ -89,9 +184,16 @@ def predict_view(request):
                     internship_grade=input_data['InternshipGrade'],
                     income_level=input_data['IncomeLevel'],
                     employment_status=input_data['EmploymentStatus'],
+                    english_proficiency=input_data['EnglishProficiency'],
+                    motivation_score=input_data['MotivationScore'],
+                    social_support=input_data['SocialSupport'],
                     avg_probability=pass_probability * 100,
                     risk_level=risk_info['level'],
-                    base_predictions={'selected_model': prediction_result},
+                    base_predictions={
+                        'model_name': SELECTED_MODEL_NAME,
+                        'model_category': MODEL_CATEGORY,
+                        'prediction': prediction_result
+                    },
                     ensemble_predictions=None,
                     ip_address=request.META.get('REMOTE_ADDR'),
                     user_agent=request.META.get('HTTP_USER_AGENT')
@@ -101,23 +203,24 @@ def predict_view(request):
                     'input_data': input_data,
                     'prediction': prediction_result,
                     'model_name': SELECTED_MODEL_NAME,
-                    'model_type': SELECTED_MODEL_TYPE,
+                    'model_category': MODEL_CATEGORY,
                     'recommendations': recommendations,
                     'avg_probability': pass_probability * 100,
                     'risk_info': risk_info,
                     'prediction_id': prediction.id
                 }
                 
-                return redirect('prediction:result', prediction_id=prediction.id)
+                return redirect(redirect_url_name, prediction_id=prediction.id)
                 
             except Exception as e:
                 messages.error(request, f'Prediction error: {str(e)}')
                 traceback.print_exc()
-                return render(request, 'pages/predict.html', {'form': form})
+                return render(request, template_name, {'form': form})
     else:
         form = PredictionForm()
     
-    return render(request, 'pages/predict.html', {'form': form})
+    return render(request, template_name, {'form': form})
+
 
 @login_required
 def result_view(request, prediction_id):
@@ -136,13 +239,14 @@ def result_view(request, prediction_id):
                     'ensemble_models': {}
                 },
                 'model_name': results['model_name'],
-                'model_type': results['model_type'],
+                'model_category': results.get('model_category', MODEL_CATEGORY),
                 'recommendations': results['recommendations'],
                 'avg_probability': results['avg_probability'],
                 'risk_info': results['risk_info'],
                 'prediction': prediction
             }
         else:
+            # Reconstruct data from database with new fields
             input_data = {
                 'Age': prediction.age,
                 'Gender': prediction.gender,
@@ -156,7 +260,10 @@ def result_view(request, prediction_id):
                 'MockExamScore': prediction.mock_exam_score,
                 'Scholarship': 1 if prediction.scholarship else 0,
                 'IncomeLevel': prediction.income_level,
-                'EmploymentStatus': prediction.employment_status
+                'EmploymentStatus': prediction.employment_status,
+                'EnglishProficiency': prediction.english_proficiency,
+                'MotivationScore': prediction.motivation_score,
+                'SocialSupport': prediction.social_support
             }
             
             prediction_result = {
@@ -178,14 +285,20 @@ def result_view(request, prediction_id):
                     'ensemble_models': {}
                 },
                 'model_name': SELECTED_MODEL_NAME,
-                'model_type': SELECTED_MODEL_TYPE,
+                'model_category': MODEL_CATEGORY,
                 'recommendations': recommendations,
                 'avg_probability': prediction.probability,
                 'risk_info': risk_info,
                 'prediction': prediction
             }
         
-        return render(request, 'pages/result.html', context)
+        # Determine template based on user role
+        if request.user.role == 'student':
+            template_name = 'pages/student_result.html'
+        else:
+            template_name = 'pages/admin_result.html'
+        
+        return render(request, template_name, context)
         
     except Prediction.DoesNotExist:
         messages.error(request, 'Prediction not found.')
@@ -195,6 +308,7 @@ def result_view(request, prediction_id):
 def detail_view(request, prediction_id):
     prediction = get_object_or_404(Prediction, id=prediction_id, user=request.user)
     
+    # Reconstruct input data with new fields
     input_data = {
         'Age': prediction.age,
         'Gender': prediction.gender,
@@ -208,7 +322,10 @@ def detail_view(request, prediction_id):
         'MockExamScore': prediction.mock_exam_score,
         'Scholarship': 1 if prediction.scholarship else 0,
         'IncomeLevel': prediction.income_level,
-        'EmploymentStatus': prediction.employment_status
+        'EmploymentStatus': prediction.employment_status,
+        'EnglishProficiency': prediction.english_proficiency,
+        'MotivationScore': prediction.motivation_score,
+        'SocialSupport': prediction.social_support
     }
     
     prediction_result = {
@@ -230,15 +347,20 @@ def detail_view(request, prediction_id):
             'ensemble_models': {}
         },
         'model_name': SELECTED_MODEL_NAME,
-        'model_type': SELECTED_MODEL_TYPE,
+        'model_category': MODEL_CATEGORY,
         'recommendations': recommendations,
         'avg_probability': prediction.probability,
         'risk_info': risk_info,
         'prediction': prediction
     }
     
-    return render(request, 'pages/result.html', context)
-
+    # Determine template based on user role
+    if request.user.role == 'student':
+        template_name = 'pages/student_result.html'
+    else:
+        template_name = 'pages/admin_result.html'
+    
+    return render(request, template_name, context)
 @login_required
 def history_view(request):
     predictions = Prediction.objects.filter(user=request.user).order_by('-created_at')
@@ -254,6 +376,9 @@ def history_view(request):
 @login_required
 @require_http_methods(["POST"])
 def delete_prediction(request, prediction_id):
+    """
+    Delete a prediction
+    """
     try:
         prediction = get_object_or_404(Prediction, id=prediction_id, user=request.user)
         prediction.delete()
@@ -263,15 +388,19 @@ def delete_prediction(request, prediction_id):
     
     return redirect('prediction:history')
 
+
 @csrf_exempt
 @require_http_methods(["POST"])
 def predict_exam_result(request):
+    """
+    API endpoint for making predictions
+    """
     try:
         data = json.loads(request.body)
         
         model, preprocessor, error = load_selected_model(
             model_name=SELECTED_MODEL_NAME,
-            model_type=SELECTED_MODEL_TYPE
+            model_category=MODEL_CATEGORY
         )
         
         if error:
@@ -290,7 +419,7 @@ def predict_exam_result(request):
         
         return JsonResponse({
             'model_name': SELECTED_MODEL_NAME,
-            'model_type': SELECTED_MODEL_TYPE,
+            'model_category': MODEL_CATEGORY,
             'prediction': prediction_result,
             'recommendations': recommendations,
             'input_data': data
@@ -299,12 +428,16 @@ def predict_exam_result(request):
     except Exception as e:
         return JsonResponse({'error': f'Prediction error: {str(e)}'}, status=500)
 
+
 @require_http_methods(["GET"])
 def model_status(request):
+    """
+    API endpoint to check model status
+    """
     try:
         model, preprocessor, error = load_selected_model(
             model_name=SELECTED_MODEL_NAME,
-            model_type=SELECTED_MODEL_TYPE
+            model_category=MODEL_CATEGORY
         )
         
         if error:
@@ -316,39 +449,56 @@ def model_status(request):
         return JsonResponse({
             'model_loaded': True,
             'selected_model': SELECTED_MODEL_NAME,
-            'model_type': SELECTED_MODEL_TYPE
+            'model_category': MODEL_CATEGORY,
+            'model_path': ENSEMBLE_MODELS_DIR if MODEL_CATEGORY == 'ensemble' else BASE_MODELS_DIR
         })
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
+
 def make_single_prediction(model, preprocessor, input_data):
+    """
+    Make a single prediction using regression model with new features
+    """
     try:
         df_input = pd.DataFrame([input_data])
         
+        # Define feature columns
         categorical_columns = ['Gender', 'IncomeLevel', 'EmploymentStatus']
         numerical_columns = ['Age', 'StudyHours', 'SleepHours', 'Confidence', 
-                           'TestAnxiety', 'MockExamScore', 'GPA', 'Scholarship', 'InternshipGrade']
-        binary_columns = ['ReviewCenter']
+                           'MockExamScore', 'GPA', 'InternshipGrade', 'TestAnxiety',
+                           'EnglishProficiency', 'MotivationScore', 'SocialSupport']
+        binary_columns = ['ReviewCenter', 'Scholarship']
         
         all_feature_columns = categorical_columns + numerical_columns + binary_columns
         X_input = df_input[all_feature_columns].copy()
         
+        # Handle missing MockExamScore
+        if 'MockExamScore' in X_input.columns and X_input['MockExamScore'].isnull().any():
+            X_input.loc[:, 'MockExamScore'] = X_input['MockExamScore'].fillna(77.0)
+        
         if preprocessor is None:
-            print("[ERROR] Preprocessor is None!")
+            print("[ERROR] Preprocessor is None")
             return None
         
+        print(f"Preprocessing input with {len(all_feature_columns)} features")
         X_input_processed = preprocessor.transform(X_input)
+        print(f"Preprocessed shape: {X_input_processed.shape}")
         
         predicted_score = model.predict(X_input_processed)[0]
+        print(f"Predicted score: {predicted_score}")
         
-        PASSING_SCORE = 75.0
+        PASSING_SCORE = 70.0
         prediction_class = 1 if predicted_score >= PASSING_SCORE else 0
+        pass_probability = float(predicted_score / 100.0)
+        
+        pass_probability = max(0.0, min(1.0, pass_probability))
         
         return {
             'prediction': prediction_class,
             'predicted_score': float(predicted_score),
-            'pass_probability': float(predicted_score / 100.0),
-            'prediction_label': 'Pass' if prediction_class == 1 else 'Fail'
+            'pass_probability': pass_probability,
+            'prediction_label': 'PASS' if prediction_class == 1 else 'FAIL'
         }
         
     except Exception as e:

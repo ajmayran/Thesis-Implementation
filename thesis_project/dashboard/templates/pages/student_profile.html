@@ -1,0 +1,190 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Profile - Social Work Predictor</title>
+    
+    <link rel="stylesheet" href="{% static 'style/css/main.css' %}">
+    <link rel="stylesheet" href="{% static 'style/css/sidebar.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+</head>
+
+<body>
+    <div class="main-container">
+        
+        {% include 'components/student_sidebar.html' %}
+
+        <div class="content-wrapper">
+            
+            <header class="header">
+                <div class="header-title">
+                    <h1>Student Profile</h1>
+                    <p>Manage your personal information</p>
+                </div>
+                <div class="header-user">
+                    <div class="user-info">
+                        <p>{{ request.user.get_full_name }}</p>
+                        <span>{{ request.user.email }}</span>
+                    </div>
+                    <div class="user-avatar">
+                        {{ request.user.first_name.0 }}{{ request.user.last_name.0 }}
+                    </div>
+                </div>
+            </header>
+
+            <main class="main-content">
+                
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="message {% if message.tags == 'error' %}error{% else %}success{% endif %}">
+                            <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% else %}fa-circle-check{% endif %}"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <div class="grid grid-cols-3">
+                    
+                    <div class="lg-col-span-2">
+                        
+                        <div class="card" style="margin-bottom: 1.5rem;">
+                            <div class="profile-section">
+                                <h3>Personal Information</h3>
+                                <form method="post" action="{% url 'dashboard:update_profile' %}">
+                                    {% csrf_token %}
+                                    
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="first_name">First Name</label>
+                                            <input type="text" id="first_name" name="first_name" value="{{ request.user.first_name }}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="last_name">Last Name</label>
+                                            <input type="text" id="last_name" name="last_name" value="{{ request.user.last_name }}" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="email">Email Address</label>
+                                            <input type="email" id="email" name="email" value="{{ request.user.email }}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="student_id">Student ID</label>
+                                            <input type="text" id="student_id" name="student_id" value="{{ request.user.student_id }}" readonly style="background-color: #f3f4f6;">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-actions">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fa-solid fa-save"></i>
+                                            Save Changes
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="profile-section">
+                                <h3>Change Password</h3>
+                                <form method="post" action="{% url 'dashboard:change_password' %}">
+                                    {% csrf_token %}
+                                    
+                                    <div class="form-group">
+                                        <label for="current_password">Current Password</label>
+                                        <input type="password" id="current_password" name="current_password" required>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="new_password1">New Password</label>
+                                            <input type="password" id="new_password1" name="new_password1" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="new_password2">Confirm New Password</label>
+                                            <input type="password" id="new_password2" name="new_password2" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-actions">
+                                        <button type="submit" class="btn btn-blue">
+                                            <i class="fa-solid fa-key"></i>
+                                            Update Password
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div>
+                        
+                        <div class="card" style="margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center;">
+                                <i class="fa-solid fa-user-circle" style="color: #3b82f6; margin-right: 0.5rem;"></i>
+                                Account Overview
+                            </h3>
+                            <div class="info-grid" style="grid-template-columns: 1fr;">
+                                <div class="info-item">
+                                    <label>Full Name</label>
+                                    <p>{{ request.user.get_full_name }}</p>
+                                </div>
+                                <div class="info-item">
+                                    <label>Email</label>
+                                    <p>{{ request.user.email }}</p>
+                                </div>
+                                <div class="info-item">
+                                    <label>Student ID</label>
+                                    <p>{{ request.user.student_id }}</p>
+                                </div>
+                                <div class="info-item">
+                                    <label>Member Since</label>
+                                    <p>{{ request.user.date_joined|date:"F d, Y" }}</p>
+                                </div>
+                                <div class="info-item">
+                                    <label>Last Login</label>
+                                    <p>{{ request.user.last_login|date:"F d, Y h:i A" }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card" style="background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);">
+                            <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center;">
+                                <i class="fa-solid fa-shield-halved" style="color: #ea580c; margin-right: 0.5rem;"></i>
+                                Security Tips
+                            </h3>
+                            <div class="tips-list">
+                                <div class="tip-item">
+                                    <i class="fa-solid fa-circle-check" style="color: #ea580c;"></i>
+                                    <p>Use a strong, unique password</p>
+                                </div>
+                                <div class="tip-item">
+                                    <i class="fa-solid fa-circle-check" style="color: #ea580c;"></i>
+                                    <p>Never share your login credentials</p>
+                                </div>
+                                <div class="tip-item">
+                                    <i class="fa-solid fa-circle-check" style="color: #ea580c;"></i>
+                                    <p>Update your password regularly</p>
+                                </div>
+                                <div class="tip-item">
+                                    <i class="fa-solid fa-circle-check" style="color: #ea580c;"></i>
+                                    <p>Log out from shared devices</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </main>
+
+        </div>
+    </div>
+
+</body>
+</html>

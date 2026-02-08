@@ -1,0 +1,413 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Pass Prediction - Social Work Licensure</title>
+    
+    <link rel="stylesheet" href="{% static 'style/css/main.css' %}">
+    <link rel="stylesheet" href="{% static 'style/css/sidebar.css' %}">
+    <link rel="stylesheet" href="{% static 'style/css/predict.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+</head>
+
+<body>
+    
+    <div class="main-container">
+        
+        {% include 'components/student_sidebar.html' %}
+
+        <div class="content-wrapper">
+            
+            <header class="header">
+                <div class="header-title">
+                    <h1>Exam Pass Prediction</h1>
+                    <p>Social Work Licensure Examination</p>
+                </div>
+                <div class="header-user">
+                    <div class="user-info">
+                        <p>{{ request.user.get_full_name }}</p>
+                        <span>{{ request.user.email }}</span>
+                    </div>
+                    <div class="user-avatar">
+                        {{ request.user.first_name.0 }}{{ request.user.last_name.0 }}
+                    </div>
+                </div>
+            </header>
+
+            <main class="main-content">
+                
+                <!-- Alert Messages -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="message {% if message.tags == 'error' %}error{% else %}success{% endif %}">
+                            <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% elif message.tags == 'warning' %}fa-triangle-exclamation{% else %}fa-circle-info{% endif %}"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <!-- Info Box -->
+                <div class="card" style="background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%); margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: start; gap: 1rem;">
+                        <div style="flex-shrink: 0;">
+                            <i class="fa-solid fa-circle-info" style="font-size: 2rem; color: #3b82f6;"></i>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 0.5rem;">About This Prediction Tool</h3>
+                            <p style="color: #374151;">
+                                This AI-powered tool analyzes your academic background, study habits, and preparation level 
+                                to predict your likelihood of passing the Social Work Licensure Examination. 
+                                Fill out all fields accurately for the most reliable prediction.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prediction Form -->
+                <form method="POST" id="predictionForm">
+                    {% csrf_token %}
+
+                    <!-- Personal Information Section -->
+                    <div class="card" style="margin-bottom: 1.5rem;">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid #e5e7eb;">
+                            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 0.75rem; border-radius: 0.5rem;">
+                                <i class="fa-solid fa-user" style="color: white; font-size: 1.25rem;"></i>
+                            </div>
+                            <div>
+                                <h2 style="font-size: 1.25rem; font-weight: 700; color: #1f2937; margin: 0;">Personal Information</h2>
+                                <p style="font-size: 0.875rem; color: #6b7280; margin: 0;">Basic demographic information</p>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="id_age">{{ form.age.label }}</label>
+                                {{ form.age }}
+                                {% if form.age.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.age.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.age.help_text %}
+                                    <p class="help-text">{{ form.age.help_text }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_gender">{{ form.gender.label }}</label>
+                                {{ form.gender }}
+                                {% if form.gender.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.gender.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Academic Background Section -->
+                    <div class="card" style="margin-bottom: 1.5rem;">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid #e5e7eb;">
+                            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 0.75rem; border-radius: 0.5rem;">
+                                <i class="fa-solid fa-graduation-cap" style="color: white; font-size: 1.25rem;"></i>
+                            </div>
+                            <div>
+                                <h2 style="font-size: 1.25rem; font-weight: 700; color: #1f2937; margin: 0;">Academic Background</h2>
+                                <p style="font-size: 0.875rem; color: #6b7280; margin: 0;">Your academic performance indicators</p>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="id_gpa">{{ form.gpa.label }}</label>
+                                {{ form.gpa }}
+                                {% if form.gpa.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.gpa.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.gpa.help_text %}
+                                    <p class="help-text">{{ form.gpa.help_text }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_internship_grade">{{ form.internship_grade.label }}</label>
+                                {{ form.internship_grade }}
+                                {% if form.internship_grade.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.internship_grade.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.internship_grade.help_text %}
+                                    <p class="help-text">{{ form.internship_grade.help_text }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_scholarship">{{ form.scholarship.label }}</label>
+                                {{ form.scholarship }}
+                                {% if form.scholarship.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.scholarship.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.scholarship.help_text %}
+                                    <p class="help-text">{{ form.scholarship.help_text }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Study Habits & Preparation Section -->
+                    <div class="card" style="margin-bottom: 1.5rem;">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid #e5e7eb;">
+                            <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 0.75rem; border-radius: 0.5rem;">
+                                <i class="fa-solid fa-book" style="color: white; font-size: 1.25rem;"></i>
+                            </div>
+                            <div>
+                                <h2 style="font-size: 1.25rem; font-weight: 700; color: #1f2937; margin: 0;">Study Habits & Preparation</h2>
+                                <p style="font-size: 0.875rem; color: #6b7280; margin: 0;">Your current preparation routine</p>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="id_study_hours">{{ form.study_hours.label }}</label>
+                                {{ form.study_hours }}
+                                {% if form.study_hours.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.study_hours.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.study_hours.help_text %}
+                                    <p class="help-text">{{ form.study_hours.help_text }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_sleep_hours">{{ form.sleep_hours.label }}</label>
+                                {{ form.sleep_hours }}
+                                {% if form.sleep_hours.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.sleep_hours.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.sleep_hours.help_text %}
+                                    <p class="help-text">{{ form.sleep_hours.help_text }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_review_center">{{ form.review_center.label }}</label>
+                                {{ form.review_center }}
+                                {% if form.review_center.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.review_center.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.review_center.help_text %}
+                                    <p class="help-text">{{ form.review_center.help_text }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_confidence">{{ form.confidence.label }}</label>
+                                {{ form.confidence }}
+                                {% if form.confidence.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.confidence.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.confidence.help_text %}
+                                    <p class="help-text">{{ form.confidence.help_text }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_test_anxiety">{{ form.test_anxiety.label }}</label>
+                                {{ form.test_anxiety }}
+                                {% if form.test_anxiety.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.test_anxiety.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.test_anxiety.help_text %}
+                                    <p class="help-text">{{ form.test_anxiety.help_text }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_mock_exam_score">{{ form.mock_exam_score.label }}</label>
+                                {{ form.mock_exam_score }}
+                                {% if form.mock_exam_score.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.mock_exam_score.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.mock_exam_score.help_text %}
+                                    <p class="help-text">{{ form.mock_exam_score.help_text }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Personal Factors Section -->
+                    <div class="card" style="margin-bottom: 1.5rem;">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid #e5e7eb;">
+                            <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 0.75rem; border-radius: 0.5rem;">
+                                <i class="fa-solid fa-lightbulb" style="color: white; font-size: 1.25rem;"></i>
+                            </div>
+                            <div>
+                                <h2 style="font-size: 1.25rem; font-weight: 700; color: #1f2937; margin: 0;">Personal Factors</h2>
+                                <p style="font-size: 0.875rem; color: #6b7280; margin: 0;">Skills and support system assessment</p>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="id_english_proficiency">{{ form.english_proficiency.label }}</label>
+                                {{ form.english_proficiency }}
+                                {% if form.english_proficiency.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.english_proficiency.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.english_proficiency.help_text %}
+                                    <p class="help-text">{{ form.english_proficiency.help_text }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_motivation_score">{{ form.motivation_score.label }}</label>
+                                {{ form.motivation_score }}
+                                {% if form.motivation_score.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.motivation_score.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.motivation_score.help_text %}
+                                    <p class="help-text">{{ form.motivation_score.help_text }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_social_support">{{ form.social_support.label }}</label>
+                                {{ form.social_support }}
+                                {% if form.social_support.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.social_support.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.social_support.help_text %}
+                                    <p class="help-text">{{ form.social_support.help_text }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Socioeconomic Background Section -->
+                    <div class="card" style="margin-bottom: 1.5rem;">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid #e5e7eb;">
+                            <div style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); padding: 0.75rem; border-radius: 0.5rem;">
+                                <i class="fa-solid fa-briefcase" style="color: white; font-size: 1.25rem;"></i>
+                            </div>
+                            <div>
+                                <h2 style="font-size: 1.25rem; font-weight: 700; color: #1f2937; margin: 0;">Socioeconomic Background</h2>
+                                <p style="font-size: 0.875rem; color: #6b7280; margin: 0;">Family and employment information</p>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="id_income_level">{{ form.income_level.label }}</label>
+                                {{ form.income_level }}
+                                {% if form.income_level.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.income_level.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_employment_status">{{ form.employment_status.label }}</label>
+                                {{ form.employment_status }}
+                                {% if form.employment_status.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.employment_status.errors %}<li>{{ error }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                                {% if form.employment_status.help_text %}
+                                    <p class="help-text">{{ form.employment_status.help_text }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Non-field Errors -->
+                    {% if form.non_field_errors %}
+                        <div class="message error">
+                            <i class="fa-solid fa-circle-exclamation"></i>
+                            <div>
+                                {% for error in form.non_field_errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Submit Button -->
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem; margin-top: 2rem;">
+                        <button type="submit" class="btn btn-primary" id="submitBtn" style="width: 100%; max-width: 400px; padding: 1rem; font-size: 1.125rem;">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            Generate Prediction
+                        </button>
+                        <p style="font-size: 0.875rem; color: #6b7280; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fa-solid fa-shield-halved" style="color: #10b981;"></i>
+                            Your data is processed securely and not stored permanently
+                        </p>
+                    </div>
+
+                </form>
+
+            </main>
+
+        </div>
+    </div>
+
+    <script>
+        // Form submission handler
+        document.getElementById('predictionForm').addEventListener('submit', function(e) {
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+        });
+
+        // Validate study hours and sleep hours total
+        const studyHours = document.getElementById('id_study_hours');
+        const sleepHours = document.getElementById('id_sleep_hours');
+
+        function validateTotalHours() {
+            const study = parseInt(studyHours.value) || 0;
+            const sleep = parseInt(sleepHours.value) || 0;
+            
+            if (study + sleep > 24) {
+                studyHours.style.borderColor = '#dc2626';
+                sleepHours.style.borderColor = '#dc2626';
+                return false;
+            } else {
+                studyHours.style.borderColor = '#e5e7eb';
+                sleepHours.style.borderColor = '#e5e7eb';
+                return true;
+            }
+        }
+
+        studyHours.addEventListener('input', validateTotalHours);
+        sleepHours.addEventListener('input', validateTotalHours);
+    </script>
+
+</body>
+</html>

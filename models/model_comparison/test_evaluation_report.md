@@ -9,219 +9,219 @@
 
 ## Model Performance on Test Data
 
-### NEURAL_NETWORK
-
-**Overall Accuracy:** 0.9727
-
-**10-Fold Cross-Validation:**
-
-- **CV Mean:** 0.5695
-- **CV Std:** 0.0384
-- **CV Min:** 0.5091
-- **CV Max:** 0.6296
-
-**Confusion Matrix:**
-
-```
-                Predicted Fail    Predicted Pass
-Actual Fail            53                 2
-Actual Pass             1                54
-```
-
-**Detailed Metrics:**
-
-- **True Positives (Correctly predicted Pass):** 54 (49.1%)
-- **True Negatives (Correctly predicted Fail):** 53 (48.2%)
-- **False Positives (Wrongly predicted Pass):** 2 (1.8%)
-- **False Negatives (Wrongly predicted Fail):** 1 (0.9%)
-
-**Classification Report:**
-
-- **Precision (Pass class):** 0.9643
-- **Recall (Pass class):** 0.9818
-- **F1-Score (Pass class):** 0.9730
-
-**Best Hyperparameters:** {'activation': 'relu', 'alpha': 0.0001, 'hidden_layer_sizes': (50,)}
-
----
-
 ### RANDOM_FOREST
 
-**Overall Accuracy:** 0.7455
+**Overall Accuracy:** 0.5182
 
 **10-Fold Cross-Validation:**
 
-- **CV Mean:** 0.5533
-- **CV Std:** 0.0344
-- **CV Min:** 0.5091
-- **CV Max:** 0.6111
+- **CV Mean:** 0.5802
+- **CV Std:** 0.0569
+- **CV Min:** 0.4651
+- **CV Max:** 0.6591
 
 **Confusion Matrix:**
 
 ```
                 Predicted Fail    Predicted Pass
-Actual Fail            46                 9
-Actual Pass            19                36
+Actual Fail            32                23
+Actual Pass            30                25
 ```
 
 **Detailed Metrics:**
 
-- **True Positives (Correctly predicted Pass):** 36 (32.7%)
-- **True Negatives (Correctly predicted Fail):** 46 (41.8%)
-- **False Positives (Wrongly predicted Pass):** 9 (8.2%)
-- **False Negatives (Wrongly predicted Fail):** 19 (17.3%)
+- **True Positives (Correctly predicted Pass):** 25 (22.7%)
+- **True Negatives (Correctly predicted Fail):** 32 (29.1%)
+- **False Positives (Wrongly predicted Pass):** 23 (20.9%)
+- **False Negatives (Wrongly predicted Fail):** 30 (27.3%)
 
 **Classification Report:**
 
-- **Precision (Pass class):** 0.8000
-- **Recall (Pass class):** 0.6545
-- **F1-Score (Pass class):** 0.7200
+- **Precision (Pass class):** 0.5208
+- **Recall (Pass class):** 0.4545
+- **F1-Score (Pass class):** 0.4854
 
-**Best Hyperparameters:** {'max_depth': 5, 'n_estimators': 100}
-
----
-
-### SVM
-
-**Overall Accuracy:** 0.7455
-
-**10-Fold Cross-Validation:**
-
-- **CV Mean:** 0.5606
-- **CV Std:** 0.0566
-- **CV Min:** 0.4182
-- **CV Max:** 0.6296
-
-**Confusion Matrix:**
-
-```
-                Predicted Fail    Predicted Pass
-Actual Fail            43                12
-Actual Pass            16                39
-```
-
-**Detailed Metrics:**
-
-- **True Positives (Correctly predicted Pass):** 39 (35.5%)
-- **True Negatives (Correctly predicted Fail):** 43 (39.1%)
-- **False Positives (Wrongly predicted Pass):** 12 (10.9%)
-- **False Negatives (Wrongly predicted Fail):** 16 (14.5%)
-
-**Classification Report:**
-
-- **Precision (Pass class):** 0.7647
-- **Recall (Pass class):** 0.7091
-- **F1-Score (Pass class):** 0.7358
-
-**Best Hyperparameters:** {'C': 1.0, 'gamma': 'scale', 'kernel': 'rbf'}
-
----
-
-### KNN
-
-**Overall Accuracy:** 0.7182
-
-**10-Fold Cross-Validation:**
-
-- **CV Mean:** 0.5603
-- **CV Std:** 0.0625
-- **CV Min:** 0.4444
-- **CV Max:** 0.6545
-
-**Confusion Matrix:**
-
-```
-                Predicted Fail    Predicted Pass
-Actual Fail            43                12
-Actual Pass            19                36
-```
-
-**Detailed Metrics:**
-
-- **True Positives (Correctly predicted Pass):** 36 (32.7%)
-- **True Negatives (Correctly predicted Fail):** 43 (39.1%)
-- **False Positives (Wrongly predicted Pass):** 12 (10.9%)
-- **False Negatives (Wrongly predicted Fail):** 19 (17.3%)
-
-**Classification Report:**
-
-- **Precision (Pass class):** 0.7500
-- **Recall (Pass class):** 0.6545
-- **F1-Score (Pass class):** 0.6990
-
-**Best Hyperparameters:** {'n_neighbors': 5, 'weights': 'uniform'}
+**Best Hyperparameters:** {'max_depth': 15, 'n_estimators': 100}
 
 ---
 
 ### DECISION_TREE
 
-**Overall Accuracy:** 0.5455
+**Overall Accuracy:** 0.5091
 
 **10-Fold Cross-Validation:**
 
-- **CV Mean:** 0.5459
-- **CV Std:** 0.0556
-- **CV Min:** 0.4727
-- **CV Max:** 0.6667
+- **CV Mean:** 0.5826
+- **CV Std:** 0.0627
+- **CV Min:** 0.4545
+- **CV Max:** 0.6591
 
 **Confusion Matrix:**
 
 ```
                 Predicted Fail    Predicted Pass
-Actual Fail            49                 6
-Actual Pass            44                11
+Actual Fail            31                24
+Actual Pass            30                25
 ```
 
 **Detailed Metrics:**
 
-- **True Positives (Correctly predicted Pass):** 11 (10.0%)
-- **True Negatives (Correctly predicted Fail):** 49 (44.5%)
-- **False Positives (Wrongly predicted Pass):** 6 (5.5%)
-- **False Negatives (Wrongly predicted Fail):** 44 (40.0%)
+- **True Positives (Correctly predicted Pass):** 25 (22.7%)
+- **True Negatives (Correctly predicted Fail):** 31 (28.2%)
+- **False Positives (Wrongly predicted Pass):** 24 (21.8%)
+- **False Negatives (Wrongly predicted Fail):** 30 (27.3%)
 
 **Classification Report:**
 
-- **Precision (Pass class):** 0.6471
-- **Recall (Pass class):** 0.2000
-- **F1-Score (Pass class):** 0.3056
+- **Precision (Pass class):** 0.5102
+- **Recall (Pass class):** 0.4545
+- **F1-Score (Pass class):** 0.4808
 
-**Best Hyperparameters:** {'max_depth': 3, 'min_samples_split': 2}
+**Best Hyperparameters:** {'max_depth': 10, 'min_samples_split': 5}
 
 ---
 
-### NAIVE_BAYES
+### SVM
+
+**Overall Accuracy:** 0.5000
+
+**10-Fold Cross-Validation:**
+
+- **CV Mean:** 0.5874
+- **CV Std:** 0.0650
+- **CV Min:** 0.4545
+- **CV Max:** 0.6744
+
+**Confusion Matrix:**
+
+```
+                Predicted Fail    Predicted Pass
+Actual Fail            34                21
+Actual Pass            34                21
+```
+
+**Detailed Metrics:**
+
+- **True Positives (Correctly predicted Pass):** 21 (19.1%)
+- **True Negatives (Correctly predicted Fail):** 34 (30.9%)
+- **False Positives (Wrongly predicted Pass):** 21 (19.1%)
+- **False Negatives (Wrongly predicted Fail):** 34 (30.9%)
+
+**Classification Report:**
+
+- **Precision (Pass class):** 0.5000
+- **Recall (Pass class):** 0.3818
+- **F1-Score (Pass class):** 0.4330
+
+**Best Hyperparameters:** {'C': 1.0, 'gamma': 'scale', 'kernel': 'rbf'}
+
+---
+
+### NEURAL_NETWORK
 
 **Overall Accuracy:** 0.4909
 
 **10-Fold Cross-Validation:**
 
-- **CV Mean:** 0.5316
-- **CV Std:** 0.0803
-- **CV Min:** 0.4444
-- **CV Max:** 0.7037
+- **CV Mean:** 0.5733
+- **CV Std:** 0.0506
+- **CV Min:** 0.4773
+- **CV Max:** 0.6818
 
 **Confusion Matrix:**
 
 ```
                 Predicted Fail    Predicted Pass
-Actual Fail            35                20
-Actual Pass            36                19
+Actual Fail            32                23
+Actual Pass            33                22
 ```
 
 **Detailed Metrics:**
 
-- **True Positives (Correctly predicted Pass):** 19 (17.3%)
-- **True Negatives (Correctly predicted Fail):** 35 (31.8%)
-- **False Positives (Wrongly predicted Pass):** 20 (18.2%)
-- **False Negatives (Wrongly predicted Fail):** 36 (32.7%)
+- **True Positives (Correctly predicted Pass):** 22 (20.0%)
+- **True Negatives (Correctly predicted Fail):** 32 (29.1%)
+- **False Positives (Wrongly predicted Pass):** 23 (20.9%)
+- **False Negatives (Wrongly predicted Fail):** 33 (30.0%)
 
 **Classification Report:**
 
-- **Precision (Pass class):** 0.4872
-- **Recall (Pass class):** 0.3455
-- **F1-Score (Pass class):** 0.4043
+- **Precision (Pass class):** 0.4889
+- **Recall (Pass class):** 0.4000
+- **F1-Score (Pass class):** 0.4400
+
+**Best Hyperparameters:** {'activation': 'relu', 'alpha': 0.01, 'hidden_layer_sizes': (50,), 'learning_rate_init': 0.01}
+
+---
+
+### NAIVE_BAYES
+
+**Overall Accuracy:** 0.4727
+
+**10-Fold Cross-Validation:**
+
+- **CV Mean:** 0.5549
+- **CV Std:** 0.0569
+- **CV Min:** 0.4419
+- **CV Max:** 0.6364
+
+**Confusion Matrix:**
+
+```
+                Predicted Fail    Predicted Pass
+Actual Fail            34                21
+Actual Pass            37                18
+```
+
+**Detailed Metrics:**
+
+- **True Positives (Correctly predicted Pass):** 18 (16.4%)
+- **True Negatives (Correctly predicted Fail):** 34 (30.9%)
+- **False Positives (Wrongly predicted Pass):** 21 (19.1%)
+- **False Negatives (Wrongly predicted Fail):** 37 (33.6%)
+
+**Classification Report:**
+
+- **Precision (Pass class):** 0.4615
+- **Recall (Pass class):** 0.3273
+- **F1-Score (Pass class):** 0.3830
 
 **Best Hyperparameters:** {'var_smoothing': 1e-09}
+
+---
+
+### KNN
+
+**Overall Accuracy:** 0.4636
+
+**10-Fold Cross-Validation:**
+
+- **CV Mean:** 0.5736
+- **CV Std:** 0.0600
+- **CV Min:** 0.5000
+- **CV Max:** 0.6744
+
+**Confusion Matrix:**
+
+```
+                Predicted Fail    Predicted Pass
+Actual Fail            33                22
+Actual Pass            37                18
+```
+
+**Detailed Metrics:**
+
+- **True Positives (Correctly predicted Pass):** 18 (16.4%)
+- **True Negatives (Correctly predicted Fail):** 33 (30.0%)
+- **False Positives (Wrongly predicted Pass):** 22 (20.0%)
+- **False Negatives (Wrongly predicted Fail):** 37 (33.6%)
+
+**Classification Report:**
+
+- **Precision (Pass class):** 0.4500
+- **Recall (Pass class):** 0.3273
+- **F1-Score (Pass class):** 0.3789
+
+**Best Hyperparameters:** {'n_neighbors': 7, 'weights': 'uniform'}
 
 ---
 
