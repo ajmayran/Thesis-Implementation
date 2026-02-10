@@ -22,8 +22,8 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    margin-left: 16rem;
-    width: calc(100% - 16rem);
+    margin-left: 18rem;
+    width: calc(100% - 18rem);
 }
 
 /* Header */
@@ -539,11 +539,11 @@ body {
     .grid-cols-3 {
         grid-template-columns: repeat(1, minmax(0, 1fr));
     }
-    
+
     .lg-col-span-2 {
         grid-column: span 1;
     }
-    
+
     .info-grid {
         grid-template-columns: repeat(1, 1fr);
     }
@@ -553,24 +553,25 @@ body {
     .content-wrapper {
         margin-left: 0;
         width: 100%;
+        padding-top: 5rem;
     }
-    
+
     .header {
         padding: 1rem;
     }
-    
+
     .header-title h1 {
         font-size: 1.25rem;
     }
-    
+
     .user-info {
         display: none;
     }
-    
+
     .main-content {
         padding: 1rem;
     }
-    
+
     .form-row {
         grid-template-columns: repeat(1, 1fr);
     }

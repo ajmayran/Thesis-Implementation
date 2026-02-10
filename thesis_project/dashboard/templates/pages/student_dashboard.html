@@ -11,6 +11,127 @@
     <link rel="stylesheet" href="{% static 'style/css/sidebar.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-5deg); }
+            75% { transform: rotate(5deg); }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-bounce-slow {
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        .animate-pulse-slow {
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        .animate-wiggle:hover {
+            animation: wiggle 0.5s ease-in-out;
+        }
+
+        .slide-in-up {
+            animation: slideInUp 0.6s ease-out forwards;
+        }
+
+        .duo-card {
+            background: white;
+            border-radius: 20px;
+            border: 3px solid #e5e7eb;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 0 #d1d5db;
+        }
+
+        .duo-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 0 #d1d5db;
+        }
+
+        .duo-button {
+            border-radius: 16px;
+            border: none;
+            padding: 16px 32px;
+            font-weight: 700;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+        }
+
+        .duo-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
+        }
+
+        .duo-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
+        }
+
+        .duo-green {
+            background: linear-gradient(180deg, #58cc02 0%, #4caf50 100%);
+            color: white;
+        }
+
+        .duo-blue {
+            background: linear-gradient(180deg, #1cb0f6 0%, #0d8ec9 100%);
+            color: white;
+        }
+
+        .duo-red {
+            background: linear-gradient(180deg, #ff4b4b 0%, #e03e3e 100%);
+            color: white;
+        }
+
+        .duo-yellow {
+            background: linear-gradient(180deg, #ffc800 0%, #ffab00 100%);
+            color: white;
+        }
+
+        .duo-purple {
+            background: linear-gradient(180deg, #ce82ff 0%, #a855f7 100%);
+            color: white;
+        }
+
+        .streak-flame {
+            background: linear-gradient(135deg, #ff9500 0%, #ff4500 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .content-wrapper {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #fef3c7 100%);
+        }
+    </style>
 </head>
 
 <body>
@@ -20,203 +141,236 @@
 
         <div class="content-wrapper">
             
-            <header class="header">
-                <div class="header-title">
-                    <h1>Welcome, {{ request.user.first_name }}!</h1>
-                    <p>Student ID: {{ request.user.student_id }}</p>
-                </div>
-                <div class="header-user">
-                    <div class="user-info">
-                        <p>{{ request.user.get_full_name }}</p>
-                        <span>{{ request.user.email }}</span>
-                    </div>
-                    <div class="user-avatar">
-                        {{ request.user.first_name.0 }}{{ request.user.last_name.0 }}
-                    </div>
-                </div>
-            </header>
-
-            <main class="main-content">
+            <main class="main-content p-6">
                 
                 {% if messages %}
                     {% for message in messages %}
-                        <div class="message {% if message.tags == 'error' %}error{% else %}success{% endif %}">
-                            <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% else %}fa-circle-check{% endif %}"></i>
-                            <span>{{ message }}</span>
+                        <div class="mb-4 p-4 rounded-2xl border-3 {% if message.tags == 'error' %}bg-red-50 border-red-300 text-red-700{% else %}bg-green-50 border-green-300 text-green-700{% endif %} flex items-center gap-3 slide-in-up">
+                            <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% else %}fa-circle-check{% endif %} text-2xl"></i>
+                            <span class="font-bold">{{ message }}</span>
                         </div>
                     {% endfor %}
                 {% endif %}
 
-                <div class="grid grid-cols-3">
-                    
-                    <div class="stat-card">
-                        <div class="stat-card-content">
-                            <div class="stat-card-info">
-                                <p>Total Predictions</p>
-                                <h2>{{ total_predictions }}</h2>
-                            </div>
-                            <div class="stat-card-icon">
-                                <i class="fa-solid fa-chart-line"></i>
+                <!-- Hero Welcome Section -->
+                <div class="duo-card p-8 mb-6 slide-in-up">
+                    <div class="flex items-center justify-between flex-wrap gap-4">
+                        <div class="flex-1">
+                            <h1 class="text-4xl md:text-5xl font-black text-gray-800 mb-2">
+                                Hello, {{ request.user.first_name }}!
+                            </h1>
+                            <p class="text-xl text-gray-600 font-semibold">
+                                Ready to predict your exam success?
+                            </p>
+                        </div>
+                        <div class="flex gap-4 items-center">
+                            <div class="text-center animate-bounce-slow">
+                                <div class="text-5xl mb-2 streak-flame">
+                                    <i class="fa-solid fa-fire"></i>
+                                </div>
+                                <div class="text-2xl font-black text-gray-700">{{ total_predictions }}</div>
+                                <div class="text-sm font-bold text-gray-500">PREDICTIONS</div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="stat-card green">
-                        <div class="stat-card-content">
-                            <div class="stat-card-info">
-                                <p>Latest Result</p>
-                                <h2>
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <!-- Latest Result Card -->
+                    <div class="duo-card p-6 duo-green text-white slide-in-up animate-wiggle" style="animation-delay: 0.1s;">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="text-sm font-bold opacity-90 uppercase tracking-wide mb-2">Latest Result</div>
+                                <div class="text-5xl font-black mb-1">
                                     {% if latest_prediction %}
                                         {{ latest_prediction.probability|floatformat:0 }}%
                                     {% else %}
                                         --
                                     {% endif %}
-                                </h2>
+                                </div>
+                                <div class="text-sm font-semibold opacity-90">Pass Probability</div>
                             </div>
-                            <div class="stat-card-icon">
+                            <div class="text-6xl opacity-20">
                                 <i class="fa-solid fa-trophy"></i>
                             </div>
                         </div>
                     </div>
 
-                    <div class="stat-card blue">
-                        <div class="stat-card-content">
-                            <div class="stat-card-info">
-                                <p>Average Score</p>
-                                <h2>{{ average_probability|floatformat:0 }}%</h2>
+                    <!-- Average Score Card -->
+                    <div class="duo-card p-6 duo-blue text-white slide-in-up animate-wiggle" style="animation-delay: 0.2s;">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="text-sm font-bold opacity-90 uppercase tracking-wide mb-2">Average Score</div>
+                                <div class="text-5xl font-black mb-1">{{ average_probability|floatformat:0 }}%</div>
+                                <div class="text-sm font-semibold opacity-90">Overall Performance</div>
                             </div>
-                            <div class="stat-card-icon">
-                                <i class="fa-solid fa-chart-simple"></i>
+                            <div class="text-6xl opacity-20">
+                                <i class="fa-solid fa-chart-line"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Highest Score Card -->
+                    <div class="duo-card p-6 duo-yellow text-white slide-in-up animate-wiggle" style="animation-delay: 0.3s;">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="text-sm font-bold opacity-90 uppercase tracking-wide mb-2">Best Score</div>
+                                <div class="text-5xl font-black mb-1">{{ highest_probability|floatformat:0 }}%</div>
+                                <div class="text-sm font-semibold opacity-90">Personal Best!</div>
+                            </div>
+                            <div class="text-6xl opacity-20">
+                                <i class="fa-solid fa-star"></i>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-3">
+                <!-- Main Action Button -->
+                <div class="text-center mb-6 slide-in-up" style="animation-delay: 0.4s;">
+                    <a href="{% url 'prediction:student_predict' %}" class="duo-button duo-green inline-flex items-center gap-3 text-xl animate-pulse-slow">
+                        <i class="fa-solid fa-wand-magic-sparkles text-2xl"></i>
+                        <span>START NEW PREDICTION</span>
+                    </a>
+                </div>
+
+                <!-- Two Column Layout -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     
-                    <div class="lg-col-span-2">
-                        <div class="card" style="margin-bottom: 1.5rem;">
-                            <div class="card-header">
-                                <h2>
-                                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <!-- Recent Predictions -->
+                    <div class="lg:col-span-2">
+                        <div class="duo-card p-6 slide-in-up" style="animation-delay: 0.5s;">
+                            <div class="flex items-center justify-between mb-6">
+                                <h2 class="text-2xl font-black text-gray-800 flex items-center gap-2">
+                                    <i class="fa-solid fa-clock-rotate-left text-purple-500"></i>
                                     Recent Predictions
                                 </h2>
-                                <a href="{% url 'prediction:history' %}">View All</a>
+                                <a href="{% url 'prediction:history' %}" class="text-blue-500 font-bold hover:text-blue-700 text-sm uppercase tracking-wide">
+                                    View All <i class="fa-solid fa-arrow-right"></i>
+                                </a>
                             </div>
 
                             {% if recent_predictions %}
-                                <div class="prediction-list">
+                                <div class="space-y-3">
                                     {% for pred in recent_predictions %}
-                                        <div class="prediction-item {% if pred.probability >= 70 %}high{% elif pred.probability >= 50 %}medium{% else %}low{% endif %}">
-                                            <div class="prediction-header">
-                                                <div>
-                                                    <p class="prediction-date">
-                                                        {{ pred.created_at|date:"M d, Y - h:i A" }}
-                                                    </p>
-                                                    <p class="prediction-details">GPA: {{ pred.gpa|floatformat:2 }} | Study: {{ pred.study_hours }}hrs</p>
+                                        <div class="duo-card p-4 {% if pred.probability >= 70 %}duo-green{% elif pred.probability >= 50 %}duo-blue{% else %}duo-red{% endif %} text-white">
+                                            <div class="flex items-center justify-between mb-2">
+                                                <div class="text-4xl font-black">{{ pred.probability|floatformat:0 }}%</div>
+                                                <div class="text-right">
+                                                    <div class="text-xs font-bold opacity-90 uppercase">{{ pred.created_at|date:"M d, Y" }}</div>
+                                                    <div class="text-xs opacity-75">{{ pred.created_at|date:"h:i A" }}</div>
                                                 </div>
-                                                <span class="badge {% if pred.probability >= 70 %}high{% elif pred.probability >= 50 %}medium{% else %}low{% endif %}">
-                                                    {{ pred.probability|floatformat:0 }}% Pass Rate
-                                                </span>
                                             </div>
-                                            <div class="prediction-footer">
-                                                <span>
-                                                    <i class="fa-solid fa-{{ pred.review_center|yesno:'check,xmark' }}"></i>
-                                                    Review Center
-                                                </span>
-                                                <a href="{% url 'prediction:detail' pred.id %}">
-                                                    View Details <i class="fa-solid fa-arrow-right"></i>
+                                            <div class="flex items-center justify-between text-sm">
+                                                <div class="flex gap-3 opacity-90">
+                                                    <span><i class="fa-solid fa-graduation-cap"></i> GPA {{ pred.gpa|floatformat:2 }}</span>
+                                                    <span><i class="fa-solid fa-clock"></i> {{ pred.study_hours }}hrs</span>
+                                                    <span><i class="fa-solid fa-{% if pred.review_center %}check{% else %}xmark{% endif %}"></i> Review</span>
+                                                </div>
+                                                <a href="{% url 'prediction:detail' pred.id %}" class="font-bold hover:underline">
+                                                    Details <i class="fa-solid fa-arrow-right"></i>
                                                 </a>
                                             </div>
                                         </div>
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                <div class="empty-state">
-                                    <i class="fa-solid fa-chart-line"></i>
-                                    <p>No predictions yet</p>
-                                    <a href="{% url 'prediction:predict' %}" class="btn btn-primary">
+                                <div class="text-center py-12">
+                                    <div class="text-6xl mb-4 text-gray-300">
+                                        <i class="fa-solid fa-chart-line"></i>
+                                    </div>
+                                    <p class="text-xl font-bold text-gray-600 mb-4">No predictions yet!</p>
+                                    <p class="text-gray-500 mb-6">Get started with your first prediction to see your results here.</p>
+                                    <a href="{% url 'prediction:student_predict' %}" class="duo-button duo-blue inline-flex items-center gap-2">
                                         <i class="fa-solid fa-plus"></i>
-                                        Create Your First Prediction
+                                        <span>CREATE FIRST PREDICTION</span>
                                     </a>
                                 </div>
                             {% endif %}
                         </div>
 
-                        <div class="card">
-                            <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center;">
-                                <i class="fa-solid fa-chart-area" style="color: #3b82f6; margin-right: 0.5rem;"></i>
+                        <!-- Progress Chart -->
+                        <div class="duo-card p-6 mt-6 slide-in-up" style="animation-delay: 0.9s;">
+                            <h2 class="text-2xl font-black text-gray-800 mb-6 flex items-center gap-2">
+                                <i class="fa-solid fa-chart-line text-blue-500"></i>
                                 Progress Chart
                             </h2>
                             <canvas id="progressChart" height="100"></canvas>
                         </div>
                     </div>
 
+                    <!-- Sidebar -->
                     <div>
-                        
-                        <div class="card" style="margin-bottom: 1.5rem;">
-                            <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center;">
-                                <i class="fa-solid fa-lightbulb" style="color: #eab308; margin-right: 0.5rem;"></i>
+                        <!-- Quick Actions -->
+                        <div class="duo-card p-6 mb-4 slide-in-up" style="animation-delay: 0.6s;">
+                            <h3 class="text-xl font-black text-gray-800 mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-bolt text-yellow-500"></i>
                                 Quick Actions
                             </h3>
-                            <div class="quick-actions">
-                                <a href="{% url 'prediction:predict' %}" class="btn btn-primary">
-                                    <i class="fa-solid fa-wand-magic-sparkles"></i>
-                                    New Prediction
-                                </a>
-                                <a href="{% url 'prediction:history' %}" class="btn btn-secondary">
+                            <div class="space-y-3">
+                                <a href="{% url 'prediction:history' %}" class="duo-button duo-blue w-full flex items-center justify-center gap-2 text-sm">
                                     <i class="fa-solid fa-history"></i>
-                                    View History
+                                    <span>VIEW HISTORY</span>
                                 </a>
-                                <a href="{% url 'dashboard:student_profile' %}" class="btn btn-blue">
+                                <a href="{% url 'dashboard:student_profile' %}" class="duo-button duo-purple w-full flex items-center justify-center gap-2 text-sm">
                                     <i class="fa-solid fa-user-pen"></i>
-                                    Update Profile
+                                    <span>UPDATE PROFILE</span>
                                 </a>
                             </div>
                         </div>
 
-                        <div class="card" style="margin-bottom: 1.5rem;">
-                            <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center;">
-                                <i class="fa-solid fa-graduation-cap" style="color: #3b82f6; margin-right: 0.5rem;"></i>
-                                Study Tips
+                        <!-- Study Tips -->
+                        <div class="duo-card p-6 mb-4 slide-in-up" style="animation-delay: 0.7s;">
+                            <h3 class="text-xl font-black text-gray-800 mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-lightbulb text-yellow-500"></i>
+                                Study Tips  
                             </h3>
-                            <div class="tips-list">
-                                <div class="tip-item">
-                                    <i class="fa-solid fa-circle-check"></i>
-                                    <p>Study 3-4 hours daily for optimal retention</p>
+                            <div class="space-y-3">
+                                <div class="flex items-start gap-3">
+                                    <div class="text-green-500 text-xl flex-shrink-0">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                    </div>
+                                    <p class="text-sm font-semibold text-gray-700">Study 3-4 hours daily for optimal retention</p>
                                 </div>
-                                <div class="tip-item">
-                                    <i class="fa-solid fa-circle-check"></i>
-                                    <p>Get 7-8 hours of sleep for better focus</p>
+                                <div class="flex items-start gap-3">
+                                    <div class="text-green-500 text-xl flex-shrink-0">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                    </div>
+                                    <p class="text-sm font-semibold text-gray-700">Get 7-8 hours of sleep for better focus</p>
                                 </div>
-                                <div class="tip-item">
-                                    <i class="fa-solid fa-circle-check"></i>
-                                    <p>Take practice exams regularly</p>
+                                <div class="flex items-start gap-3">
+                                    <div class="text-green-500 text-xl flex-shrink-0">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                    </div>
+                                    <p class="text-sm font-semibold text-gray-700">Take practice exams regularly</p>
                                 </div>
-                                <div class="tip-item">
-                                    <i class="fa-solid fa-circle-check"></i>
-                                    <p>Join study groups for better understanding</p>
+                                <div class="flex items-start gap-3">
+                                    <div class="text-green-500 text-xl flex-shrink-0">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                    </div>
+                                    <p class="text-sm font-semibold text-gray-700">Join study groups for better understanding</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="stats-box">
-                            <h3>
-                                <i class="fa-solid fa-star"></i>
+                        <!-- Your Stats -->
+                        <div class="duo-card p-6 slide-in-up" style="animation-delay: 0.8s;">
+                            <h3 class="text-xl font-black text-gray-800 mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-star text-yellow-500"></i>
                                 Your Stats
                             </h3>
-                            <div class="stats-list">
-                                <div class="stats-item">
-                                    <span>Member Since</span>
-                                    <span>{{ request.user.date_joined|date:"M Y" }}</span>
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between py-2 border-b-2 border-gray-100">
+                                    <span class="text-sm font-bold text-gray-600">Member Since</span>
+                                    <span class="text-sm font-black text-gray-800">{{ request.user.date_joined|date:"M Y" }}</span>
                                 </div>
-                                <div class="stats-item">
-                                    <span>Predictions Made</span>
-                                    <span>{{ total_predictions }}</span>
+                                <div class="flex items-center justify-between py-2 border-b-2 border-gray-100">
+                                    <span class="text-sm font-bold text-gray-600">Predictions Made</span>
+                                    <span class="text-sm font-black text-gray-800">{{ total_predictions }}</span>
                                 </div>
-                                <div class="stats-item">
-                                    <span>Highest Score</span>
-                                    <span>{{ highest_probability|floatformat:0 }}%</span>
+                                <div class="flex items-center justify-between py-2">
+                                    <span class="text-sm font-bold text-gray-600">Highest Score</span>
+                                    <span class="text-sm font-black text-gray-800">{{ highest_probability|floatformat:0 }}%</span>
                                 </div>
                             </div>
                         </div>
@@ -230,41 +384,88 @@
     </div>
 
     <script>
-        const ctx = document.getElementById('progressChart').getContext('2d');
-        const progressChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: {{ chart_labels|safe }},
-                datasets: [{
-                    label: 'Pass Probability',
-                    data: {{ chart_data|safe }},
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
+        // Progress Chart
+        const ctx = document.getElementById('progressChart');
+        if (ctx) {
+            const progressChart = new Chart(ctx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: {{ chart_labels|safe }},
+                    datasets: [{
+                        label: 'Pass Probability',
+                        data: {{ chart_data|safe }},
+                        borderColor: '#1cb0f6',
+                        backgroundColor: 'rgba(28, 176, 246, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        pointBackgroundColor: '#1cb0f6',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointHoverBackgroundColor: '#58cc02',
+                        pointHoverBorderColor: '#fff',
+                        pointHoverBorderWidth: 3
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        ticks: {
-                            callback: function(value) {
-                                return value + '%';
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: '#fff',
+                            titleColor: '#1f2937',
+                            bodyColor: '#1f2937',
+                            borderColor: '#e5e7eb',
+                            borderWidth: 2,
+                            padding: 12,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Pass Rate: ' + context.parsed.y + '%';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: {
+                                color: '#e5e7eb',
+                                lineWidth: 2
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                },
+                                color: '#6b7280',
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                },
+                                color: '#6b7280'
                             }
                         }
                     }
                 }
-            }
-        });
+            });
+        }
     </script>
 
 </body>

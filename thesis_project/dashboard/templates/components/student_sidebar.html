@@ -1,44 +1,58 @@
 {% load static %}
 
 <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">
-        <div class="sidebar-logo-icon">
-            <i class="fa-solid fa-user-graduate"></i>
+    <div class="sidebar-user">
+        <div class="user-avatar">
+            {{ request.user.first_name.0|default:'U' }}{{ request.user.last_name.0|default:'S' }}
         </div>
-        <div class="sidebar-logo-text">
-            <h1>Social Work<br />Predictor</h1>
+        <div class="user-info">
+            <div class="user-name">{{ request.user.first_name }} {{ request.user.last_name }}</div>
+            <div class="user-email">{{ request.user.email }}</div>
         </div>
     </div>
 
     <nav class="sidebar-nav">
-        <a href="{% url 'dashboard:student_dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'student_dashboard' %}active{% endif %}">
-            <i class="fa-solid fa-house-chimney"></i>
-            Dashboard
+        <a href="{% url 'dashboard:student_dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'student_dashboard' %}active{% endif %}" data-color="blue">
+            <div class="nav-item-icon">
+                <i class="fa-solid fa-house"></i>
+            </div>
+            <span class="nav-item-text">Dashboard</span>
         </a>
-        <a href="{% url 'prediction:student_predict' %}" class="nav-item {% if request.resolver_match.url_name == 'predict' %}active{% endif %}">
-            <i class="fa-solid fa-brain"></i>
-            New Prediction
+        <a href="{% url 'prediction:student_predict' %}" class="nav-item {% if request.resolver_match.url_name == 'student_predict' %}active{% endif %}" data-color="green">
+            <div class="nav-item-icon">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+            </div>
+            <span class="nav-item-text">New Prediction</span>
         </a>
-        <a href="{% url 'prediction:history' %}" class="nav-item {% if request.resolver_match.url_name == 'history' %}active{% endif %}">
-            <i class="fa-solid fa-clock-rotate-left"></i>
-            History
+        <a href="{% url 'prediction:history' %}" class="nav-item {% if request.resolver_match.url_name == 'history' %}active{% endif %}" data-color="purple">
+            <div class="nav-item-icon">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+            <span class="nav-item-text">History</span>
         </a>
-        <a href="{% url 'dashboard:student_profile' %}" class="nav-item {% if request.resolver_match.url_name == 'student_profile' %}active{% endif %}">
-            <i class="fa-solid fa-user"></i>
-            Profile
+        <a href="{% url 'dashboard:student_profile' %}" class="nav-item {% if request.resolver_match.url_name == 'student_profile' %}active{% endif %}" data-color="orange">
+            <div class="nav-item-icon">
+                <i class="fa-solid fa-user"></i>
+            </div>
+            <span class="nav-item-text">Profile</span>
         </a>
     </nav>
 
     <div class="sidebar-logout">
         <a href="{% url 'accounts:logout' %}" class="nav-item logout">
-            <i class="fa-solid fa-right-from-bracket"></i>
-            Logout
+            <div class="nav-item-icon">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </div>
+            <span class="nav-item-text">Logout</span>
         </a>
     </div>
 
     <div class="sidebar-footer">
-        <div>© 2024 Thesis Project</div>
-        <div>Version 1.0.0</div>
+        <div class="footer-badge">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Exam Predictor</span>
+        </div>
+        <div class="footer-version">v1.0.0</div>
     </div>
 </aside>
 
@@ -53,14 +67,26 @@
     const sidebar = document.getElementById('sidebar');
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const toggleIcon = sidebarToggle.querySelector('i');
 
     sidebarToggle.addEventListener('click', function() {
         sidebar.classList.toggle('open');
         sidebarOverlay.classList.toggle('active');
+        
+        // Toggle icon between bars and X
+        if (sidebar.classList.contains('open')) {
+            toggleIcon.classList.remove('fa-bars');
+            toggleIcon.classList.add('fa-xmark');
+        } else {
+            toggleIcon.classList.remove('fa-xmark');
+            toggleIcon.classList.add('fa-bars');
+        }
     });
 
     sidebarOverlay.addEventListener('click', function() {
         sidebar.classList.remove('open');
         sidebarOverlay.classList.remove('active');
+        toggleIcon.classList.remove('fa-xmark');
+        toggleIcon.classList.add('fa-bars');
     });
 </script>
