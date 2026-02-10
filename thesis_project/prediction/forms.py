@@ -3,7 +3,7 @@ from django import forms
 class PredictionForm(forms.Form):
     # Personal Information
     age = forms.IntegerField(
-        min_value=18,
+        min_value=21,
         max_value=100,
         widget=forms.NumberInput(attrs={
             'class': 'form-control',
@@ -30,7 +30,7 @@ class PredictionForm(forms.Form):
             'placeholder': 'e.g., 1.5',
             'step': '0.01'
         }),
-        help_text='Your General Weighted Average (1.0 - 5.0, lower is better)'
+        help_text='Your General Weighted Average'
     )
     
     internship_grade = forms.FloatField(

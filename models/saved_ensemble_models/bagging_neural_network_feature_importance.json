@@ -1,0 +1,85 @@
+{
+  "method": "permutation",
+  "importance": [
+    {
+      "Feature": "SleepHours",
+      "Importance": 0.07082050399059285,
+      "Std": 0.043067961998107473
+    },
+    {
+      "Feature": "GPA",
+      "Importance": 0.06995822425996734,
+      "Std": 0.03606385369333675
+    },
+    {
+      "Feature": "ReviewCenter",
+      "Importance": 0.06762803365491224,
+      "Std": 0.01391866299366346
+    },
+    {
+      "Feature": "Confidence",
+      "Importance": 0.0654873402639448,
+      "Std": 0.02698860655254996
+    },
+    {
+      "Feature": "TestAnxiety",
+      "Importance": 0.06458303767705262,
+      "Std": 0.03482204411505427
+    },
+    {
+      "Feature": "StudyHours",
+      "Importance": 0.05713245130919402,
+      "Std": 0.0290276992366757
+    },
+    {
+      "Feature": "EnglishProficiency",
+      "Importance": 0.056305768338618264,
+      "Std": 0.04075080323844957
+    },
+    {
+      "Feature": "Age",
+      "Importance": 0.0335444774500856,
+      "Std": 0.04380620965944548
+    },
+    {
+      "Feature": "MockExamScore",
+      "Importance": 0.014435496767310308,
+      "Std": 0.0405813554160149
+    },
+    {
+      "Feature": "InternshipGrade",
+      "Importance": 0.00724733378222433,
+      "Std": 0.039600324844258704
+    },
+    {
+      "Feature": "IncomeLevel",
+      "Importance": 0.003169418887439379,
+      "Std": 0.029429334407831822
+    },
+    {
+      "Feature": "SocialSupport",
+      "Importance": -0.0017942531310603193,
+      "Std": 0.0291626868382976
+    },
+    {
+      "Feature": "Gender",
+      "Importance": -0.008433238969215084,
+      "Std": 0.02311205611199319
+    },
+    {
+      "Feature": "Scholarship",
+      "Importance": -0.015051225240468268,
+      "Std": 0.04134332684560603
+    },
+    {
+      "Feature": "EmploymentStatus",
+      "Importance": -0.028871164294905306,
+      "Std": 0.0234950791464759
+    },
+    {
+      "Feature": "MotivationScore",
+      "Importance": -0.03817653692741478,
+      "Std": 0.03382451876207866
+    }
+  ]
+}

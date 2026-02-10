@@ -1,0 +1,85 @@
+{
+  "method": "permutation",
+  "importance": [
+    {
+      "Feature": "Age",
+      "Importance": 0.07239536168094293,
+      "Std": 0.008943682562799322
+    },
+    {
+      "Feature": "StudyHours",
+      "Importance": 0.06065535804185561,
+      "Std": 0.01826648445931561
+    },
+    {
+      "Feature": "GPA",
+      "Importance": 0.04101436589895531,
+      "Std": 0.017137293321915523
+    },
+    {
+      "Feature": "TestAnxiety",
+      "Importance": 0.037260352182934685,
+      "Std": 0.012318356262707815
+    },
+    {
+      "Feature": "SleepHours",
+      "Importance": 0.028286752189718222,
+      "Std": 0.014776354924100085
+    },
+    {
+      "Feature": "ReviewCenter",
+      "Importance": 0.024137400115680597,
+      "Std": 0.007457129063432389
+    },
+    {
+      "Feature": "EnglishProficiency",
+      "Importance": 0.0229299969959179,
+      "Std": 0.008079566117840657
+    },
+    {
+      "Feature": "IncomeLevel",
+      "Importance": 0.005142375628239826,
+      "Std": 0.007854087215079065
+    },
+    {
+      "Feature": "SocialSupport",
+      "Importance": 0.0034565582503139902,
+      "Std": 0.002127467942765683
+    },
+    {
+      "Feature": "MotivationScore",
+      "Importance": 0.0016918166862692318,
+      "Std": 0.0018088453037619528
+    },
+    {
+      "Feature": "MockExamScore",
+      "Importance": -0.00012148333156869473,
+      "Std": 0.0012047250908035236
+    },
+    {
+      "Feature": "Confidence",
+      "Importance": -0.000225067154548797,
+      "Std": 0.002010933783302867
+    },
+    {
+      "Feature": "InternshipGrade",
+      "Importance": -0.0006108995021521846,
+      "Std": 0.0007897108270716025
+    },
+    {
+      "Feature": "Gender",
+      "Importance": -0.0015463795580264116,
+      "Std": 0.0005283278113905202
+    },
+    {
+      "Feature": "Scholarship",
+      "Importance": -0.003902651985311467,
+      "Std": 0.005666537128056008
+    },
+    {
+      "Feature": "EmploymentStatus",
+      "Importance": -0.004138585696087304,
+      "Std": 0.010054497811815931
+    }
+  ]
+}

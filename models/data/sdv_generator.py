@@ -137,7 +137,7 @@ class SDVDataGenerator:
                 print(synthetic_data[col].value_counts(normalize=True).sort_index())
 
 def generate_sdv_datasets():
-    data_path = 'social_work_exam_dataset.csv'
+    data_path = 'social_work_exam_dataset_sdv.csv'
     generator = SDVDataGenerator(data_path, random_state=42)
     
     generator.load_data()
@@ -146,7 +146,7 @@ def generate_sdv_datasets():
     synthetic_copula = generator.generate_with_gaussian_copula(n_samples=1000)
     synthetic_copula = generator.post_process(synthetic_copula)
     
-    generator.save_data(synthetic_copula, 'sdv_dataset.csv')
+    generator.save_data(synthetic_copula, 'sdv_dataset_2.csv')
     generator.compare_distributions(synthetic_copula)
     
     print("\n" + "="*60)

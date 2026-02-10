@@ -1,8 +1,8 @@
 # Preprocessed Data for Regression Models
 
 ## Data Split
-- Training samples: 832
-- Test samples: 209
+- Training samples: 888
+- Test samples: 222
 - Test size: 20%
 - Random state: 42
 
@@ -43,4 +43,4 @@ All data has been validated for:
 - Consistent shapes
 - Proper scaling (mean ~0, std ~1 for training data)
 
-Generated: 2026-02-07 00:35:01.357738
+Generated: 2026-02-10 12:33:35.250221

@@ -513,19 +513,42 @@ def export_csv(request):
         response['Content-Disposition'] = f'attachment; filename="predictions_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv"'
         
         writer = csv.writer(response)
+        
+        # Write CSV header with all columns including the three missing ones
         writer.writerow([
-            'Student ID', 'Student Name', 'Email', 'Prediction Result', 
-            'Probability (%)', 'Age', 'Gender', 'GPA', 'Internship Grade',
-            'Study Hours', 'Sleep Hours', 'Review Center', 'Confidence', 
-            'Test Anxiety', 'Mock Exam Score', 'Scholarship', 'Income Level',
-            'Employment Status', 'Date'
+            'Student ID', 
+            'Student Name', 
+            'Email', 
+            'Prediction Result', 
+            'Probability (%)', 
+            'Age', 
+            'Gender', 
+            'GPA', 
+            'Internship Grade',
+            'Study Hours', 
+            'Sleep Hours', 
+            'Review Center', 
+            'Confidence', 
+            'Test Anxiety', 
+            'Mock Exam Score', 
+            'Scholarship', 
+            'Income Level',
+            'Employment Status',
+            'Social Support',
+            'Motivation Score',
+            'English Proficiency',
+            'Date'
         ])
         
+        # Fetch all predictions from database
         predictions = Prediction.objects.select_related('user').order_by('-created_at')
         
+        print(f"[DEBUG] Exporting {predictions.count()} predictions to CSV")
+        
+        # Write each prediction row with all data including the three fields
         for pred in predictions:
             writer.writerow([
-                pred.user.student_id or 'N/A',
+                getattr(pred.user, 'student_id', 'N/A'),
                 pred.user.get_full_name(),
                 pred.user.email,
                 pred.prediction_result,
@@ -543,17 +566,24 @@ def export_csv(request):
                 'Yes' if pred.scholarship else 'No',
                 pred.income_level,
                 pred.employment_status,
+                pred.social_support,
+                pred.motivation_score,
+                pred.english_proficiency,
                 pred.created_at.strftime('%Y-%m-%d %H:%M:%S')
             ])
         
+        print(f"[DEBUG] CSV export completed successfully")
         return response
         
     except Exception as e:
+        print(f"[ERROR] CSV export failed: {e}")
+        import traceback
+        traceback.print_exc()
         return JsonResponse({
             'error': str(e),
             'message': 'Failed to export CSV'
         }, status=500)
-
+    
 @require_http_methods(["GET"])
 @login_required
 def export_pdf(request):
@@ -1139,7 +1169,7 @@ def export_reports_csv(request):
         date_from = request.GET.get('dateFrom', '')
         date_to = request.GET.get('dateTo', '')
         
-        # Get predictions
+        # Get predictions with date filters
         predictions = Prediction.objects.all()
         if date_from:
             predictions = predictions.filter(created_at__gte=datetime.strptime(date_from, '%Y-%m-%d'))
@@ -1152,18 +1182,36 @@ def export_reports_csv(request):
         writer = csv.writer(response)
         
         if report_type == 'predictions':
+            # Write header with all columns including the three missing ones
             writer.writerow([
-                'No.', 'Student Name', 'Student ID', 'Email', 'Likelihood (%)',
-                'Risk Level', 'Age', 'Gender', 'GPA', 'Study Hours',
-                'Sleep Hours', 'Review Center', 'Prediction Date'
+                'No.', 
+                'Student Name', 
+                'Student ID', 
+                'Email', 
+                'Likelihood (%)',
+                'Risk Level', 
+                'Age', 
+                'Gender', 
+                'GPA', 
+                'Study Hours',
+                'Sleep Hours', 
+                'Review Center', 
+                'Confidence', 
+                'Test Anxiety',
+                'Mock Exam Score', 
+                'Social Support', 
+                'Motivation Score',
+                'English Proficiency', 
+                'Prediction Date'
             ])
             
+            # Write prediction data with all fields
             for idx, pred in enumerate(predictions.select_related('user').order_by('-created_at'), 1):
                 risk = 'High' if pred.probability < 50 else 'Medium' if pred.probability < 70 else 'Low'
                 writer.writerow([
                     idx,
                     pred.user.get_full_name(),
-                    pred.user.student_id or 'N/A',
+                    getattr(pred.user, 'student_id', 'N/A'),
                     pred.user.email,
                     f"{pred.probability:.1f}",
                     risk,
@@ -1173,6 +1221,12 @@ def export_reports_csv(request):
                     pred.study_hours,
                     pred.sleep_hours,
                     'Yes' if pred.review_center else 'No',
+                    pred.confidence,
+                    pred.test_anxiety,
+                    f"{pred.mock_exam_score:.1f}" if pred.mock_exam_score else 'N/A',
+                    pred.social_support,
+                    pred.motivation_score,
+                    pred.english_proficiency,
                     pred.created_at.strftime('%Y-%m-%d %H:%M:%S')
                 ])
         
@@ -1190,22 +1244,25 @@ def export_reports_csv(request):
             writer.writerow(['Total', total, '100.0'])
         
         else:
-            # Overview or performance
+            # Overview or performance report
             writer.writerow(['Metric', 'Value'])
             writer.writerow(['Total Predictions', predictions.count()])
             writer.writerow(['Average Likelihood', f"{predictions.aggregate(Avg('probability'))['probability__avg'] or 0:.1f}"])
             writer.writerow(['At Risk Students', predictions.filter(probability__lt=50).values('user').distinct().count()])
             writer.writerow(['Active Users', predictions.values('user').distinct().count()])
         
+        print(f"[DEBUG] CSV export completed for report type: {report_type}")
         return response
         
     except Exception as e:
         print(f"[ERROR] CSV export error: {e}")
+        import traceback
+        traceback.print_exc()
         return JsonResponse({
             'error': str(e),
             'message': 'Failed to export CSV'
         }, status=500)
-    
+
 @login_required
 def student_profile(request):
     return render(request, 'pages/student_profile.html')

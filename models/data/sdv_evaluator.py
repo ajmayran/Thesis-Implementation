@@ -127,8 +127,8 @@ class SDVEvaluator:
         return violations
 
 def evaluate_sdv_data():
-    original_path = 'social_work_exam_dataset.csv'
-    synthetic_path = 'sdv_dataset.csv'
+    original_path = 'social_work_exam_dataset_sdv.csv'
+    synthetic_path = 'sdv_dataset_2.csv'
     
     evaluator = SDVEvaluator(original_path, synthetic_path)
     
