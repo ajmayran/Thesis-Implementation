@@ -13,7 +13,7 @@ class CorrelationAnalyzer:
     def __init__(self):
         self.categorical_columns = ['Gender', 'IncomeLevel', 'EmploymentStatus']
         self.numerical_columns = ['Age', 'StudyHours', 'SleepHours', 'Confidence', 
-                                'MockExamScore', 'GPA', 'InternshipGrade', 'TestAnxiety']
+                                'MockExamScore', 'GPA', 'InternshipGrade', 'TestAnxiety', 'SocialSupport', 'MotivationScore', 'EnglishProficiency']
         self.binary_columns = ['ReviewCenter', 'Scholarship']
         self.target_column = 'Passed'
         self.correlation_matrix = None
@@ -542,7 +542,7 @@ def main():
     analyzer = CorrelationAnalyzer()
     
     csv_files_to_try = [
-        'social_work_exam_dataset.csv',
+        'data/social_work_exam_dataset.csv',
         '../social_work_exam_dataset.csv',
         os.path.join('..', 'social_work_exam_dataset.csv')
     ]

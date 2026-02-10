@@ -18,14 +18,15 @@ sys.path.append(models_path)
 from .forms import PredictionForm
 from .utils import prepare_input_data, generate_recommendations, get_risk_level
 
-# Configuration
-SELECTED_MODEL_NAME = 'stacking_ridge'
-MODEL_CATEGORY = 'ensemble'
+# Import shared configuration
+from .config import (
+    SELECTED_MODEL_NAME,
+    MODEL_CATEGORY,
+    BASE_MODELS_DIR,
+    ENSEMBLE_MODELS_DIR,
+    PREPROCESSOR_PATH
+)
 
-# Model paths
-BASE_MODELS_DIR = os.path.join(models_path, 'saved_base_models')
-ENSEMBLE_MODELS_DIR = os.path.join(models_path, 'saved_ensemble_models')
-PREPROCESSOR_PATH = os.path.join(models_path, 'saved_ensemble_models', 'preprocessor.pkl')
 
 def load_selected_model(model_name, model_category='base'):
     """
@@ -246,7 +247,7 @@ def result_view(request, prediction_id):
                 'prediction': prediction
             }
         else:
-            # Reconstruct data from database with new fields
+            # Reconstruct data from database
             input_data = {
                 'Age': prediction.age,
                 'Gender': prediction.gender,
@@ -304,11 +305,12 @@ def result_view(request, prediction_id):
         messages.error(request, 'Prediction not found.')
         return redirect('prediction:history')
 
+
 @login_required
 def detail_view(request, prediction_id):
     prediction = get_object_or_404(Prediction, id=prediction_id, user=request.user)
     
-    # Reconstruct input data with new fields
+    # Reconstruct input data
     input_data = {
         'Age': prediction.age,
         'Gender': prediction.gender,
@@ -361,6 +363,8 @@ def detail_view(request, prediction_id):
         template_name = 'pages/admin_result.html'
     
     return render(request, template_name, context)
+
+
 @login_required
 def history_view(request):
     predictions = Prediction.objects.filter(user=request.user).order_by('-created_at')
@@ -458,7 +462,7 @@ def model_status(request):
 
 def make_single_prediction(model, preprocessor, input_data):
     """
-    Make a single prediction using regression model with new features
+    Make a single prediction using regression model
     """
     try:
         df_input = pd.DataFrame([input_data])

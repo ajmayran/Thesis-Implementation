@@ -14,53 +14,6 @@ parent_path = os.path.abspath(os.path.join(
 if parent_path not in sys.path:
     sys.path.insert(0, parent_path)
 
-def load_selected_model(model_name='random_forest', model_type='classification_base'):
-    """
-    Load the selected model and its preprocessing objects
-    
-    Args:
-        model_name: Name of the model to load
-        model_type: Type of model (classification_base or classification_ensemble)
-    
-    Returns:
-        tuple: (model, preprocessing_objects, error_message)
-    """
-    try:
-        models_path = os.path.join(parent_path, 'models')
-        
-        if model_type == 'classification_base':
-            model_dir = os.path.join(models_path, 'saved_models')
-            model_file = f'{model_name}_model.pkl'
-            preprocessor_dir = model_dir
-            preprocessor_file = 'preprocessing_objects.pkl'
-            
-        elif model_type == 'classification_ensemble':
-            model_dir = os.path.join(models_path, 'saved_classification_ensemble_models')
-            model_file = f'{model_name}_ensemble.pkl'
-            preprocessor_dir = os.path.join(models_path, 'classification_processed_data')
-            preprocessor_file = 'preprocessing_objects.pkl'
-        else:
-            return None, None, f"Invalid model_type: {model_type}. Use 'classification_base' or 'classification_ensemble'"
-        
-        model_path = os.path.join(model_dir, model_file)
-        preprocessor_path = os.path.join(preprocessor_dir, preprocessor_file)
-        
-        if not os.path.exists(model_path):
-            return None, None, f"Model file not found: {model_path}"
-        
-        if not os.path.exists(preprocessor_path):
-            return None, None, f"Preprocessor file not found: {preprocessor_path}"
-        
-        model = joblib.load(model_path)
-        preprocessing_objects = joblib.load(preprocessor_path)
-        
-        print(f"[LOAD] Model: {model_file} from {model_dir}")
-        print(f"[LOAD] Preprocessor from: {preprocessor_path}")
-        
-        return model, preprocessing_objects, None
-        
-    except Exception as e:
-        return None, None, f"Error loading model: {str(e)}"
 
 def prepare_input_data(form_data):
     """

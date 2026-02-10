@@ -1,0 +1,17 @@
+Feature,SHAP_Importance
+StudyHours,0.45707331907530485
+ReviewCenter,0.2591367151526122
+TestAnxiety,0.1610856500776971
+EnglishProficiency,0.14913923840353466
+GPA,0.07644732004752895
+SocialSupport,0.05677135546813249
+EmploymentStatus,0.04129312045422132
+Gender,0.0
+Confidence,0.0
+SleepHours,0.0
+IncomeLevel,0.0
+Age,0.0
+InternshipGrade,0.0
+Scholarship,0.0
+MockExamScore,0.0
+MotivationScore,0.0
