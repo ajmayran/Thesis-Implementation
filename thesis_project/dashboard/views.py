@@ -8,11 +8,6 @@ from django.db.models.functions import TruncMonth, TruncWeek, TruncYear, Extract
 from prediction.models import Prediction, RegressionModelPerformance
 from .models import DashboardStatistics, MonthlyTrend
 from django.utils import timezone
-import json
-import csv
-import os
-import pandas as pd
-import traceback
 from datetime import datetime, timedelta
 from collections import Counter
 from django.contrib import messages
@@ -21,12 +16,23 @@ from django.contrib.auth.forms import PasswordChangeForm
 from prediction.models import Prediction
 from django.conf import settings
 
+# Import shared config so dashboard always uses the same active model
+from prediction.config import SELECTED_MODEL_NAME, MODEL_CATEGORY
+
+import json
+import os
+import csv
+import traceback
+import pandas as pd
+
+
 @login_required
 def dashboard_home(request):
     if request.user.role == 'student':
         return redirect('dashboard:student_dashboard')
     
     return render(request, 'pages/dashboard.html')
+
 
 @login_required
 def student_dashboard(request):
@@ -59,22 +65,26 @@ def student_dashboard(request):
     
     return render(request, 'pages/student_dashboard.html', context)
 
+
 @login_required
 def student_profile(request):
     return render(request, 'pages/student_profile.html')
 
+
 def load_feature_importance_from_csv():
-    """Load feature importance from the SHAP analysis CSV file"""
+    """Load feature importance from the SHAP analysis CSV file for the active model"""
     
+    # Build CSV path based on active model name from config
     csv_path = os.path.join(
         settings.BASE_DIR.parent,
         'models',
         'saved_ensemble_models',
         'shap_analysis',
-        'stacking_neural_ridge_neural_final_shap_importance.csv'
+        f'{SELECTED_MODEL_NAME}_shap_importance.csv'
     )
     
     print(f"[DEBUG] Looking for feature importance CSV at: {csv_path}")
+    print(f"[DEBUG] Active model from config: {SELECTED_MODEL_NAME}")
     
     try:
         if not os.path.exists(csv_path):
@@ -86,20 +96,21 @@ def load_feature_importance_from_csv():
         # Create dictionary mapping feature to importance
         feature_importance = dict(zip(df['Feature'], df['SHAP_Importance']))
         
-        # Sort by importance descending for better visualization
+        # Sort by importance descending
         feature_importance = dict(sorted(
             feature_importance.items(),
             key=lambda x: x[1],
             reverse=True
         ))
         
-        print(f"[DEBUG] Successfully loaded {len(feature_importance)} features from CSV")
+        print(f"[DEBUG] Successfully loaded {len(feature_importance)} features from CSV for model: {SELECTED_MODEL_NAME}")
         return feature_importance
         
     except Exception as e:
         print(f"[ERROR] Error loading feature importance from CSV: {e}")
         traceback.print_exc()
         return get_default_feature_importance()
+
 
 def get_default_feature_importance():
     """Return default feature importance values as fallback"""
@@ -122,10 +133,12 @@ def get_default_feature_importance():
         'InternshipGrade': 0.0
     }
 
+
 def calculate_dashboard_statistics():
-    """Calculate all dashboard statistics"""
+    """Calculate all dashboard statistics using the active model from config"""
     
-    print("[DEBUG] Starting calculate_dashboard_statistics")
+    print(f"[DEBUG] Starting calculate_dashboard_statistics")
+    print(f"[DEBUG] Active model: {SELECTED_MODEL_NAME} ({MODEL_CATEGORY})")
     
     all_predictions = Prediction.objects.all()
     total_predictions = all_predictions.count()
@@ -144,14 +157,21 @@ def calculate_dashboard_statistics():
     
     print(f"[DEBUG] KPI calculated - Avg prob: {avg_probability}, At risk: {at_risk_students}")
     
-    # Load feature importance from JSON file
+    # Load feature importance from CSV for the active model
     feature_importance = load_feature_importance_from_csv()
     print(f"[DEBUG] Feature importance loaded: {len(feature_importance)} features")
     
-    # Get latest regression model performance
+    # Get model performance for the SELECTED model by name first, then fallback to is_active
     latest_model = RegressionModelPerformance.objects.filter(
-        is_active=True
+        model_name=SELECTED_MODEL_NAME
     ).order_by('-trained_at').first()
+    
+    # Fallback: try matching by is_active if no match by name
+    if not latest_model:
+        print(f"[DEBUG] No model found matching name '{SELECTED_MODEL_NAME}', trying is_active=True")
+        latest_model = RegressionModelPerformance.objects.filter(
+            is_active=True
+        ).order_by('-trained_at').first()
     
     print(f"[DEBUG] Latest model query result: {latest_model}")
     
@@ -170,7 +190,7 @@ def calculate_dashboard_statistics():
         }
         print(f"[DEBUG] Model performance: {model_performance}")
     else:
-        print("[DEBUG] No model found in database")
+        print(f"[DEBUG] No model found in database for '{SELECTED_MODEL_NAME}'")
         model_performance = {
             'rmse': 0,
             'mae': 0,
@@ -178,8 +198,8 @@ def calculate_dashboard_statistics():
             'mse': 0,
             'cv_rmse': None,
             'cv_std': None,
-            'model_name': 'No Model',
-            'model_type': 'N/A',
+            'model_name': SELECTED_MODEL_NAME,
+            'model_type': MODEL_CATEGORY,
             'trained_at': 'Not trained yet'
         }
     
@@ -267,11 +287,17 @@ def calculate_dashboard_statistics():
         },
         'model_performance': model_performance,
         'feature_importance': feature_importance,
-        'user_statistics': user_statistics
+        'user_statistics': user_statistics,
+        # Include active model info so the frontend can display it
+        'active_model_config': {
+            'model_name': SELECTED_MODEL_NAME,
+            'model_category': MODEL_CATEGORY
+        }
     }
     
-    print(f"[DEBUG] Returning statistics with {len(feature_importance)} features")
+    print(f"[DEBUG] Returning statistics with {len(feature_importance)} features for model: {SELECTED_MODEL_NAME}")
     return result
+
 
 def calculate_monthly_trends():
     """Calculate monthly prediction trends"""
@@ -309,6 +335,7 @@ def calculate_monthly_trends():
         'values': values[-12:]
     }
 
+
 def calculate_weekly_trends():
     """Calculate weekly prediction trends for last 8 weeks"""
     now = timezone.now()
@@ -323,7 +350,6 @@ def calculate_weekly_trends():
         avg_prob=Avg('probability')
     ).order_by('week')
     
-    # Generate labels for last 8 weeks
     labels = []
     values = []
     
@@ -331,14 +357,12 @@ def calculate_weekly_trends():
         week_start = now - timedelta(weeks=(7-i))
         labels.append(f'Week {i+1}')
     
-    # Map data to labels
     week_dict = {}
     for data in weekly_data:
         week_num = (now - data['week']).days // 7
         if 0 <= week_num < 8:
             week_dict[7 - week_num] = round(data['avg_prob'], 1)
     
-    # Fill values
     for i in range(8):
         values.append(week_dict.get(i, 0))
     
@@ -346,6 +370,7 @@ def calculate_weekly_trends():
         'labels': labels,
         'values': values
     }
+
 
 def calculate_yearly_trends():
     """Calculate yearly prediction trends for last 5 years"""
@@ -362,11 +387,9 @@ def calculate_yearly_trends():
         avg_prob=Avg('probability')
     ).order_by('year')
     
-    # Generate labels for last 5 years
     labels = [str(current_year - 4 + i) for i in range(5)]
     values = [0] * 5
     
-    # Map data to years
     for data in yearly_data:
         year = data['year'].year
         year_index = year - (current_year - 4)
@@ -377,6 +400,7 @@ def calculate_yearly_trends():
         'labels': labels,
         'values': values
     }
+
 
 @require_http_methods(["GET"])
 @login_required
@@ -405,7 +429,6 @@ def get_trend_data(request):
         
     except Exception as e:
         print(f"[ERROR] get_trend_data error: {e}")
-        import traceback
         traceback.print_exc()
         
         return JsonResponse({
@@ -413,12 +436,14 @@ def get_trend_data(request):
             'message': 'Failed to load trend data'
         }, status=500)
 
+
 @require_http_methods(["GET"])
 @login_required
 def dashboard_stats(request):
-    """API endpoint for dashboard statistics"""
+    """API endpoint for dashboard statistics - uses active model from config"""
     try:
-        print("[DEBUG] dashboard_stats endpoint called")
+        print(f"[DEBUG] dashboard_stats endpoint called")
+        print(f"[DEBUG] Active model config: {SELECTED_MODEL_NAME} ({MODEL_CATEGORY})")
         
         stats = calculate_dashboard_statistics()
         
@@ -445,8 +470,8 @@ def dashboard_stats(request):
                     'mse': 0,
                     'cv_rmse': None,
                     'cv_std': None,
-                    'model_name': 'No Model',
-                    'model_type': 'N/A',
+                    'model_name': SELECTED_MODEL_NAME,
+                    'model_type': MODEL_CATEGORY,
                     'trained_at': 'Not trained yet'
                 },
                 'feature_importance': {},
@@ -467,13 +492,17 @@ def dashboard_stats(request):
                 'trend_data': {
                     'labels': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                     'values': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                },
+                'active_model_config': {
+                    'model_name': SELECTED_MODEL_NAME,
+                    'model_category': MODEL_CATEGORY
                 }
             })
         
         trend_data = calculate_monthly_trends()
         stats['trend_data'] = trend_data
         
-        print(f"[DEBUG] Returning stats with {len(stats['feature_importance'])} features")
+        print(f"[DEBUG] Returning stats with {len(stats['feature_importance'])} features for model: {SELECTED_MODEL_NAME}")
         
         # Save to dashboard statistics
         today = timezone.now().date()
@@ -496,13 +525,13 @@ def dashboard_stats(request):
         
     except Exception as e:
         print(f"[ERROR] dashboard_stats error: {e}")
-        import traceback
         traceback.print_exc()
         
         return JsonResponse({
             'error': str(e),
             'message': 'Failed to load dashboard statistics'
         }, status=500)
+
 
 @require_http_methods(["GET"])
 @login_required
@@ -514,7 +543,6 @@ def export_csv(request):
         
         writer = csv.writer(response)
         
-        # Write CSV header with all columns including the three missing ones
         writer.writerow([
             'Student ID', 
             'Student Name', 
@@ -540,12 +568,10 @@ def export_csv(request):
             'Date'
         ])
         
-        # Fetch all predictions from database
         predictions = Prediction.objects.select_related('user').order_by('-created_at')
         
         print(f"[DEBUG] Exporting {predictions.count()} predictions to CSV")
         
-        # Write each prediction row with all data including the three fields
         for pred in predictions:
             writer.writerow([
                 getattr(pred.user, 'student_id', 'N/A'),
@@ -577,13 +603,13 @@ def export_csv(request):
         
     except Exception as e:
         print(f"[ERROR] CSV export failed: {e}")
-        import traceback
         traceback.print_exc()
         return JsonResponse({
             'error': str(e),
             'message': 'Failed to export CSV'
         }, status=500)
-    
+
+
 @require_http_methods(["GET"])
 @login_required
 def export_pdf(request):
@@ -623,6 +649,7 @@ def export_pdf(request):
         
         elements.append(Paragraph('Social Work Licensure Exam Predictor', title_style))
         elements.append(Paragraph('Dashboard Report', styles['Heading2']))
+        elements.append(Paragraph(f'Active Model: {SELECTED_MODEL_NAME} ({MODEL_CATEGORY})', styles['Normal']))
         elements.append(Paragraph(f'Generated: {datetime.now().strftime("%B %d, %Y %H:%M:%S")}', styles['Normal']))
         elements.append(Spacer(1, 0.3*inch))
         
@@ -666,7 +693,7 @@ def export_pdf(request):
                 ['Model Type', perf['model_type']],
                 ['RMSE', f"{perf['rmse']:.4f}"],
                 ['MAE', f"{perf['mae']:.4f}"],
-                ['R² Score', f"{perf['r2_score']:.4f}"],
+                ['R2 Score', f"{perf['r2_score']:.4f}"],
                 ['MSE', f"{perf['mse']:.4f}"],
             ]
             
@@ -740,33 +767,31 @@ def export_pdf(request):
         }, status=500)
     except Exception as e:
         print(f"[ERROR] PDF generation error: {e}")
-        import traceback
         traceback.print_exc()
         return JsonResponse({
             'error': str(e),
             'message': 'Failed to generate PDF'
         }, status=500)
-    
+
+
 @login_required
 def reports_view(request):
     """Render the reports page"""
     return render(request, 'pages/reports.html')
+
 
 @require_http_methods(["GET"])
 @login_required
 def get_reports_data(request):
     """API endpoint for reports data with filters"""
     try:
-        # Get filter parameters
         date_from = request.GET.get('dateFrom', '')
         date_to = request.GET.get('dateTo', '')
         risk_level = request.GET.get('riskLevel', 'all')
         department = request.GET.get('department', 'all')
         
-        # Base queryset
         predictions = Prediction.objects.all()
         
-        # Apply date filters
         if date_from:
             date_from_obj = datetime.strptime(date_from, '%Y-%m-%d')
             predictions = predictions.filter(created_at__gte=date_from_obj)
@@ -775,7 +800,6 @@ def get_reports_data(request):
             date_to_obj = datetime.strptime(date_to, '%Y-%m-%d')
             predictions = predictions.filter(created_at__lte=date_to_obj)
         
-        # Apply risk level filter
         if risk_level == 'high':
             predictions = predictions.filter(probability__lt=50)
         elif risk_level == 'medium':
@@ -783,7 +807,6 @@ def get_reports_data(request):
         elif risk_level == 'low':
             predictions = predictions.filter(probability__gte=70)
         
-        # Calculate overview data
         total_predictions = predictions.count()
         avg_likelihood = predictions.aggregate(Avg('probability'))['probability__avg'] or 0
         at_risk_students = predictions.filter(probability__lt=50).values('user').distinct().count()
@@ -796,7 +819,6 @@ def get_reports_data(request):
             'active_users': active_users
         }
         
-        # Calculate trend data (last 30 days)
         thirty_days_ago = timezone.now() - timedelta(days=30)
         trend_predictions = predictions.filter(created_at__gte=thirty_days_ago).annotate(
             date=TruncDate('created_at')
@@ -815,7 +837,6 @@ def get_reports_data(request):
             'values': trend_values
         }
         
-        # Risk distribution
         high_risk = predictions.filter(probability__lt=50).count()
         medium_risk = predictions.filter(probability__gte=50, probability__lt=70).count()
         low_risk = predictions.filter(probability__gte=70).count()
@@ -826,10 +847,15 @@ def get_reports_data(request):
             'low': low_risk
         }
         
-        # Performance metrics
+        # Get model performance for the active model from config
         latest_model = RegressionModelPerformance.objects.filter(
-            is_active=True
+            model_name=SELECTED_MODEL_NAME
         ).order_by('-trained_at').first()
+        
+        if not latest_model:
+            latest_model = RegressionModelPerformance.objects.filter(
+                is_active=True
+            ).order_by('-trained_at').first()
         
         if latest_model:
             performance_data = {
@@ -848,17 +874,23 @@ def get_reports_data(request):
                 'mae': 0,
                 'r2_score': 0,
                 'mse': 0,
-                'model_name': 'No Model',
-                'model_type': 'N/A',
+                'model_name': SELECTED_MODEL_NAME,
+                'model_type': MODEL_CATEGORY,
                 'trained_at': 'Not trained yet',
                 'total_predictions': 0
             }
         
-        # Feature importance
         feature_importance = load_feature_importance_from_csv()
         
-        # Accuracy trend (last 10 model trainings)
-        model_history = RegressionModelPerformance.objects.order_by('-trained_at')[:10]
+        # Get accuracy trend for the active model
+        model_history = RegressionModelPerformance.objects.filter(
+            model_name=SELECTED_MODEL_NAME
+        ).order_by('-trained_at')[:10]
+        
+        # Fallback to all models if no history for selected model
+        if not model_history.exists():
+            model_history = RegressionModelPerformance.objects.order_by('-trained_at')[:10]
+        
         accuracy_labels = []
         accuracy_values = []
         for model in reversed(list(model_history)):
@@ -870,7 +902,6 @@ def get_reports_data(request):
             'values': accuracy_values
         }
         
-        # Recent predictions for predictions report
         recent_predictions = predictions.select_related('user').order_by('-created_at')[:50]
         predictions_list = []
         for pred in recent_predictions:
@@ -881,7 +912,6 @@ def get_reports_data(request):
                 'prediction_date': pred.created_at.strftime('%Y-%m-%d')
             })
         
-        # Likelihood ranges for distribution
         ranges = {
             '0-20': predictions.filter(probability__lt=20).count(),
             '20-40': predictions.filter(probability__gte=20, probability__lt=40).count(),
@@ -890,7 +920,6 @@ def get_reports_data(request):
             '80-100': predictions.filter(probability__gte=80).count()
         }
         
-        # Risk analysis data
         risk_analysis = {
             'high_risk': high_risk,
             'medium_risk': medium_risk,
@@ -898,12 +927,10 @@ def get_reports_data(request):
             'total_assessed': total_predictions
         }
         
-        # Risk factors (based on feature importance)
         risk_factors = {}
         for feature, importance in feature_importance.items():
             risk_factors[feature] = importance
         
-        # Risk trends over time (last 6 months)
         six_months_ago = timezone.now() - timedelta(days=180)
         risk_trends_data = predictions.filter(created_at__gte=six_months_ago).annotate(
             month=TruncMonth('created_at')
@@ -926,7 +953,6 @@ def get_reports_data(request):
             risk_trends['medium'].append(item['medium'])
             risk_trends['low'].append(item['low'])
         
-        # Compile all data
         report_data = {
             'overview': overview_data,
             'trend_data': trend_data,
@@ -938,20 +964,24 @@ def get_reports_data(request):
             'likelihood_ranges': ranges,
             'risk_analysis': risk_analysis,
             'risk_factors': risk_factors,
-            'risk_trends': risk_trends
+            'risk_trends': risk_trends,
+            'active_model_config': {
+                'model_name': SELECTED_MODEL_NAME,
+                'model_category': MODEL_CATEGORY
+            }
         }
         
         return JsonResponse(report_data)
         
     except Exception as e:
         print(f"[ERROR] get_reports_data error: {e}")
-        import traceback
         traceback.print_exc()
         
         return JsonResponse({
             'error': str(e),
             'message': 'Failed to load report data'
         }, status=500)
+
 
 @require_http_methods(["GET"])
 @login_required
@@ -976,7 +1006,6 @@ def export_reports_pdf(request):
         elements = []
         styles = getSampleStyleSheet()
         
-        # Custom styles
         title_style = ParagraphStyle(
             'CustomTitle',
             parent=styles['Heading1'],
@@ -995,9 +1024,9 @@ def export_reports_pdf(request):
             spaceBefore=12
         )
         
-        # Title
         elements.append(Paragraph('Social Work Licensure Exam Predictor', title_style))
         elements.append(Paragraph(f'{report_type.title()} Report', styles['Heading2']))
+        elements.append(Paragraph(f'Active Model: {SELECTED_MODEL_NAME} ({MODEL_CATEGORY})', styles['Normal']))
         elements.append(Paragraph(f'Generated: {datetime.now().strftime("%B %d, %Y %H:%M:%S")}', styles['Normal']))
         
         if date_from and date_to:
@@ -1005,16 +1034,13 @@ def export_reports_pdf(request):
         
         elements.append(Spacer(1, 0.3*inch))
         
-        # Get data
         predictions = Prediction.objects.all()
         if date_from:
             predictions = predictions.filter(created_at__gte=datetime.strptime(date_from, '%Y-%m-%d'))
         if date_to:
             predictions = predictions.filter(created_at__lte=datetime.strptime(date_to, '%Y-%m-%d'))
         
-        # Generate report content based on type
         if report_type == 'overview':
-            # Overview statistics
             elements.append(Paragraph('System Overview', heading_style))
             
             overview_data = [
@@ -1040,22 +1066,32 @@ def export_reports_pdf(request):
             elements.append(overview_table)
         
         elif report_type == 'performance':
-            # Model performance
             elements.append(Paragraph('Model Performance Metrics', heading_style))
             
-            latest_model = RegressionModelPerformance.objects.filter(is_active=True).order_by('-trained_at').first()
+            latest_model = RegressionModelPerformance.objects.filter(
+                model_name=SELECTED_MODEL_NAME
+            ).order_by('-trained_at').first()
+            
+            if not latest_model:
+                latest_model = RegressionModelPerformance.objects.filter(
+                    is_active=True
+                ).order_by('-trained_at').first()
             
             if latest_model:
                 perf_data = [
-                    ['Metric', 'Value'],
+                    ['Metric', 'Score'],
                     ['Model Name', latest_model.model_name],
                     ['Model Type', latest_model.model_type],
                     ['RMSE', f"{latest_model.rmse:.4f}"],
                     ['MAE', f"{latest_model.mae:.4f}"],
-                    ['R² Score', f"{latest_model.r2_score:.4f}"],
+                    ['R2 Score', f"{latest_model.r2_score:.4f}"],
                     ['MSE', f"{latest_model.mse:.4f}"],
-                    ['Trained At', latest_model.trained_at.strftime('%Y-%m-%d %H:%M:%S')]
                 ]
+                
+                if latest_model.cv_rmse:
+                    perf_data.append(['CV RMSE', f"{latest_model.cv_rmse:.4f}"])
+                if latest_model.cv_std:
+                    perf_data.append(['CV Std', f"{latest_model.cv_std:.4f}"])
                 
                 perf_table = Table(perf_data, colWidths=[3*inch, 2*inch])
                 perf_table.setStyle(TableStyle([
@@ -1070,20 +1106,21 @@ def export_reports_pdf(request):
                 ]))
                 
                 elements.append(perf_table)
+            else:
+                elements.append(Paragraph(f'No performance data found for model: {SELECTED_MODEL_NAME}', styles['Normal']))
         
         elif report_type == 'predictions':
-            # Predictions list
             elements.append(Paragraph('Recent Predictions', heading_style))
             
             pred_data = [['No.', 'Student', 'ID', 'Likelihood', 'Risk', 'Date']]
             
             recent_preds = predictions.select_related('user').order_by('-created_at')[:20]
             for idx, pred in enumerate(recent_preds, 1):
-                risk = 'High' if pred.probability < 50 else 'Medium' if pred.probability < 70 else 'Low'
+                risk = 'High' if pred.probability < 50 else ('Medium' if pred.probability < 70 else 'Low')
                 pred_data.append([
                     str(idx),
                     pred.user.get_full_name(),
-                    pred.user.student_id or 'N/A',
+                    getattr(pred.user, 'student_id', 'N/A') or 'N/A',
                     f"{pred.probability:.1f}%",
                     risk,
                     pred.created_at.strftime('%Y-%m-%d')
@@ -1105,19 +1142,19 @@ def export_reports_pdf(request):
             elements.append(pred_table)
         
         elif report_type == 'risk':
-            # Risk analysis
             elements.append(Paragraph('Risk Analysis', heading_style))
             
             high_risk = predictions.filter(probability__lt=50).count()
             medium_risk = predictions.filter(probability__gte=50, probability__lt=70).count()
             low_risk = predictions.filter(probability__gte=70).count()
+            total = predictions.count()
             
             risk_data = [
                 ['Risk Level', 'Count', 'Percentage'],
-                ['High Risk', str(high_risk), f"{(high_risk/predictions.count()*100) if predictions.count() > 0 else 0:.1f}%"],
-                ['Medium Risk', str(medium_risk), f"{(medium_risk/predictions.count()*100) if predictions.count() > 0 else 0:.1f}%"],
-                ['Low Risk', str(low_risk), f"{(low_risk/predictions.count()*100) if predictions.count() > 0 else 0:.1f}%"],
-                ['Total', str(predictions.count()), '100.0%']
+                ['High Risk', str(high_risk), f"{(high_risk/total*100) if total > 0 else 0:.1f}%"],
+                ['Medium Risk', str(medium_risk), f"{(medium_risk/total*100) if total > 0 else 0:.1f}%"],
+                ['Low Risk', str(low_risk), f"{(low_risk/total*100) if total > 0 else 0:.1f}%"],
+                ['Total', str(total), '100.0%']
             ]
             
             risk_table = Table(risk_data, colWidths=[2*inch, 1.5*inch, 1.5*inch])
@@ -1134,7 +1171,6 @@ def export_reports_pdf(request):
             
             elements.append(risk_table)
         
-        # Build PDF
         doc.build(elements)
         
         pdf = buffer.getvalue()
@@ -1153,12 +1189,12 @@ def export_reports_pdf(request):
         }, status=500)
     except Exception as e:
         print(f"[ERROR] PDF export error: {e}")
-        import traceback
         traceback.print_exc()
         return JsonResponse({
             'error': str(e),
             'message': 'Failed to export PDF'
         }, status=500)
+
 
 @require_http_methods(["GET"])
 @login_required
@@ -1169,7 +1205,6 @@ def export_reports_csv(request):
         date_from = request.GET.get('dateFrom', '')
         date_to = request.GET.get('dateTo', '')
         
-        # Get predictions with date filters
         predictions = Prediction.objects.all()
         if date_from:
             predictions = predictions.filter(created_at__gte=datetime.strptime(date_from, '%Y-%m-%d'))
@@ -1182,7 +1217,6 @@ def export_reports_csv(request):
         writer = csv.writer(response)
         
         if report_type == 'predictions':
-            # Write header with all columns including the three missing ones
             writer.writerow([
                 'No.', 
                 'Student Name', 
@@ -1205,25 +1239,24 @@ def export_reports_csv(request):
                 'Prediction Date'
             ])
             
-            # Write prediction data with all fields
             for idx, pred in enumerate(predictions.select_related('user').order_by('-created_at'), 1):
-                risk = 'High' if pred.probability < 50 else 'Medium' if pred.probability < 70 else 'Low'
+                risk = 'High' if pred.probability < 50 else ('Medium' if pred.probability < 70 else 'Low')
                 writer.writerow([
                     idx,
                     pred.user.get_full_name(),
-                    getattr(pred.user, 'student_id', 'N/A'),
+                    getattr(pred.user, 'student_id', 'N/A') or 'N/A',
                     pred.user.email,
-                    f"{pred.probability:.1f}",
+                    f'{pred.probability:.1f}',
                     risk,
                     pred.age,
                     pred.gender,
-                    f"{pred.gpa:.2f}",
+                    f'{pred.gpa:.2f}',
                     pred.study_hours,
                     pred.sleep_hours,
                     'Yes' if pred.review_center else 'No',
                     pred.confidence,
                     pred.test_anxiety,
-                    f"{pred.mock_exam_score:.1f}" if pred.mock_exam_score else 'N/A',
+                    f'{pred.mock_exam_score:.1f}' if pred.mock_exam_score else 'N/A',
                     pred.social_support,
                     pred.motivation_score,
                     pred.english_proficiency,
@@ -1244,8 +1277,9 @@ def export_reports_csv(request):
             writer.writerow(['Total', total, '100.0'])
         
         else:
-            # Overview or performance report
             writer.writerow(['Metric', 'Value'])
+            writer.writerow(['Active Model', SELECTED_MODEL_NAME])
+            writer.writerow(['Model Category', MODEL_CATEGORY])
             writer.writerow(['Total Predictions', predictions.count()])
             writer.writerow(['Average Likelihood', f"{predictions.aggregate(Avg('probability'))['probability__avg'] or 0:.1f}"])
             writer.writerow(['At Risk Students', predictions.filter(probability__lt=50).values('user').distinct().count()])
@@ -1256,23 +1290,18 @@ def export_reports_csv(request):
         
     except Exception as e:
         print(f"[ERROR] CSV export error: {e}")
-        import traceback
         traceback.print_exc()
         return JsonResponse({
             'error': str(e),
             'message': 'Failed to export CSV'
         }, status=500)
 
-@login_required
-def student_profile(request):
-    return render(request, 'pages/student_profile.html')
 
 @login_required
 def update_profile(request):
     if request.method == 'POST':
         user = request.user
         
-        # Update user information
         user.first_name = request.POST.get('first_name', '').strip()
         user.last_name = request.POST.get('last_name', '').strip()
         user.email = request.POST.get('email', '').strip()
@@ -1287,6 +1316,7 @@ def update_profile(request):
     
     return redirect('dashboard:student_profile')
 
+
 @login_required
 def change_password(request):
     if request.method == 'POST':
@@ -1294,7 +1324,6 @@ def change_password(request):
         
         if form.is_valid():
             user = form.save()
-            # Update session to prevent logout
             update_session_auth_hash(request, user)
             messages.success(request, 'Password changed successfully!')
         else:

@@ -1,19 +1,20 @@
 import os
 import pandas as pd
 from django.conf import settings
+from .config import SELECTED_MODEL_NAME
 
-# Path to SHAP importance data
+# Build SHAP data path dynamically based on active model
 SHAP_DATA_PATH = os.path.join(
     settings.BASE_DIR.parent, 
     'models', 
     'saved_ensemble_models', 
     'shap_analysis', 
-    'stacking_neural_ridge_neural_final_shap_importance.csv'
+    f'{SELECTED_MODEL_NAME}_shap_importance.csv'
 )
 
 def load_shap_importance():
     """
-    Load SHAP feature importance from CSV file
+    Load SHAP feature importance from CSV file for the active model
     Returns a dictionary mapping feature names to their importance scores
     """
     try:
@@ -33,7 +34,7 @@ def load_shap_importance():
             reverse=True
         ))
         
-        print(f"[INFO] Loaded SHAP importance for {len(importance_dict)} features")
+        print(f"[INFO] Loaded SHAP importance for {len(importance_dict)} features from model: {SELECTED_MODEL_NAME}")
         return importance_dict
     
     except Exception as e:
@@ -72,14 +73,12 @@ def get_feature_importance_ranking():
     """
     importance_dict = load_shap_importance()
     
-    # Already sorted by load_shap_importance, but ensure it
     sorted_features = sorted(
         importance_dict.items(), 
         key=lambda x: x[1], 
         reverse=True
     )
     
-    # Add ranking
     ranked_features = [
         (feature, importance, rank + 1) 
         for rank, (feature, importance) in enumerate(sorted_features)
@@ -134,7 +133,6 @@ def analyze_user_weaknesses(input_data):
     importance_dict = load_shap_importance()
     weaknesses = []
     
-    # Define thresholds for each feature
     thresholds = {
         'StudyHours': 20,
         'GPA': 2.5,
@@ -153,9 +151,7 @@ def analyze_user_weaknesses(input_data):
             value = input_data[feature]
             importance = importance_dict[feature]
             
-            # Check if value is below threshold and feature is important
             if feature == 'TestAnxiety':
-                # For anxiety, higher is worse
                 if value > threshold and importance > 0.01:
                     weaknesses.append({
                         'feature': feature,
@@ -166,7 +162,6 @@ def analyze_user_weaknesses(input_data):
                         'display_name': get_feature_display_name(feature)
                     })
             else:
-                # For other features, lower is worse
                 if value < threshold and importance > 0.01:
                     weaknesses.append({
                         'feature': feature,
@@ -177,9 +172,7 @@ def analyze_user_weaknesses(input_data):
                         'display_name': get_feature_display_name(feature)
                     })
     
-    # Sort by importance
     weaknesses.sort(key=lambda x: x['importance'], reverse=True)
-    
     return weaknesses
 
 
@@ -190,7 +183,6 @@ def analyze_user_strengths(input_data):
     importance_dict = load_shap_importance()
     strengths = []
     
-    # Define excellence thresholds
     excellence_thresholds = {
         'StudyHours': 30,
         'GPA': 3.5,
@@ -209,9 +201,7 @@ def analyze_user_strengths(input_data):
             value = input_data[feature]
             importance = importance_dict[feature]
             
-            # Check if value exceeds excellence threshold
             if feature == 'TestAnxiety':
-                # For anxiety, lower is better
                 if value <= threshold and importance > 0.01:
                     strengths.append({
                         'feature': feature,
@@ -230,9 +220,7 @@ def analyze_user_strengths(input_data):
                         'display_name': get_feature_display_name(feature)
                     })
     
-    # Sort by importance
     strengths.sort(key=lambda x: x['importance'], reverse=True)
-    
     return strengths
 
 
