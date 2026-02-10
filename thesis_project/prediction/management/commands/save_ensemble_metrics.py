@@ -26,8 +26,11 @@ class Command(BaseCommand):
         # Define ensemble models to process
         ensemble_models = [
             'bagging_random_forest',
+            'bagging_neural_network',
             'boosting_gradient_boost',
-            'stacking_ridge'
+            'stacking_neural_only',
+            'stacking_neural_ridge_neural_final',
+            'stacking_neural_ridge_ridge_final',
         ]
         
         saved_count = 0

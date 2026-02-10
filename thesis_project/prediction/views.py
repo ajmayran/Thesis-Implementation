@@ -19,13 +19,13 @@ from .forms import PredictionForm
 from .utils import prepare_input_data, generate_recommendations, get_risk_level
 
 # Configuration
-SELECTED_MODEL_NAME = 'stacking_ridge'
+SELECTED_MODEL_NAME = 'stacking_neural_ridge_neural_final'
 MODEL_CATEGORY = 'ensemble'
 
 # Model paths
 BASE_MODELS_DIR = os.path.join(models_path, 'saved_base_models')
 ENSEMBLE_MODELS_DIR = os.path.join(models_path, 'saved_ensemble_models')
-PREPROCESSOR_PATH = os.path.join(models_path, 'saved_ensemble_models', 'preprocessor.pkl')
+PREPROCESSOR_PATH = os.path.join(models_path, 'regression_preprocessed_data', 'preprocessor.pkl')
 
 def load_selected_model(model_name, model_category='base'):
     """

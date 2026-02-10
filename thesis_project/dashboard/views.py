@@ -11,12 +11,15 @@ from django.utils import timezone
 import json
 import csv
 import os
+import pandas as pd
+import traceback
 from datetime import datetime, timedelta
 from collections import Counter
 from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
 from prediction.models import Prediction
+from django.conf import settings
 
 @login_required
 def dashboard_home(request):
@@ -60,66 +63,63 @@ def student_dashboard(request):
 def student_profile(request):
     return render(request, 'pages/student_profile.html')
 
-def load_feature_importance_from_json():
-    """Load feature importance from the analysis JSON file"""
+def load_feature_importance_from_csv():
+    """Load feature importance from the SHAP analysis CSV file"""
     
-    # Get the project root directory
-    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-    json_path = os.path.join(
-        base_dir,
+    csv_path = os.path.join(
+        settings.BASE_DIR.parent,
         'models',
-        'regression_processed_data',
-        'feature_importance_analysis.json'
+        'saved_ensemble_models',
+        'shap_analysis',
+        'stacking_neural_ridge_neural_final_shap_importance.csv'
     )
     
-    print(f"[DEBUG] Looking for feature importance at: {json_path}")
+    print(f"[DEBUG] Looking for feature importance CSV at: {csv_path}")
     
     try:
-        if not os.path.exists(json_path):
-            print(f"[WARNING] Feature importance file not found at: {json_path}")
+        if not os.path.exists(csv_path):
+            print(f"[WARNING] Feature importance CSV not found at: {csv_path}")
             return get_default_feature_importance()
         
-        with open(json_path, 'r') as f:
-            data = json.load(f)
+        df = pd.read_csv(csv_path)
         
-        print("[DEBUG] Successfully loaded feature importance JSON")
+        # Create dictionary mapping feature to importance
+        feature_importance = dict(zip(df['Feature'], df['SHAP_Importance']))
         
-        # Use combined ranking average rank (lower is better)
-        combined = data.get('combined_ranking', [])
+        # Sort by importance descending for better visualization
+        feature_importance = dict(sorted(
+            feature_importance.items(),
+            key=lambda x: x[1],
+            reverse=True
+        ))
         
-        if not combined:
-            print("[WARNING] No combined_ranking found in JSON")
-            return get_default_feature_importance()
-        
-        # Convert to importance scores (inverse of rank, normalized)
-        feature_importance = {}
-        max_rank = max(item['Avg_Rank'] for item in combined)
-        
-        for item in combined:
-            # Inverse ranking: lower rank = higher importance
-            importance = (max_rank - item['Avg_Rank'] + 1) / max_rank
-            feature_importance[item['Feature']] = round(importance, 4)
-        
-        print(f"[DEBUG] Processed {len(feature_importance)} features")
+        print(f"[DEBUG] Successfully loaded {len(feature_importance)} features from CSV")
         return feature_importance
         
     except Exception as e:
-        print(f"[ERROR] Error loading feature importance: {e}")
-        import traceback
+        print(f"[ERROR] Error loading feature importance from CSV: {e}")
         traceback.print_exc()
         return get_default_feature_importance()
 
 def get_default_feature_importance():
-    """Return default feature importance values"""
+    """Return default feature importance values as fallback"""
     return {
-        'Age': 0.85,
-        'TestAnxiety': 0.72,
-        'SleepHours': 0.68,
-        'StudyHours': 0.58,
-        'GPA': 0.52,
-        'EnglishProficiency': 0.48,
-        'ReviewCenter': 0.35,
-        'Gender': 0.28
+        'StudyHours': 0.3607,
+        'GPA': 0.2978,
+        'ReviewCenter': 0.2658,
+        'Age': 0.2646,
+        'TestAnxiety': 0.2575,
+        'SleepHours': 0.2167,
+        'EmploymentStatus': 0.2139,
+        'EnglishProficiency': 0.1600,
+        'IncomeLevel': 0.1018,
+        'Scholarship': 0.0943,
+        'MockExamScore': 0.0192,
+        'Confidence': 0.0173,
+        'SocialSupport': 0.0138,
+        'MotivationScore': 0.0054,
+        'Gender': 0.0,
+        'InternshipGrade': 0.0
     }
 
 def calculate_dashboard_statistics():
@@ -145,7 +145,7 @@ def calculate_dashboard_statistics():
     print(f"[DEBUG] KPI calculated - Avg prob: {avg_probability}, At risk: {at_risk_students}")
     
     # Load feature importance from JSON file
-    feature_importance = load_feature_importance_from_json()
+    feature_importance = load_feature_importance_from_csv()
     print(f"[DEBUG] Feature importance loaded: {len(feature_importance)} features")
     
     # Get latest regression model performance
@@ -855,7 +855,7 @@ def get_reports_data(request):
             }
         
         # Feature importance
-        feature_importance = load_feature_importance_from_json()
+        feature_importance = load_feature_importance_from_csv()
         
         # Accuracy trend (last 10 model trainings)
         model_history = RegressionModelPerformance.objects.order_by('-trained_at')[:10]
