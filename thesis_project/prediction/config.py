@@ -11,4 +11,4 @@ MODEL_CATEGORY = 'ensemble'
 # Model paths
 BASE_MODELS_DIR = os.path.join(models_path, 'saved_base_models')
 ENSEMBLE_MODELS_DIR = os.path.join(models_path, 'saved_ensemble_models')
-PREPROCESSOR_PATH = os.path.join(models_path, 'regression_preprocessed_data', 'preprocessor.pkl')
+PREPROCESSOR_PATH = os.path.join(models_path, 'regression_processed_data', 'preprocessor.pkl')
