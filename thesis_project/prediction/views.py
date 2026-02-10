@@ -57,7 +57,7 @@ def load_selected_model(model_name, model_category='base'):
         except Exception as e:
             return None, None, f"Failed to load model: {str(e)}. Please re-train the model."
         
-        if not os.path.exists(cOR_PATH):
+        if not os.path.exists(PREPROCESSOR_PATH):
             return None, None, f"Preprocessor file not found: {PREPROCESSOR_PATH}"
         
         preprocessor_size = os.path.getsize(PREPROCESSOR_PATH)
