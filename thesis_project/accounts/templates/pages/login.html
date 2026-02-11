@@ -1,112 +1,78 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Social Work Licensure Exam Predictor</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'style/css/auth.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-    <style>
-        .gradient-bg {
-            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-        }
-        .login-card {
-            backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-        .form-input {
-            transition: all 0.3s ease;
-        }
-        .form-input:focus {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            transition: all 0.3s ease;
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
-        }
-    </style>
 </head>
-<body class="gradient-bg min-h-screen flex items-center justify-center p-4">
-    <div class="w-full max-w-md">
-        <div class="login-card rounded-2xl p-8">
-            <div class="text-center mb-8">
-                <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-4">
-                    <i class="fa-solid fa-user-graduate text-white text-2xl"></i>
+<body>
+    <div class="gradient-bg">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-icon">
+                    <i class="fa-solid fa-user-graduate"></i>
                 </div>
-                <h1 class="text-3xl font-bold text-gray-800 mb-2">Welcome Back</h1>
-                <p class="text-gray-600">Social Work Licensure Exam Predictor</p>
+                <h1 class="auth-title">Welcome Back</h1>
+                <p class="auth-subtitle">Social Work Licensure Exam Predictor</p>
             </div>
 
             {% if messages %}
                 {% for message in messages %}
-                    <div class="mb-4 p-4 rounded-lg {% if message.tags == 'error' %}bg-red-50 border border-red-200 text-red-700{% elif message.tags == 'success' %}bg-green-50 border border-green-200 text-green-700{% else %}bg-blue-50 border border-blue-200 text-blue-700{% endif %}">
-                        <div class="flex items-center">
-                            <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% elif message.tags == 'success' %}fa-circle-check{% else %}fa-circle-info{% endif %} mr-2"></i>
-                            <span>{{ message }}</span>
-                        </div>
+                    <div class="message {% if message.tags == 'error' %}error{% elif message.tags == 'success' %}success{% else %}info{% endif %}">
+                        <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% elif message.tags == 'success' %}fa-circle-check{% else %}fa-circle-info{% endif %}"></i>
+                        <span>{{ message }}</span>
                     </div>
                 {% endfor %}
             {% endif %}
 
-            <form method="post" action="{% url 'accounts:login' %}" class="space-y-6">
+            <form method="post" action="{% url 'accounts:login' %}" class="auth-form">
                 {% csrf_token %}
                 
-                <div>
-                    <label for="id_email" class="block text-sm font-semibold text-gray-700 mb-2">
-                        <i class="fa-solid fa-user mr-2"></i>WMSU Email
+                <div class="form-group">
+                    <label for="id_email" class="form-label">
+                        <i class="fa-solid fa-user"></i>WMSU Email
                     </label>
                     {{ form.email }}
                     {% if form.email.errors %}
-                        <p class="mt-2 text-sm text-red-600">{{ form.email.errors.0 }}</p>
+                        <p class="form-error">{{ form.email.errors.0 }}</p>
                     {% endif %}
                 </div>
 
-                <div>
-                    <label for="id_password" class="block text-sm font-semibold text-gray-700 mb-2">
-                        <i class="fa-solid fa-lock mr-2"></i>Password
+                <div class="form-group">
+                    <label for="id_password" class="form-label">
+                        <i class="fa-solid fa-lock"></i>Password
                     </label>
                     {{ form.password }}
                     {% if form.password.errors %}
-                        <p class="mt-2 text-sm text-red-600">{{ form.password.errors.0 }}</p>
+                        <p class="form-error">{{ form.password.errors.0 }}</p>
                     {% endif %}
                 </div>
 
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
+                <div class="form-extras">
+                    <div class="remember-me">
                         {{ form.remember_me }}
-                        <label for="id_remember_me" class="ml-2 text-sm text-gray-700">
-                            Remember me
-                        </label>
+                        <label for="id_remember_me">Remember me</label>
                     </div>
-                    <a href="#" class="text-sm text-blue-600 hover:text-blue-800">
-                        Forgot password?
-                    </a>
+                    <a href="#" class="forgot-link">Forgot password?</a>
                 </div>
 
-                <button type="submit" class="btn-primary w-full py-3 px-4 text-white font-semibold rounded-lg">
-                    <i class="fa-solid fa-right-to-bracket mr-2"></i>Sign In
+                <button type="submit" class="btn-primary">
+                    <i class="fa-solid fa-right-to-bracket"></i>Sign In
                 </button>
             </form>
 
-            <div class="mt-6 text-center">
-                <p class="text-sm text-gray-600">
+            <div class="auth-footer">
+                <p>
                     Don't have an account? 
-                    <a href="{% url 'accounts:register' %}" class="text-blue-600 hover:text-blue-800 font-semibold">
-                        Register here
-                    </a>
+                    <a href="{% url 'accounts:register' %}">Register here</a>
                 </p>
             </div>
 
-            <div class="mt-8 pt-6 border-t border-gray-200">
-                <div class="text-center text-xs text-gray-500">
-                    <p>© 2024 Thesis Project</p>
-                </div>
+            <div class="copyright">
+                <p>&copy; 2024 Thesis Project</p>
             </div>
         </div>
     </div>

@@ -1,156 +1,112 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - Social Work Licensure Exam Predictor</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'style/css/auth.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-    <style>
-        .gradient-bg {
-            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-        }
-        .register-card {
-            backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-        .form-input {
-            transition: all 0.3s ease;
-        }
-        .form-input:focus {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            transition: all 0.3s ease;
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
-        }
-    </style>
 </head>
-<body class="gradient-bg min-h-screen flex items-center justify-center p-4">
-    <div class="w-full max-w-2xl">
-        <div class="register-card rounded-2xl p-8">
-            <div class="text-center mb-8">
-                <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-4">
-                    <i class="fa-solid fa-user-plus text-white text-2xl"></i>
+<body>
+    <div class="gradient-bg">
+        <div class="auth-card register-card">
+            <div class="auth-header">
+                <div class="auth-icon">
+                    <i class="fa-solid fa-user-plus"></i>
                 </div>
-                <h1 class="text-3xl font-bold text-gray-800 mb-2">Create Account</h1>
-                <p class="text-gray-600">Join the Social Work Licensure Exam Predictor</p>
+                <h1 class="auth-title">Create Account</h1>
+                <p class="auth-subtitle">Join the Social Work Licensure Exam Predictor</p>
             </div>
 
             {% if messages %}
                 {% for message in messages %}
-                    <div class="mb-4 p-4 rounded-lg {% if message.tags == 'error' %}bg-red-50 border border-red-200 text-red-700{% elif message.tags == 'success' %}bg-green-50 border border-green-200 text-green-700{% else %}bg-blue-50 border border-blue-200 text-blue-700{% endif %}">
-                        <div class="flex items-center">
-                            <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% elif message.tags == 'success' %}fa-circle-check{% else %}fa-circle-info{% endif %} mr-2"></i>
-                            <span>{{ message }}</span>
-                        </div>
+                    <div class="message {% if message.tags == 'error' %}error{% elif message.tags == 'success' %}success{% else %}info{% endif %}">
+                        <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% elif message.tags == 'success' %}fa-circle-check{% else %}fa-circle-info{% endif %}"></i>
+                        <span>{{ message }}</span>
                     </div>
                 {% endfor %}
             {% endif %}
 
-            <form method="post" action="{% url 'accounts:register' %}" class="space-y-6">
+            <form method="post" action="{% url 'accounts:register' %}" class="auth-form">
                 {% csrf_token %}
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label for="id_first_name" class="block text-sm font-semibold text-gray-700 mb-2">
-                            First Name
-                        </label>
+                <div class="form-row two-columns">
+                    <div class="form-group">
+                        <label for="id_first_name" class="form-label">First Name</label>
                         {{ form.first_name }}
                         {% if form.first_name.errors %}
-                            <p class="mt-2 text-sm text-red-600">{{ form.first_name.errors.0 }}</p>
+                            <p class="form-error">{{ form.first_name.errors.0 }}</p>
                         {% endif %}
                     </div>
 
-                    <div>
-                        <label for="id_last_name" class="block text-sm font-semibold text-gray-700 mb-2">
-                            Last Name
-                        </label>
+                    <div class="form-group">
+                        <label for="id_last_name" class="form-label">Last Name</label>
                         {{ form.last_name }}
                         {% if form.last_name.errors %}
-                            <p class="mt-2 text-sm text-red-600">{{ form.last_name.errors.0 }}</p>
+                            <p class="form-error">{{ form.last_name.errors.0 }}</p>
                         {% endif %}
                     </div>
                 </div>
 
-                <div>
-                    <label for="id_email" class="block text-sm font-semibold text-gray-700 mb-2">
-                        Email Address 
-                    </label>
+                <div class="form-group">
+                    <label for="id_email" class="form-label">Email Address</label>
                     {{ form.email }}
                     {% if form.email.errors %}
-                        <p class="mt-2 text-sm text-red-600">{{ form.email.errors.0 }}</p>
+                        <p class="form-error">{{ form.email.errors.0 }}</p>
                     {% endif %}
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label for="id_phone_number" class="block text-sm font-semibold text-gray-700 mb-2">
-                            Phone Number
-                        </label>
+                <div class="form-row two-columns">
+                    <div class="form-group">
+                        <label for="id_phone_number" class="form-label">Phone Number</label>
                         {{ form.phone_number }}
                         {% if form.phone_number.errors %}
-                            <p class="mt-2 text-sm text-red-600">{{ form.phone_number.errors.0 }}</p>
+                            <p class="form-error">{{ form.phone_number.errors.0 }}</p>
                         {% endif %}
                     </div>
 
-                    <div>
-                        <label for="id_student_id" class="block text-sm font-semibold text-gray-700 mb-2">
-                            Student ID
-                        </label>
+                    <div class="form-group">
+                        <label for="id_student_id" class="form-label">Student ID</label>
                         {{ form.student_id }}
                         {% if form.student_id.errors %}
-                            <p class="mt-2 text-sm text-red-600">{{ form.student_id.errors.0 }}</p>
+                            <p class="form-error">{{ form.student_id.errors.0 }}</p>
                         {% endif %}
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label for="id_password1" class="block text-sm font-semibold text-gray-700 mb-2">
-                            Password
-                        </label>
+                <div class="form-row two-columns">
+                    <div class="form-group">
+                        <label for="id_password1" class="form-label">Password</label>
                         {{ form.password1 }}
                         {% if form.password1.errors %}
-                            <p class="mt-2 text-sm text-red-600">{{ form.password1.errors.0 }}</p>
+                            <p class="form-error">{{ form.password1.errors.0 }}</p>
                         {% endif %}
                     </div>
 
-                    <div>
-                        <label for="id_password2" class="block text-sm font-semibold text-gray-700 mb-2">
-                            Confirm Password
-                        </label>
+                    <div class="form-group">
+                        <label for="id_password2" class="form-label">Confirm Password</label>
                         {{ form.password2 }}
                         {% if form.password2.errors %}
-                            <p class="mt-2 text-sm text-red-600">{{ form.password2.errors.0 }}</p>
+                            <p class="form-error">{{ form.password2.errors.0 }}</p>
                         {% endif %}
                     </div>
                 </div>
 
-                <button type="submit" class="btn-primary w-full py-3 px-4 text-white font-semibold rounded-lg">
-                    <i class="fa-solid fa-user-plus mr-2"></i>Create Account
+                <button type="submit" class="btn-primary">
+                    <i class="fa-solid fa-user-plus"></i>Create Account
                 </button>
             </form>
 
-            <div class="mt-6 text-center">
-                <p class="text-sm text-gray-600">
+            <div class="auth-footer">
+                <p>
                     Already have an account? 
-                    <a href="{% url 'accounts:login' %}" class="text-blue-600 hover:text-blue-800 font-semibold">
-                        Login here
-                    </a>
+                    <a href="{% url 'accounts:login' %}">Login here</a>
                 </p>
             </div>
 
-            <div class="mt-8 pt-6 border-t border-gray-200">
-                <div class="text-center text-xs text-gray-500">
-                    <p>© 2024 Thesis Project</p>
-                </div>
+            <div class="copyright">
+                <p>&copy; 2024 Thesis Project</p>
             </div>
         </div>
     </div>
