@@ -1,0 +1,85 @@
+{
+  "method": "permutation",
+  "importance": [
+    {
+      "Feature": "IncomeLevel",
+      "Importance": 0.04221608175274265,
+      "Std": 0.024610918371912607
+    },
+    {
+      "Feature": "GPA",
+      "Importance": 0.029431976565423755,
+      "Std": 0.02319939933420779
+    },
+    {
+      "Feature": "MockExamScore",
+      "Importance": 0.01923894209705468,
+      "Std": 0.01613957981396531
+    },
+    {
+      "Feature": "TestAnxiety",
+      "Importance": 0.013262256138126394,
+      "Std": 0.01803711680542092
+    },
+    {
+      "Feature": "MotivationScore",
+      "Importance": 0.008546656093518502,
+      "Std": 0.004708303765085814
+    },
+    {
+      "Feature": "EnglishProficiency",
+      "Importance": 0.005548050418632977,
+      "Std": 0.02109661965682786
+    },
+    {
+      "Feature": "StudyHours",
+      "Importance": 0.002362942017662717,
+      "Std": 0.01254679388737976
+    },
+    {
+      "Feature": "Scholarship",
+      "Importance": 0.002346782074155418,
+      "Std": 0.008850911204891352
+    },
+    {
+      "Feature": "InternshipGrade",
+      "Importance": 0.0015454160547223816,
+      "Std": 0.01932591663067676
+    },
+    {
+      "Feature": "Gender",
+      "Importance": -0.0018775227606182554,
+      "Std": 0.007605321569390459
+    },
+    {
+      "Feature": "SleepHours",
+      "Importance": -0.0022269418020979927,
+      "Std": 0.01370883503082394
+    },
+    {
+      "Feature": "EmploymentStatus",
+      "Importance": -0.004603771745895857,
+      "Std": 0.011791148407942237
+    },
+    {
+      "Feature": "Confidence",
+      "Importance": -0.006813519414721992,
+      "Std": 0.006918689993691393
+    },
+    {
+      "Feature": "SocialSupport",
+      "Importance": -0.007402757035953766,
+      "Std": 0.01641521478837291
+    },
+    {
+      "Feature": "Age",
+      "Importance": -0.01017489813012622,
+      "Std": 0.025410765521517626
+    },
+    {
+      "Feature": "ReviewCenter",
+      "Importance": -0.015117053426114645,
+      "Std": 0.007022914684468368
+    }
+  ]
+}
