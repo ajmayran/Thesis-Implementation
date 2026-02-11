@@ -1,0 +1,21 @@
+{
+  "name": "@wissakib/fontawesome-free-6.5.1-web",
+  "version": "1.0.0",
+  "description": "This is free for use. all copyright to fontawesome.com",
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "Sakib Malik",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sakib-wis/fontawesome-free-6.5.1-web.git"
+  },
+  "keywords": [
+    "font-awesome"
+  ],
+  "bugs": {
+    "url": "https://github.com/sakib-wis/fontawesome-free-6.5.1-web/issues"
+  },
+  "homepage": "https://github.com/sakib-wis/fontawesome-free-6.5.1-web#readme"
+}
