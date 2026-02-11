@@ -92,3 +92,116 @@
         display: none;
     }
 }
+
+/* Logout Modal */
+.logout-modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.logout-modal.hidden {
+    display: none;
+}
+
+.logout-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.7);
+}
+
+.logout-modal-content {
+    position: relative;
+    background: #0f172a;
+    padding: 1.5rem 1.75rem;
+    border-radius: 20px;
+    border: 2px solid #1f2937;
+    max-width: 22rem;
+    width: 100%;
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.25);
+}
+
+.logout-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    margin-bottom: 1.25rem;
+}
+
+.logout-modal-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.9rem;
+    background: linear-gradient(135deg, #58cc02 0%, #4caf50 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    box-shadow: 0 3px 0 #3d9140;
+    font-size: 1.2rem;
+}
+
+.logout-modal-content h2 {
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin: 0 0 0.25rem 0;
+    color: #e5e7eb;
+}
+
+.logout-modal-content p {
+    font-size: 0.9rem;
+    color: #9ca3af;
+    margin: 0;
+}
+
+.logout-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.btn-secondary {
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    border: 1px solid #4b5563;
+    background: transparent;
+    color: #e5e7eb;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-danger {
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, #58cc02 0%, #4caf50 100%);
+    color: #ffffff;
+    font-size: 0.875rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #3d9140;
+    transition: all 0.15s ease;
+}
+
+.btn-secondary:hover {
+    background: rgba(31, 41, 55, 0.8);
+}
+
+.btn-danger:hover {
+    box-shadow: 0 6px 0 #3d9140;
+    transform: translateY(-1px);
+}
+
+.btn-secondary:hover {
+    background: rgba(31, 41, 55, 0.8);
+}
+
+.btn-danger:hover {
+    box-shadow: 0 6px 0 #c73333;
+    transform: translateY(-1px);
+}

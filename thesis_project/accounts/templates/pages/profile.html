@@ -21,9 +21,121 @@
             box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
             border-radius: 12px;
         }
+
+        /* Logout Modal Styles */
+        .logout-modal {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+        .logout-modal.hidden {
+            display: none;
+        }
+        .logout-modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.7);
+        }
+        .logout-modal-content {
+            position: relative;
+            background: white;
+            padding: 1.5rem 1.75rem;
+            border-radius: 24px;
+            border: 3px solid #e5e7eb;
+            max-width: 22rem;
+            width: 100%;
+            box-shadow: 0 20px 45px rgba(15, 23, 42, 0.25);
+        }
+        .logout-modal-header {
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+            margin-bottom: 1.25rem;
+        }
+        .logout-modal-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 0.9rem;
+            background: linear-gradient(135deg, #58cc02 0%, #4caf50 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            box-shadow: 0 3px 0 #3d9140;
+            font-size: 1.2rem;
+        }
+        .logout-modal-content h2 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin: 0 0 0.25rem 0;
+            color: #111827;
+        }
+        .logout-modal-content p {
+            font-size: 0.9rem;
+            color: #4b5563;
+            margin: 0;
+        }
+        .logout-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+        .btn-secondary {
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid #d1d5db;
+            background: #f9fafb;
+            color: #374151;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .btn-danger {
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            background: linear-gradient(135deg, #58cc02 0%, #4caf50 100%);
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 700;
+            box-shadow: 0 4px 0 #3d9140;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        .btn-danger:hover {
+            box-shadow: 0 6px 0 #3d9140;
+            transform: translateY(-1px);
+        }
     </style>
 </head>
 <body class="bg-gray-100">
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutModal" class="logout-modal hidden">
+        <div class="logout-modal-backdrop"></div>
+        <div class="logout-modal-content">
+            <div class="logout-modal-header">
+                <div class="logout-modal-icon">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </div>
+                <div>
+                    <h2>Ready to sign out?</h2>
+                    <p>You can always log back in to continue where you left off.</p>
+                </div>
+            </div>
+            <div class="logout-modal-actions">
+                <button type="button" id="cancelLogout" class="btn-secondary">Stay logged in</button>
+                <button type="button" id="confirmLogout" class="btn-danger">Log out</button>
+            </div>
+        </div>
+    </div>
+
     <div class="flex min-h-screen">
         <aside class="sidebar w-64 text-white p-6 hidden md:block">
             <div class="flex items-center mb-8">
@@ -45,7 +157,7 @@
                 <a href="{% url 'accounts:profile' %}" class="flex items-center p-3 nav-item rounded text-sm bg-white/10">
                     <i class="fa-solid fa-user mr-3 w-5"></i>Profile
                 </a>
-                <a href="{% url 'accounts:logout' %}" class="flex items-center p-3 nav-item rounded text-sm">
+                <a href="{% url 'accounts:logout' %}" class="flex items-center p-3 nav-item rounded text-sm logout-trigger">
                     <i class="fa-solid fa-right-from-bracket mr-3 w-5"></i>Logout
                 </a>
             </nav>
@@ -107,4 +219,54 @@
         </div>
     </div>
 </body>
+<script>
+    (function() {
+        const modal = document.getElementById('logoutModal');
+        const cancelBtn = document.getElementById('cancelLogout');
+        const confirmBtn = document.getElementById('confirmLogout');
+        let pendingLogoutUrl = null;
+
+        function openModal(url) {
+            pendingLogoutUrl = url;
+            if (modal) {
+                modal.classList.remove('hidden');
+            }
+        }
+
+        function closeModal() {
+            pendingLogoutUrl = null;
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            const target = e.target.closest('.logout-trigger');
+            if (!target) return;
+            e.preventDefault();
+            openModal(target.getAttribute('href'));
+        });
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function() {
+                closeModal();
+            });
+        }
+
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', function() {
+                if (pendingLogoutUrl) {
+                    window.location.href = pendingLogoutUrl;
+                }
+            });
+        }
+
+        const backdrop = document.querySelector('.logout-modal-backdrop');
+        if (backdrop) {
+            backdrop.addEventListener('click', function() {
+                closeModal();
+            });
+        }
+    })();
+</script>
 </html>

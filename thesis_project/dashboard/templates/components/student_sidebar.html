@@ -39,7 +39,7 @@
     </nav>
 
     <div class="sidebar-logout">
-        <a href="{% url 'accounts:logout' %}" class="nav-item logout">
+        <a href="{% url 'accounts:logout' %}" class="nav-item logout logout-trigger">
             <div class="nav-item-icon">
                 <i class="fa-solid fa-right-from-bracket"></i>
             </div>
@@ -55,6 +55,26 @@
         <div class="footer-version">v1.0.0</div>
     </div>
 </aside>
+
+<!-- Logout Confirmation Modal -->
+<div id="logoutModal" class="logout-modal hidden">
+    <div class="logout-modal-backdrop"></div>
+    <div class="logout-modal-content">
+        <div class="logout-modal-header">
+            <div class="logout-modal-icon">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </div>
+            <div>
+                <h2>Ready to sign out?</h2>
+                <p>Your progress is safe. You can come back anytime.</p>
+            </div>
+        </div>
+        <div class="logout-modal-actions">
+            <button type="button" id="cancelLogout" class="btn-secondary">Stay logged in</button>
+            <button type="button" id="confirmLogout" class="btn-danger">Log out</button>
+        </div>
+    </div>
+</div>
 
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
@@ -89,4 +109,54 @@
         toggleIcon.classList.remove('fa-xmark');
         toggleIcon.classList.add('fa-bars');
     });
+
+    // Logout confirmation modal behavior
+    (function() {
+        const modal = document.getElementById('logoutModal');
+        const cancelBtn = document.getElementById('cancelLogout');
+        const confirmBtn = document.getElementById('confirmLogout');
+        let pendingLogoutUrl = null;
+
+        function openModal(url) {
+            pendingLogoutUrl = url;
+            if (modal) {
+                modal.classList.remove('hidden');
+            }
+        }
+
+        function closeModal() {
+            pendingLogoutUrl = null;
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            const target = e.target.closest('.logout-trigger');
+            if (!target) return;
+            e.preventDefault();
+            openModal(target.getAttribute('href'));
+        });
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function() {
+                closeModal();
+            });
+        }
+
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', function() {
+                if (pendingLogoutUrl) {
+                    window.location.href = pendingLogoutUrl;
+                }
+            });
+        }
+
+        const backdrop = document.querySelector('.logout-modal-backdrop');
+        if (backdrop) {
+            backdrop.addEventListener('click', function() {
+                closeModal();
+            });
+        }
+    })();
 </script>
