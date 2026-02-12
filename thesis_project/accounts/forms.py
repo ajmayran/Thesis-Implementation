@@ -9,7 +9,7 @@ class LoginForm(forms.Form):
     email = forms.EmailField(
         widget=forms.EmailInput(attrs={
             'class': 'form-control',
-            'placeholder': 'WMSU Email',
+            'placeholder': 'Email',
             'autofocus': True,
             'id': 'id_email'
         })
@@ -31,8 +31,6 @@ class LoginForm(forms.Form):
     
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        if email and not email.endswith('@wmsu.edu.ph'):
-            raise ValidationError('Please use your WMSU email address (@wmsu.edu.ph)')
         return email
 
 class RegistrationForm(UserCreationForm):
@@ -40,7 +38,7 @@ class RegistrationForm(UserCreationForm):
         required=True,
         widget=forms.EmailInput(attrs={
             'class': 'form-control',
-            'placeholder': 'WMSU Email',
+            'placeholder': 'Email',
             'id': 'id_email'
         })
     )
@@ -103,8 +101,6 @@ class RegistrationForm(UserCreationForm):
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if email:
-            if not email.endswith('@wmsu.edu.ph'):
-                raise ValidationError('Please use your WMSU email address (@wmsu.edu.ph)')
             if User.objects.filter(email=email).exists():
                 raise ValidationError('This email is already registered.')
         return email
