@@ -1,0 +1,70 @@
+CORRELATION ANALYSIS REPORT
+================================================================================
+Dataset: social_work_exam_dataset.csv
+Total Records: 140
+Total Features: 18
+Target Variable: ExamResultPercent
+Significance Level: alpha = 0.05
+================================================================================
+
+1. DESCRIPTIVE STATISTICS
+--------------------------------------------------------------------------------
+           Feature  Count  Missing      Mean  Std. Dev.   Min     Q1  Median    Q3  Max
+               Age    140        0 22.371429   1.108131 21.00 22.000   22.00 23.00 26.0
+        StudyHours    140        0  5.642857   2.192438  1.00  4.000    5.50  7.00 13.0
+        SleepHours    140        0  6.792857   1.255185  4.00  6.000    7.00  8.00 10.0
+        Confidence    140        0  7.064286   1.755611  2.00  6.000    7.00  8.25 10.0
+       TestAnxiety    140        0  6.292857   2.951640  1.00  4.000    7.00  9.00 10.0
+     MockExamScore    100       40 75.350000   7.047279 55.00 71.750   76.00 80.00 87.0
+               GPA    140        0  1.649643   0.319819  1.25  1.500    1.50  2.00  2.5
+       Scholarship    140        0  0.400000   0.491657  0.00  0.000    0.00  1.00  1.0
+   InternshipGrade    103       37  1.779126   0.382364  1.00  1.500    1.75  2.00  2.5
+      ReviewCenter    140        0  0.714286   0.453376  0.00  0.000    1.00  1.00  1.0
+EnglishProficiency    140        0  6.857143   1.571195  4.00  6.000    7.00  8.00 10.0
+   MotivationScore    140        0  7.871429   1.749996  2.00  7.000    8.00  9.00 10.0
+     SocialSupport    140        0  7.135714   1.993553  2.00  6.000    7.00  9.00 10.0
+ ExamResultPercent    140        0 76.640714   2.484800 63.80 75.475   76.55 78.50 81.8
+
+2. MISSING VALUE HANDLING
+--------------------------------------------------------------------------------
+Method: Median Imputation
+   MockExamScore: 40 values imputed with median
+   InternshipGrade: 37 values imputed with median
+
+3. FEATURE CLASSIFICATION
+--------------------------------------------------------------------------------
+Binary Features: Scholarship, ReviewCenter
+Continuous Features: Age, StudyHours, SleepHours, Confidence, TestAnxiety, MockExamScore, GPA, InternshipGrade, EnglishProficiency, MotivationScore, SocialSupport
+
+4. CORRELATION RESULTS (Sorted by |r|)
+--------------------------------------------------------------------------------
+Method: Pearson for continuous, Point-Biserial for binary predictors
+
+           Feature         Method  Correlation (r)  p-value      Interpretation
+      ReviewCenter Point-Biserial           0.2314 0.005953 Significant at 0.05
+               Age        Pearson          -0.2075 0.013894 Significant at 0.05
+        StudyHours        Pearson           0.1880 0.026150 Significant at 0.05
+EnglishProficiency        Pearson           0.1738 0.040014 Significant at 0.05
+        SleepHours        Pearson          -0.1730 0.040895 Significant at 0.05
+       TestAnxiety        Pearson           0.1702 0.044358 Significant at 0.05
+               GPA        Pearson          -0.1687 0.046280 Significant at 0.05
+       Scholarship Point-Biserial           0.0808 0.342639     Not Significant
+     MockExamScore        Pearson          -0.0469 0.582165     Not Significant
+     SocialSupport        Pearson           0.0408 0.631798     Not Significant
+        Confidence        Pearson          -0.0278 0.744249     Not Significant
+   InternshipGrade        Pearson           0.0254 0.765617     Not Significant
+   MotivationScore        Pearson          -0.0112 0.895547     Not Significant
+
+Significant features (p < 0.05): 7
+Not significant features (p >= 0.05): 6
+
+5. TOP 5 STRONGEST CORRELATED PREDICTORS
+--------------------------------------------------------------------------------
+   1. ReviewCenter (r = 0.2314, p = 0.005953, Positive, Point-Biserial)
+   2. Age (r = -0.2075, p = 0.013894, Negative, Pearson)
+   3. StudyHours (r = 0.1880, p = 0.026150, Positive, Pearson)
+   4. EnglishProficiency (r = 0.1738, p = 0.040014, Positive, Pearson)
+   5. SleepHours (r = -0.1730, p = 0.040895, Negative, Pearson)
+
+================================================================================
+END OF REPORT

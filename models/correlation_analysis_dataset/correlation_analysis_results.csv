@@ -1,0 +1,14 @@
+Feature,Method,Correlation (r),p-value,Interpretation
+ReviewCenter,Point-Biserial,0.2314,0.005953,Significant at 0.05
+Age,Pearson,-0.2075,0.013894,Significant at 0.05
+StudyHours,Pearson,0.188,0.02615,Significant at 0.05
+EnglishProficiency,Pearson,0.1738,0.040014,Significant at 0.05
+SleepHours,Pearson,-0.173,0.040895,Significant at 0.05
+TestAnxiety,Pearson,0.1702,0.044358,Significant at 0.05
+GPA,Pearson,-0.1687,0.04628,Significant at 0.05
+Scholarship,Point-Biserial,0.0808,0.342639,Not Significant
+MockExamScore,Pearson,-0.0469,0.582165,Not Significant
+SocialSupport,Pearson,0.0408,0.631798,Not Significant
+Confidence,Pearson,-0.0278,0.744249,Not Significant
+InternshipGrade,Pearson,0.0254,0.765617,Not Significant
+MotivationScore,Pearson,-0.0112,0.895547,Not Significant
