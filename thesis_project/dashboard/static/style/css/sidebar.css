@@ -97,8 +97,55 @@
 }
 
 .nav-item:hover {
-    background: #f3f4f6;
     transform: translateX(4px);
+}
+
+.nav-item[data-color="blue"]:hover {
+    background: linear-gradient(135deg, #1cb0f6 0%, #0d8ec9 100%);
+    color: #ffffff;
+    border: 3px solid #0d8ec9;
+    box-shadow: 0 4px 0 #0a6fa0;
+}
+
+.nav-item[data-color="blue"]:hover .nav-item-icon {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+.nav-item[data-color="green"]:hover {
+    background: linear-gradient(135deg, #58cc02 0%, #4caf50 100%);
+    color: #ffffff;
+    border: 3px solid #4caf50;
+    box-shadow: 0 4px 0 #3d9140;
+}
+
+.nav-item[data-color="green"]:hover .nav-item-icon {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+.nav-item[data-color="purple"]:hover {
+    background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+    color: #ffffff;
+    border: 3px solid #9333ea;
+    box-shadow: 0 4px 0 #7e22ce;
+}
+
+.nav-item[data-color="purple"]:hover .nav-item-icon {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+.nav-item[data-color="orange"]:hover {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    color: #ffffff;
+    border: 3px solid #ea580c;
+    box-shadow: 0 4px 0 #c2410c;
+}
+
+.nav-item[data-color="orange"]:hover .nav-item-icon {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
 }
 
 .nav-item.active {

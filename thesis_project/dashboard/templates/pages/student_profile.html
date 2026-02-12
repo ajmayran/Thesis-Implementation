@@ -10,6 +10,400 @@
     <link rel="stylesheet" href="{% static 'style/css/main.css' %}">
     <link rel="stylesheet" href="{% static 'style/css/sidebar.css' %}">
     <link rel="stylesheet" href="{% static 'fontawesome/css/all.min.css'%}">
+    <style>
+        .profile-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 2rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 3px solid #5a67d8;
+            box-shadow: 0 4px 0 #4c51bf;
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 900;
+            flex-shrink: 0;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .profile-hero-info h1 {
+            font-size: 1.75rem;
+            font-weight: 900;
+            margin-bottom: 0.25rem;
+        }
+
+        .profile-hero-info p {
+            opacity: 0.9;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .profile-hero-meta {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .profile-hero-meta span {
+            font-size: 0.8rem;
+            font-weight: 700;
+            opacity: 0.85;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .profile-section-card {
+            background: white;
+            border-radius: 20px;
+            border: 3px solid #e5e7eb;
+            box-shadow: 0 4px 0 #d1d5db;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .profile-section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 3px solid #f3f4f6;
+        }
+
+        .profile-section-header .icon-box {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .icon-box.green { background: #dcfce7; color: #16a34a; }
+        .icon-box.blue { background: #dbeafe; color: #2563eb; }
+        .icon-box.orange { background: #ffedd5; color: #ea580c; }
+
+        .profile-section-header h2 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #1f2937;
+        }
+
+        .profile-section-header p {
+            font-size: 0.8rem;
+            color: #6b7280;
+            font-weight: 600;
+        }
+
+        .profile-form .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .profile-form .form-group {
+            margin-bottom: 0;
+        }
+
+        .profile-form label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 0.4rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .profile-form input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 3px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #1f2937;
+            transition: all 0.2s ease;
+            background: #f9fafb;
+        }
+
+        .profile-form input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+            background: white;
+        }
+
+        .profile-form input[readonly] {
+            background: #f3f4f6;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .profile-form .form-actions {
+            margin-top: 1.25rem;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn-save,
+        .btn-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 14px;
+            border: none;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-save.green {
+            background: linear-gradient(180deg, #58cc02 0%, #4caf50 100%);
+            color: white;
+            box-shadow: 0 4px 0 #3d9140;
+        }
+
+        .btn-save.green:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #3d9140;
+        }
+
+        .btn-save.green:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #3d9140;
+        }
+
+        .btn-save.blue {
+            background: linear-gradient(180deg, #1cb0f6 0%, #0d8ec9 100%);
+            color: white;
+            box-shadow: 0 4px 0 #0a6fa0;
+        }
+
+        .btn-save.blue:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #0a6fa0;
+        }
+
+        .btn-save.blue:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #0a6fa0;
+        }
+
+        .btn-toggle.gray {
+            background: linear-gradient(180deg, #9ca3af 0%, #6b7280 100%);
+            color: white;
+            box-shadow: 0 4px 0 #4b5563;
+        }
+
+        .btn-toggle.gray:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #4b5563;
+        }
+
+        .btn-toggle.gray:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #4b5563;
+        }
+
+        .btn-toggle.orange {
+            background: linear-gradient(180deg, #f97316 0%, #ea580c 100%);
+            color: white;
+            box-shadow: 0 4px 0 #c2410c;
+        }
+
+        .btn-toggle.orange:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #c2410c;
+        }
+
+        .btn-toggle.orange:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #c2410c;
+        }
+
+        /* Password strength indicator */
+        .password-strength {
+            margin-top: 0.5rem;
+        }
+
+        .strength-bars {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 0.35rem;
+        }
+
+        .strength-bar {
+            height: 5px;
+            flex: 1;
+            border-radius: 3px;
+            background: #e5e7eb;
+            transition: background 0.3s ease;
+        }
+
+        .strength-bar.active.weak { background: #ef4444; }
+        .strength-bar.active.fair { background: #f59e0b; }
+        .strength-bar.active.good { background: #3b82f6; }
+        .strength-bar.active.strong { background: #10b981; }
+
+        .strength-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .strength-label.weak { color: #ef4444; }
+        .strength-label.fair { color: #f59e0b; }
+        .strength-label.good { color: #3b82f6; }
+        .strength-label.strong { color: #10b981; }
+
+        .password-info {
+            padding: 0.75rem 1rem;
+            background: #f0f9ff;
+            border-radius: 12px;
+            border: 2px solid #bae6fd;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #0369a1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* View mode info display */
+        .profile-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .profile-info-item {
+            padding: 0.75rem 1rem;
+            background: #f9fafb;
+            border-radius: 12px;
+            border: 2px solid #f3f4f6;
+        }
+
+        .profile-info-item label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.25rem;
+        }
+
+        .profile-info-item p {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 0;
+        }
+
+        .profile-view, .profile-edit {
+            transition: opacity 0.2s ease;
+        }
+
+        .profile-edit { display: none; }
+        .profile-section-card.editing .profile-view { display: none; }
+        .profile-section-card.editing .profile-edit { display: block; }
+
+        .header-with-action {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-with-action .profile-section-header {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+            flex: 1;
+        }
+
+        .section-divider {
+            border: none;
+            border-top: 3px solid #f3f4f6;
+            margin: 1rem 0 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .profile-info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .security-tips {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .tip-card {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            background: #fffbeb;
+            border-radius: 12px;
+            border: 2px solid #fde68a;
+        }
+
+        .tip-card i {
+            color: #f59e0b;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .tip-card p {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #92400e;
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .profile-hero {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .profile-hero-meta {
+                justify-content: center;
+            }
+
+            .profile-form .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .security-tips {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -18,22 +412,6 @@
         {% include 'components/student_sidebar.html' %}
 
         <div class="content-wrapper">
-            
-            <header class="header">
-                <div class="header-title">
-                    <h1>Student Profile</h1>
-                    <p>Manage your personal information</p>
-                </div>
-                <div class="header-user">
-                    <div class="user-info">
-                        <p>{{ request.user.get_full_name }}</p>
-                        <span>{{ request.user.email }}</span>
-                    </div>
-                    <div class="user-avatar">
-                        {{ request.user.first_name.0 }}{{ request.user.last_name.0 }}
-                    </div>
-                </div>
-            </header>
 
             <main class="main-content">
                 
@@ -46,138 +424,189 @@
                     {% endfor %}
                 {% endif %}
 
-                <div class="grid grid-cols-3">
-                    
-                    <div class="lg-col-span-2">
-                        
-                        <div class="card" style="margin-bottom: 1.5rem;">
-                            <div class="profile-section">
-                                <h3>Personal Information</h3>
-                                <form method="post" action="{% url 'dashboard:update_profile' %}">
-                                    {% csrf_token %}
-                                    
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label for="first_name">First Name</label>
-                                            <input type="text" id="first_name" name="first_name" value="{{ request.user.first_name }}" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="last_name">Last Name</label>
-                                            <input type="text" id="last_name" name="last_name" value="{{ request.user.last_name }}" required>
-                                        </div>
-                                    </div>
+                <!-- Profile Hero -->
+                <div class="profile-hero">
+                    <div class="profile-avatar">
+                        {{ request.user.first_name.0 }}{{ request.user.last_name.0 }}
+                    </div>
+                    <div class="profile-hero-info">
+                        <h1>{{ request.user.get_full_name }}</h1>
+                        <p>{{ request.user.email }}</p>
+                        <div class="profile-hero-meta">
+                            <span><i class="fa-solid fa-id-card"></i> {{ request.user.student_id }}</span>
+                            <span><i class="fa-solid fa-calendar"></i> Joined {{ request.user.date_joined|date:"M Y" }}</span>
+                            <span><i class="fa-solid fa-clock"></i> Last login {{ request.user.last_login|date:"M d, Y" }}</span>
+                        </div>
+                    </div>
+                </div>
 
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label for="email">Email Address</label>
-                                            <input type="email" id="email" name="email" value="{{ request.user.email }}" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="student_id">Student ID</label>
-                                            <input type="text" id="student_id" name="student_id" value="{{ request.user.student_id }}" readonly style="background-color: #f3f4f6;">
-                                        </div>
-                                    </div>
-
-                                    <div class="form-actions">
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="fa-solid fa-save"></i>
-                                            Save Changes
-                                        </button>
-                                    </div>
-                                </form>
+                <!-- Personal Information -->
+                <div class="profile-section-card" id="profileSection">
+                    <div class="header-with-action">
+                        <div class="profile-section-header">
+                            <div class="icon-box green">
+                                <i class="fa-solid fa-user-pen"></i>
+                            </div>
+                            <div>
+                                <h2>Personal Information</h2>
+                                <p>Your name and email address</p>
                             </div>
                         </div>
+                        <button type="button" class="btn-toggle orange" id="editToggleBtn" onclick="toggleEdit()">
+                            <i class="fa-solid fa-pen"></i>
+                            Edit
+                        </button>
+                    </div>
+                    <hr class="section-divider">
 
-                        <div class="card">
-                            <div class="profile-section">
-                                <h3>Change Password</h3>
-                                <form method="post" action="{% url 'dashboard:change_password' %}">
-                                    {% csrf_token %}
-                                    
-                                    <div class="form-group">
-                                        <label for="current_password">Current Password</label>
-                                        <input type="password" id="current_password" name="current_password" required>
-                                    </div>
-
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label for="new_password1">New Password</label>
-                                            <input type="password" id="new_password1" name="new_password1" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="new_password2">Confirm New Password</label>
-                                            <input type="password" id="new_password2" name="new_password2" required>
-                                        </div>
-                                    </div>
-
-                                    <div class="form-actions">
-                                        <button type="submit" class="btn btn-blue">
-                                            <i class="fa-solid fa-key"></i>
-                                            Update Password
-                                        </button>
-                                    </div>
-                                </form>
+                    <!-- View Mode -->
+                    <div class="profile-view">
+                        <div class="profile-info-grid">
+                            <div class="profile-info-item">
+                                <label>First Name</label>
+                                <p>{{ request.user.first_name }}</p>
+                            </div>
+                            <div class="profile-info-item">
+                                <label>Last Name</label>
+                                <p>{{ request.user.last_name }}</p>
+                            </div>
+                            <div class="profile-info-item">
+                                <label>Email Address</label>
+                                <p>{{ request.user.email }}</p>
+                            </div>
+                            <div class="profile-info-item">
+                                <label>Student ID</label>
+                                <p>{{ request.user.student_id }}</p>
                             </div>
                         </div>
-
                     </div>
 
-                    <div>
-                        
-                        <div class="card" style="margin-bottom: 1.5rem;">
-                            <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center;">
-                                <i class="fa-solid fa-user-circle" style="color: #3b82f6; margin-right: 0.5rem;"></i>
-                                Account Overview
-                            </h3>
-                            <div class="info-grid" style="grid-template-columns: 1fr;">
-                                <div class="info-item">
-                                    <label>Full Name</label>
-                                    <p>{{ request.user.get_full_name }}</p>
+                    <!-- Edit Mode -->
+                    <div class="profile-edit">
+                        <form method="post" action="{% url 'dashboard:update_profile' %}" class="profile-form">
+                            {% csrf_token %}
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="first_name">First Name</label>
+                                    <input type="text" id="first_name" name="first_name" value="{{ request.user.first_name }}" required>
                                 </div>
-                                <div class="info-item">
-                                    <label>Email</label>
-                                    <p>{{ request.user.email }}</p>
-                                </div>
-                                <div class="info-item">
-                                    <label>Student ID</label>
-                                    <p>{{ request.user.student_id }}</p>
-                                </div>
-                                <div class="info-item">
-                                    <label>Member Since</label>
-                                    <p>{{ request.user.date_joined|date:"F d, Y" }}</p>
-                                </div>
-                                <div class="info-item">
-                                    <label>Last Login</label>
-                                    <p>{{ request.user.last_login|date:"F d, Y h:i A" }}</p>
+                                <div class="form-group">
+                                    <label for="last_name">Last Name</label>
+                                    <input type="text" id="last_name" name="last_name" value="{{ request.user.last_name }}" required>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="card" style="background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);">
-                            <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center;">
-                                <i class="fa-solid fa-shield-halved" style="color: #ea580c; margin-right: 0.5rem;"></i>
-                                Security Tips
-                            </h3>
-                            <div class="tips-list">
-                                <div class="tip-item">
-                                    <i class="fa-solid fa-circle-check" style="color: #ea580c;"></i>
-                                    <p>Use a strong, unique password</p>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="email">Email Address</label>
+                                    <input type="email" id="email" name="email" value="{{ request.user.email }}" required>
                                 </div>
-                                <div class="tip-item">
-                                    <i class="fa-solid fa-circle-check" style="color: #ea580c;"></i>
-                                    <p>Never share your login credentials</p>
-                                </div>
-                                <div class="tip-item">
-                                    <i class="fa-solid fa-circle-check" style="color: #ea580c;"></i>
-                                    <p>Update your password regularly</p>
-                                </div>
-                                <div class="tip-item">
-                                    <i class="fa-solid fa-circle-check" style="color: #ea580c;"></i>
-                                    <p>Log out from shared devices</p>
+                                <div class="form-group">
+                                    <label for="student_id">Student ID</label>
+                                    <input type="text" id="student_id" name="student_id" value="{{ request.user.student_id }}" readonly>
                                 </div>
                             </div>
-                        </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn-save green">
+                                    <i class="fa-solid fa-check"></i>
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
 
+                <!-- Change Password -->
+                <div class="profile-section-card" id="passwordSection">
+                    <div class="header-with-action">
+                        <div class="profile-section-header">
+                            <div class="icon-box blue">
+                                <i class="fa-solid fa-lock"></i>
+                            </div>
+                            <div>
+                                <h2>Change Password</h2>
+                                <p>Keep your account secure</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-toggle orange" id="passwordToggleBtn" onclick="togglePassword()">
+                            <i class="fa-solid fa-pen"></i>
+                            Change
+                        </button>
+                    </div>
+                    <hr class="section-divider">
+
+                    <!-- View Mode -->
+                    <div class="profile-view">
+                        <div class="password-info">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            Your password is set. Click "Change" to update it.
+                        </div>
+                    </div>
+
+                    <!-- Edit Mode -->
+                    <div class="profile-edit">
+                        <form method="post" action="{% url 'dashboard:change_password' %}" class="profile-form">
+                            {% csrf_token %}
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label for="current_password">Current Password</label>
+                                <input type="password" id="current_password" name="current_password" required>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="new_password1">New Password</label>
+                                    <input type="password" id="new_password1" name="new_password1" required>
+                                    <div class="password-strength" id="strengthIndicator" style="display: none;">
+                                        <div class="strength-bars">
+                                            <div class="strength-bar" id="bar1"></div>
+                                            <div class="strength-bar" id="bar2"></div>
+                                            <div class="strength-bar" id="bar3"></div>
+                                            <div class="strength-bar" id="bar4"></div>
+                                        </div>
+                                        <span class="strength-label" id="strengthLabel"></span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="new_password2">Confirm New Password</label>
+                                    <input type="password" id="new_password2" name="new_password2" required>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn-save blue">
+                                    <i class="fa-solid fa-key"></i>
+                                    Update Password
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Security Tips -->
+                <div class="profile-section-card">
+                    <div class="profile-section-header">
+                        <div class="icon-box orange">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <div>
+                            <h2>Security Tips</h2>
+                            <p>Best practices for account safety</p>
+                        </div>
+                    </div>
+                    <div class="security-tips">
+                        <div class="tip-card">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <p>Use a strong, unique password</p>
+                        </div>
+                        <div class="tip-card">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <p>Never share your login credentials</p>
+                        </div>
+                        <div class="tip-card">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <p>Update your password regularly</p>
+                        </div>
+                        <div class="tip-card">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <p>Log out from shared devices</p>
+                        </div>
                     </div>
                 </div>
 
@@ -185,6 +614,69 @@
 
         </div>
     </div>
+
+    <script>
+        function toggleSection(sectionId, btnId, showLabel, hideLabel) {
+            const section = document.getElementById(sectionId);
+            const btn = document.getElementById(btnId);
+            section.classList.toggle('editing');
+
+            if (section.classList.contains('editing')) {
+                btn.innerHTML = '<i class="fa-solid fa-xmark"></i> Cancel';
+                btn.classList.remove('orange');
+                btn.classList.add('gray');
+            } else {
+                btn.innerHTML = '<i class="fa-solid fa-pen"></i> ' + showLabel;
+                btn.classList.remove('gray');
+                btn.classList.add('orange');
+            }
+        }
+
+        function toggleEdit() {
+            toggleSection('profileSection', 'editToggleBtn', 'Edit');
+        }
+
+        function togglePassword() {
+            toggleSection('passwordSection', 'passwordToggleBtn', 'Change');
+        }
+
+        // Password strength checker
+        const passwordInput = document.getElementById('new_password1');
+        if (passwordInput) {
+            passwordInput.addEventListener('input', function() {
+                const val = this.value;
+                const indicator = document.getElementById('strengthIndicator');
+                const bars = [document.getElementById('bar1'), document.getElementById('bar2'), document.getElementById('bar3'), document.getElementById('bar4')];
+                const label = document.getElementById('strengthLabel');
+
+                if (!val) {
+                    indicator.style.display = 'none';
+                    return;
+                }
+                indicator.style.display = 'block';
+
+                let score = 0;
+                if (val.length >= 8) score++;
+                if (/[a-z]/.test(val) && /[A-Z]/.test(val)) score++;
+                if (/\d/.test(val)) score++;
+                if (/[^a-zA-Z0-9]/.test(val)) score++;
+
+                const levels = ['weak', 'fair', 'good', 'strong'];
+                const labels = ['Weak', 'Fair', 'Good', 'Strong'];
+                const level = levels[Math.max(0, score - 1)];
+
+                bars.forEach((bar, i) => {
+                    bar.className = 'strength-bar';
+                    if (i < score) {
+                        bar.classList.add('active', level);
+                    }
+                });
+
+                label.className = 'strength-label ' + level;
+                label.textContent = labels[Math.max(0, score - 1)];
+            });
+        }
+    </script>
 
 </body>
 </html>

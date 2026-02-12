@@ -1,34 +1,60 @@
 {% load static %}
-<aside class="sidebar">
-    <div class="flex items-center mb-8">
-        <div class="mr-3" style="background: rgba(255, 255, 255, 0.1); padding: 0.5rem; border-radius: 0.5rem;">
-            <i class="fa-solid fa-user-graduate text-xl"></i>
+
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-user">
+        <div class="user-avatar">
+            {{ request.user.first_name.0|default:'A' }}{{ request.user.last_name.0|default:'D' }}
         </div>
-        <div>
-            <h1>Social Work<br />Predictor</h1>
+        <div class="user-info">
+            <div class="user-name">{{ request.user.first_name }}</div>
+            <div class="user-role">Administrator</div>
         </div>
     </div>
 
-    <nav>
-        <a href="{% url 'dashboard:home' %}" class="nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
-            <i class="fa-solid fa-house-chimney"></i>Dashboard
+    <nav class="sidebar-nav">
+        <a href="{% url 'dashboard:home' %}" class="nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}" data-color="blue">
+            <div class="nav-item-icon">
+                <i class="fa-solid fa-house-chimney"></i>
+            </div>
+            <span class="nav-item-text">Dashboard</span>
         </a>
-        <a href="{% url 'prediction:admin_predict' %}" class="nav-item {% if request.resolver_match.url_name == 'predict' %}active{% endif %}">
-            <i class="fa-solid fa-brain"></i>Predictions
+        <a href="{% url 'prediction:admin_predict' %}" class="nav-item {% if request.resolver_match.url_name == 'admin_predict' %}active{% endif %}" data-color="green">
+            <div class="nav-item-icon">
+                <i class="fa-solid fa-brain"></i>
+            </div>
+            <span class="nav-item-text">Predictions</span>
         </a>
-        <a href="{% url 'dashboard:reports' %}" class="nav-item {% if request.resolver_match.url_name == 'reports' %}active{% endif %}">
-            <i class="fa-solid fa-chart-line"></i>Reports
-        </a>
-        <a href="{% url 'accounts:logout' %}" class="nav-item logout-trigger" style="color: #fca5a5;">
-            <i class="fa-solid fa-right-from-bracket"></i>Logout
+        <a href="{% url 'dashboard:reports' %}" class="nav-item {% if request.resolver_match.url_name == 'reports' %}active{% endif %}" data-color="purple">
+            <div class="nav-item-icon">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <span class="nav-item-text">Reports</span>
         </a>
     </nav>
 
+    <div class="sidebar-logout">
+        <a href="{% url 'accounts:logout' %}" class="nav-item logout logout-trigger">
+            <div class="nav-item-icon">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </div>
+            <span class="nav-item-text">Logout</span>
+        </a>
+    </div>
+
     <div class="sidebar-footer">
-        <div>© 2024 Thesis Project</div>
-        <div class="mt-1">Version 1.0.0</div>
+        <div class="footer-badge">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Admin Panel</span>
+        </div>
+        <div class="footer-version">v1.0.0</div>
     </div>
 </aside>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<button class="sidebar-toggle" id="sidebarToggle">
+    <i class="fa-solid fa-bars"></i>
+</button>
 
 <!-- Logout Confirmation Modal -->
 <div id="logoutModal" class="logout-modal hidden">
@@ -51,6 +77,32 @@
 </div>
 
 <script>
+    // Mobile sidebar toggle
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const toggleIcon = sidebarToggle.querySelector('i');
+
+    sidebarToggle.addEventListener('click', function() {
+        sidebar.classList.toggle('open');
+        sidebarOverlay.classList.toggle('active');
+        if (sidebar.classList.contains('open')) {
+            toggleIcon.classList.remove('fa-bars');
+            toggleIcon.classList.add('fa-xmark');
+        } else {
+            toggleIcon.classList.remove('fa-xmark');
+            toggleIcon.classList.add('fa-bars');
+        }
+    });
+
+    sidebarOverlay.addEventListener('click', function() {
+        sidebar.classList.remove('open');
+        sidebarOverlay.classList.remove('active');
+        toggleIcon.classList.remove('fa-xmark');
+        toggleIcon.classList.add('fa-bars');
+    });
+
+    // Logout confirmation modal behavior
     (function() {
         const modal = document.getElementById('logoutModal');
         const cancelBtn = document.getElementById('cancelLogout');

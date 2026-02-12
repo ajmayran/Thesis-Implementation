@@ -6,7 +6,7 @@
             {{ request.user.first_name.0|default:'U' }}{{ request.user.last_name.0|default:'S' }}
         </div>
         <div class="user-info">
-            <div class="user-name">{{ request.user.first_name }} {{ request.user.last_name }}</div>
+            <div class="user-name">{{ request.user.first_name }}</div>
             <div class="user-email">{{ request.user.email }}</div>
         </div>
     </div>

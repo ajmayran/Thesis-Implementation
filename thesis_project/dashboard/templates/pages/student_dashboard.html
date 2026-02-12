@@ -9,265 +9,187 @@
     
     <link rel="stylesheet" href="{% static 'style/css/main.css' %}">
     <link rel="stylesheet" href="{% static 'style/css/sidebar.css' %}">
+    <link rel="stylesheet" href="{% static 'style/css/dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'fontawesome/css/all.min.css'%}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        @keyframes wiggle {
-            0%, 100% { transform: rotate(0deg); }
-            25% { transform: rotate(-5deg); }
-            75% { transform: rotate(5deg); }
-        }
-
-        @keyframes slideInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .animate-bounce-slow {
-            animation: bounce 2s ease-in-out infinite;
-        }
-
-        .animate-pulse-slow {
-            animation: pulse 3s ease-in-out infinite;
-        }
-
-        .animate-wiggle:hover {
-            animation: wiggle 0.5s ease-in-out;
-        }
-
-        .slide-in-up {
-            animation: slideInUp 0.6s ease-out forwards;
-        }
-
-        .duo-card {
-            background: white;
-            border-radius: 20px;
-            border: 3px solid #e5e7eb;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 0 #d1d5db;
-        }
-
-        .duo-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 0 #d1d5db;
-        }
-
-        .duo-button {
-            border-radius: 16px;
-            border: none;
-            padding: 16px 32px;
-            font-weight: 700;
-            font-size: 16px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.15);
-            cursor: pointer;
-        }
-
-        .duo-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
-        }
-
-        .duo-button:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
-        }
-
-        .duo-green {
-            background: linear-gradient(180deg, #58cc02 0%, #4caf50 100%);
-            color: white;
-        }
-
-        .duo-blue {
-            background: linear-gradient(180deg, #1cb0f6 0%, #0d8ec9 100%);
-            color: white;
-        }
-
-        .duo-red {
-            background: linear-gradient(180deg, #ff4b4b 0%, #e03e3e 100%);
-            color: white;
-        }
-
-        .duo-yellow {
-            background: linear-gradient(180deg, #ffc800 0%, #ffab00 100%);
-            color: white;
-        }
-
-        .duo-purple {
-            background: linear-gradient(180deg, #ce82ff 0%, #a855f7 100%);
-            color: white;
-        }
-
-        .streak-flame {
-            background: linear-gradient(135deg, #ff9500 0%, #ff4500 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .progress-ring {
-            transform: rotate(-90deg);
-        }
-
-        .content-wrapper {
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #fef3c7 100%);
-        }
-    </style>
 </head>
 
-<body>
+<body class="dashboard-page">
     <div class="main-container">
         
         {% include 'components/student_sidebar.html' %}
 
         <div class="content-wrapper">
+
+            <!-- Skeleton Loading -->
+            <div class="skeleton-wrapper" id="dashboardSkeleton">
+                <!-- Hero skeleton -->
+                <div class="skeleton-card skel-hero">
+                    <div class="skeleton skeleton-line title" style="width: 60%;"></div>
+                    <div class="skeleton skeleton-line subtitle" style="width: 40%;"></div>
+                </div>
+                <!-- Stats grid skeleton -->
+                <div class="skel-stats">
+                    <div class="skeleton-card skel-stat-card">
+                        <div class="skeleton skeleton-line short"></div>
+                        <div class="skeleton skeleton-line title" style="width: 50%;"></div>
+                        <div class="skeleton skeleton-line short"></div>
+                    </div>
+                    <div class="skeleton-card skel-stat-card">
+                        <div class="skeleton skeleton-line short"></div>
+                        <div class="skeleton skeleton-line title" style="width: 50%;"></div>
+                        <div class="skeleton skeleton-line short"></div>
+                    </div>
+                    <div class="skeleton-card skel-stat-card">
+                        <div class="skeleton skeleton-line short"></div>
+                        <div class="skeleton skeleton-line title" style="width: 50%;"></div>
+                        <div class="skeleton skeleton-line short"></div>
+                    </div>
+                </div>
+                <!-- CTA button skeleton -->
+                <div class="skel-cta">
+                    <div class="skeleton skeleton-btn skel-cta-btn"></div>
+                </div>
+                <!-- Two column layout skeleton -->
+                <div class="skel-grid">
+                    <div>
+                        <div class="skeleton-card skel-main-card">
+                            <div class="skeleton skeleton-line title" style="width: 50%; margin-bottom: 1.5rem;"></div>
+                            <div class="skeleton skeleton-line full"></div>
+                            <div class="skeleton skeleton-line full"></div>
+                            <div class="skeleton skeleton-line full"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="skeleton-card skel-side-card">
+                            <div class="skeleton skeleton-line title" style="width: 60%;"></div>
+                            <div class="skeleton skeleton-btn" style="margin-top: 1rem;"></div>
+                            <div class="skeleton skeleton-btn" style="margin-top: 0.75rem;"></div>
+                        </div>
+                        <div class="skeleton-card skel-side-card">
+                            <div class="skeleton skeleton-line title" style="width: 50%;"></div>
+                            <div class="skeleton skeleton-line full"></div>
+                            <div class="skeleton skeleton-line full"></div>
+                            <div class="skeleton skeleton-line full"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
-            <main class="main-content p-6">
+            <main class="main-content page-content" id="dashboardContent">
                 
                 {% if messages %}
                     {% for message in messages %}
-                        <div class="mb-4 p-4 rounded-2xl border-3 {% if message.tags == 'error' %}bg-red-50 border-red-300 text-red-700{% else %}bg-green-50 border-green-300 text-green-700{% endif %} flex items-center gap-3 slide-in-up">
-                            <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% else %}fa-circle-check{% endif %} text-2xl"></i>
-                            <span class="font-bold">{{ message }}</span>
+                        <div class="dash-message {% if message.tags == 'error' %}error{% else %}success{% endif %} dash-slide-in">
+                            <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% else %}fa-circle-check{% endif %}"></i>
+                            <span>{{ message }}</span>
                         </div>
                     {% endfor %}
                 {% endif %}
 
                 <!-- Hero Welcome Section -->
-                <div class="duo-card p-8 mb-6 slide-in-up">
-                    <div class="flex items-center justify-between flex-wrap gap-4">
-                        <div class="flex-1">
-                            <h1 class="text-4xl md:text-5xl font-black text-gray-800 mb-2">
-                                Hello, {{ request.user.first_name }}!
-                            </h1>
-                            <p class="text-xl text-gray-600 font-semibold">
-                                Ready to predict your exam success?
-                            </p>
+                <div class="dash-hero dash-slide-in">
+                    <div class="dash-hero-text">
+                        <h1 class="dash-hero-title">Hello, {{ request.user.first_name }}!</h1>
+                        <p class="dash-hero-subtitle">Ready to predict your exam success?</p>
+                    </div>
+                    <div class="dash-hero-streak dash-bounce">
+                        <div class="dash-hero-streak-icon">
+                            <i class="fa-solid fa-fire"></i>
                         </div>
-                        <div class="flex gap-4 items-center">
-                            <div class="text-center animate-bounce-slow">
-                                <div class="text-5xl mb-2 streak-flame">
-                                    <i class="fa-solid fa-fire"></i>
-                                </div>
-                                <div class="text-2xl font-black text-gray-700">{{ total_predictions }}</div>
-                                <div class="text-sm font-bold text-gray-500">PREDICTIONS</div>
-                            </div>
-                        </div>
+                        <div class="dash-hero-streak-count">{{ total_predictions }}</div>
+                        <div class="dash-hero-streak-label">Predictions</div>
                     </div>
                 </div>
 
                 <!-- Stats Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="dash-stats">
                     <!-- Latest Result Card -->
-                    <div class="duo-card p-6 duo-green text-white slide-in-up animate-wiggle" style="animation-delay: 0.1s;">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <div class="text-sm font-bold opacity-90 uppercase tracking-wide mb-2">Latest Result</div>
-                                <div class="text-5xl font-black mb-1">
-                                    {% if latest_prediction %}
-                                        {{ latest_prediction.probability|floatformat:0 }}%
-                                    {% else %}
-                                        --
-                                    {% endif %}
-                                </div>
-                                <div class="text-sm font-semibold opacity-90">Pass Probability</div>
+                    <div class="dash-stat-card green dash-slide-in dash-wiggle" style="animation-delay: 0.1s;">
+                        <div class="dash-stat-info">
+                            <div class="dash-stat-label">Latest Result</div>
+                            <div class="dash-stat-value">
+                                {% if latest_prediction %}
+                                    {{ latest_prediction.probability|floatformat:0 }}%
+                                {% else %}
+                                    --
+                                {% endif %}
                             </div>
-                            <div class="text-6xl opacity-20">
-                                <i class="fa-solid fa-trophy"></i>
-                            </div>
+                            <div class="dash-stat-sub">Pass Probability</div>
+                        </div>
+                        <div class="dash-stat-icon">
+                            <i class="fa-solid fa-trophy"></i>
                         </div>
                     </div>
 
                     <!-- Average Score Card -->
-                    <div class="duo-card p-6 duo-blue text-white slide-in-up animate-wiggle" style="animation-delay: 0.2s;">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <div class="text-sm font-bold opacity-90 uppercase tracking-wide mb-2">Average Score</div>
-                                <div class="text-5xl font-black mb-1">{{ average_probability|floatformat:0 }}%</div>
-                                <div class="text-sm font-semibold opacity-90">Overall Performance</div>
-                            </div>
-                            <div class="text-6xl opacity-20">
-                                <i class="fa-solid fa-chart-line"></i>
-                            </div>
+                    <div class="dash-stat-card blue dash-slide-in dash-wiggle" style="animation-delay: 0.2s;">
+                        <div class="dash-stat-info">
+                            <div class="dash-stat-label">Average Score</div>
+                            <div class="dash-stat-value">{{ average_probability|floatformat:0 }}%</div>
+                            <div class="dash-stat-sub">Overall Performance</div>
+                        </div>
+                        <div class="dash-stat-icon">
+                            <i class="fa-solid fa-chart-line"></i>
                         </div>
                     </div>
 
                     <!-- Highest Score Card -->
-                    <div class="duo-card p-6 duo-yellow text-white slide-in-up animate-wiggle" style="animation-delay: 0.3s;">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <div class="text-sm font-bold opacity-90 uppercase tracking-wide mb-2">Best Score</div>
-                                <div class="text-5xl font-black mb-1">{{ highest_probability|floatformat:0 }}%</div>
-                                <div class="text-sm font-semibold opacity-90">Personal Best!</div>
-                            </div>
-                            <div class="text-6xl opacity-20">
-                                <i class="fa-solid fa-star"></i>
-                            </div>
+                    <div class="dash-stat-card yellow dash-slide-in dash-wiggle" style="animation-delay: 0.3s;">
+                        <div class="dash-stat-info">
+                            <div class="dash-stat-label">Best Score</div>
+                            <div class="dash-stat-value">{{ highest_probability|floatformat:0 }}%</div>
+                            <div class="dash-stat-sub">Personal Best!</div>
+                        </div>
+                        <div class="dash-stat-icon">
+                            <i class="fa-solid fa-star"></i>
                         </div>
                     </div>
                 </div>
 
                 <!-- Main Action Button -->
-                <div class="text-center mb-6 slide-in-up" style="animation-delay: 0.4s;">
-                    <a href="{% url 'prediction:student_predict' %}" class="duo-button duo-green inline-flex items-center gap-3 text-xl animate-pulse-slow">
-                        <i class="fa-solid fa-wand-magic-sparkles text-2xl"></i>
-                        <span>START NEW PREDICTION</span>
+                <div class="dash-cta dash-slide-in" style="animation-delay: 0.4s;">
+                    <a href="{% url 'prediction:student_predict' %}" class="dash-cta-btn dash-pulse">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>Start New Prediction</span>
                     </a>
                 </div>
 
                 <!-- Two Column Layout -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="dash-grid">
                     
-                    <!-- Recent Predictions -->
-                    <div class="lg:col-span-2">
-                        <div class="duo-card p-6 slide-in-up" style="animation-delay: 0.5s;">
-                            <div class="flex items-center justify-between mb-6">
-                                <h2 class="text-2xl font-black text-gray-800 flex items-center gap-2">
-                                    <i class="fa-solid fa-clock-rotate-left text-purple-500"></i>
+                    <!-- Main Column -->
+                    <div>
+                        <!-- Recent Predictions -->
+                        <div class="dash-card dash-slide-in" style="animation-delay: 0.5s;">
+                            <div class="dash-card-header">
+                                <h2 class="dash-card-title">
+                                    <i class="fa-solid fa-clock-rotate-left purple"></i>
                                     Recent Predictions
                                 </h2>
-                                <a href="{% url 'prediction:history' %}" class="text-blue-500 font-bold hover:text-blue-700 text-sm uppercase tracking-wide">
+                                <a href="{% url 'prediction:history' %}" class="dash-view-all">
                                     View All <i class="fa-solid fa-arrow-right"></i>
                                 </a>
                             </div>
 
                             {% if recent_predictions %}
-                                <div class="space-y-3">
+                                <div class="dash-predictions">
                                     {% for pred in recent_predictions %}
-                                        <div class="duo-card p-4 {% if pred.probability >= 70 %}duo-green{% elif pred.probability >= 50 %}duo-blue{% else %}duo-red{% endif %} text-white">
-                                            <div class="flex items-center justify-between mb-2">
-                                                <div class="text-4xl font-black">{{ pred.probability|floatformat:0 }}%</div>
-                                                <div class="text-right">
-                                                    <div class="text-xs font-bold opacity-90 uppercase">{{ pred.created_at|date:"M d, Y" }}</div>
-                                                    <div class="text-xs opacity-75">{{ pred.created_at|date:"h:i A" }}</div>
+                                        <div class="dash-pred-card {% if pred.probability >= 70 %}green{% elif pred.probability >= 50 %}blue{% else %}red{% endif %}">
+                                            <div class="dash-pred-top">
+                                                <div class="dash-pred-score">{{ pred.probability|floatformat:0 }}%</div>
+                                                <div class="dash-pred-date">
+                                                    <div class="dash-pred-date-day">{{ pred.created_at|date:"M d, Y" }}</div>
+                                                    <div class="dash-pred-date-time">{{ pred.created_at|date:"h:i A" }}</div>
                                                 </div>
                                             </div>
-                                            <div class="flex items-center justify-between text-sm">
-                                                <div class="flex gap-3 opacity-90">
+                                            <div class="dash-pred-bottom">
+                                                <div class="dash-pred-details">
                                                     <span><i class="fa-solid fa-graduation-cap"></i> GPA {{ pred.gpa|floatformat:2 }}</span>
                                                     <span><i class="fa-solid fa-clock"></i> {{ pred.study_hours }}hrs</span>
                                                     <span><i class="fa-solid fa-{% if pred.review_center %}check{% else %}xmark{% endif %}"></i> Review</span>
                                                 </div>
-                                                <a href="{% url 'prediction:detail' pred.id %}" class="font-bold hover:underline">
+                                                <a href="{% url 'prediction:detail' pred.id %}" class="dash-pred-link">
                                                     Details <i class="fa-solid fa-arrow-right"></i>
                                                 </a>
                                             </div>
@@ -275,102 +197,102 @@
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                <div class="text-center py-12">
-                                    <div class="text-6xl mb-4 text-gray-300">
+                                <div class="dash-empty">
+                                    <div class="dash-empty-icon">
                                         <i class="fa-solid fa-chart-line"></i>
                                     </div>
-                                    <p class="text-xl font-bold text-gray-600 mb-4">No predictions yet!</p>
-                                    <p class="text-gray-500 mb-6">Get started with your first prediction to see your results here.</p>
-                                    <a href="{% url 'prediction:student_predict' %}" class="duo-button duo-blue inline-flex items-center gap-2">
+                                    <p class="dash-empty-title">No predictions yet!</p>
+                                    <p class="dash-empty-text">Get started with your first prediction to see your results here.</p>
+                                    <a href="{% url 'prediction:student_predict' %}" class="dash-empty-btn">
                                         <i class="fa-solid fa-plus"></i>
-                                        <span>CREATE FIRST PREDICTION</span>
+                                        <span>Create First Prediction</span>
                                     </a>
                                 </div>
                             {% endif %}
                         </div>
 
                         <!-- Progress Chart -->
-                        <div class="duo-card p-6 mt-6 slide-in-up" style="animation-delay: 0.9s;">
-                            <h2 class="text-2xl font-black text-gray-800 mb-6 flex items-center gap-2">
-                                <i class="fa-solid fa-chart-line text-blue-500"></i>
+                        <div class="dash-card dash-chart-card dash-slide-in" style="animation-delay: 0.9s;">
+                            <h2 class="dash-card-title" style="margin-bottom: 1.25rem;">
+                                <i class="fa-solid fa-chart-line blue"></i>
                                 Progress Chart
                             </h2>
                             <canvas id="progressChart" height="100"></canvas>
                         </div>
                     </div>
 
-                    <!-- Sidebar -->
+                    <!-- Sidebar Column -->
                     <div>
                         <!-- Quick Actions -->
-                        <div class="duo-card p-6 mb-4 slide-in-up" style="animation-delay: 0.6s;">
-                            <h3 class="text-xl font-black text-gray-800 mb-4 flex items-center gap-2">
-                                <i class="fa-solid fa-bolt text-yellow-500"></i>
+                        <div class="dash-card dash-slide-in" style="animation-delay: 0.6s;">
+                            <h3 class="dash-card-title" style="margin-bottom: 1rem;">
+                                <i class="fa-solid fa-bolt yellow"></i>
                                 Quick Actions
                             </h3>
-                            <div class="space-y-3">
-                                <a href="{% url 'prediction:history' %}" class="duo-button duo-blue w-full flex items-center justify-center gap-2 text-sm">
+                            <div class="dash-actions">
+                                <a href="{% url 'prediction:history' %}" class="dash-action-btn blue">
                                     <i class="fa-solid fa-history"></i>
-                                    <span>VIEW HISTORY</span>
+                                    <span>View History</span>
                                 </a>
-                                <a href="{% url 'dashboard:student_profile' %}" class="duo-button duo-purple w-full flex items-center justify-center gap-2 text-sm">
+                                <a href="{% url 'dashboard:student_profile' %}" class="dash-action-btn purple">
                                     <i class="fa-solid fa-user-pen"></i>
-                                    <span>UPDATE PROFILE</span>
+                                    <span>Update Profile</span>
                                 </a>
                             </div>
                         </div>
 
                         <!-- Study Tips -->
-                        <div class="duo-card p-6 mb-4 slide-in-up" style="animation-delay: 0.7s;">
-                            <h3 class="text-xl font-black text-gray-800 mb-4 flex items-center gap-2">
-                                <i class="fa-solid fa-lightbulb text-yellow-500"></i>
+                        <div class="dash-card dash-slide-in" style="animation-delay: 0.7s;">
+                            <h3 class="dash-card-title" style="margin-bottom: 1rem;">
+                                <i class="fa-solid fa-lightbulb yellow"></i>
                                 Study Tips  
                             </h3>
-                            <div class="space-y-3">
-                                <div class="flex items-start gap-3">
-                                    <div class="text-green-500 text-xl flex-shrink-0">
+                            <div class="dash-tips">
+                                <div class="dash-tip-item">
+                                    <div class="dash-tip-icon">
                                         <i class="fa-solid fa-circle-check"></i>
                                     </div>
-                                    <p class="text-sm font-semibold text-gray-700">Study 3-4 hours daily for optimal retention</p>
+                                    <p class="dash-tip-text">Study 3-4 hours daily for optimal retention</p>
                                 </div>
-                                <div class="flex items-start gap-3">
-                                    <div class="text-green-500 text-xl flex-shrink-0">
+                                <div class="dash-tip-item">
+                                    <div class="dash-tip-icon">
                                         <i class="fa-solid fa-circle-check"></i>
                                     </div>
-                                    <p class="text-sm font-semibold text-gray-700">Get 7-8 hours of sleep for better focus</p>
+                                    <p class="dash-tip-text">Get 7-8 hours of sleep for better focus</p>
                                 </div>
-                                <div class="flex items-start gap-3">
-                                    <div class="text-green-500 text-xl flex-shrink-0">
+                                <div class="dash-tip-item">
+                                    <div class="dash-tip-icon">
                                         <i class="fa-solid fa-circle-check"></i>
                                     </div>
-                                    <p class="text-sm font-semibold text-gray-700">Take practice exams regularly</p>
+                                    <p class="dash-tip-text">Take practice exams regularly</p>
                                 </div>
-                                <div class="flex items-start gap-3">
-                                    <div class="text-green-500 text-xl flex-shrink-0">
+                                <div class="dash-tip-item">
+                                    <div class="dash-tip-icon">
                                         <i class="fa-solid fa-circle-check"></i>
                                     </div>
-                                    <p class="text-sm font-semibold text-gray-700">Join study groups for better understanding</p>
+                                    <p class="dash-tip-text">Join study groups for better understanding</p>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Your Stats -->
-                        <div class="duo-card p-6 slide-in-up" style="animation-delay: 0.8s;">
-                            <h3 class="text-xl font-black text-gray-800 mb-4 flex items-center gap-2">
-                                <i class="fa-solid fa-star text-yellow-500"></i>
+                        <div class="dash-card dash-slide-in" style="animation-delay: 0.8s;">
+                            <h3 class="dash-card-title" style="margin-bottom: 1rem;">
+                                <i class="fa-solid fa-star yellow"></i>
                                 Your Stats
                             </h3>
-                            <div class="space-y-3">
-                                <div class="flex items-center justify-between py-2 border-b-2 border-gray-100">
-                                    <span class="text-sm font-bold text-gray-600">Member Since</span>
-                                    <span class="text-sm font-black text-gray-800">{{ request.user.date_joined|date:"M Y" }}</span>
+                            <div class="dash-user-stats">
+                                <div class="dash-user-stat">
+                                    <span class="dash-user-stat-label">Member Since</span>
+                                    <span class="dash-user-stat-value">{{ request.user.date_joined|date:"M Y" }}</span>
                                 </div>
-                                <div class="flex items-center justify-between py-2 border-b-2 border-gray-100">
-                                    <span class="text-sm font-bold text-gray-600">Predictions Made</span>
-                                    <span class="text-sm font-black text-gray-800">{{ total_predictions }}</span>
+                                <div class="dash-user-stat">
+                                    <span class="dash-user-stat-label">Predictions Made</span>
+                                    <span class="dash-user-stat-value">{{ total_predictions }}</span>
                                 </div>
-                                <div class="flex items-center justify-between py-2">
-                                    <span class="text-sm font-bold text-gray-600">Highest Score</span>
-                                    <span class="text-sm font-black text-gray-800">{{ highest_probability|floatformat:0 }}%</span>
+                                <div class="dash-user-stat">
+                                    <span class="dash-user-stat-label">Highest Score</span>
+                                    <span class="dash-user-stat-value">{{ highest_probability|floatformat:0 }}%</span>
                                 </div>
                             </div>
                         </div>
@@ -424,6 +346,9 @@
                             borderWidth: 2,
                             padding: 12,
                             displayColors: false,
+                            titleFont: { weight: '700' },
+                            bodyFont: { weight: '600' },
+                            cornerRadius: 12,
                             callbacks: {
                                 label: function(context) {
                                     return 'Pass Rate: ' + context.parsed.y + '%';
@@ -436,15 +361,18 @@
                             beginAtZero: true,
                             max: 100,
                             grid: {
-                                color: '#e5e7eb',
+                                color: '#f3f4f6',
                                 lineWidth: 2
+                            },
+                            border: {
+                                display: false
                             },
                             ticks: {
                                 font: {
                                     size: 12,
                                     weight: 'bold'
                                 },
-                                color: '#6b7280',
+                                color: '#9ca3af',
                                 callback: function(value) {
                                     return value + '%';
                                 }
@@ -454,18 +382,31 @@
                             grid: {
                                 display: false
                             },
+                            border: {
+                                display: false
+                            },
                             ticks: {
                                 font: {
                                     size: 12,
                                     weight: 'bold'
                                 },
-                                color: '#6b7280'
+                                color: '#9ca3af'
                             }
                         }
                     }
                 }
             });
         }
+    </script>
+
+    <script>
+        // Reveal content, hide skeleton
+        document.addEventListener('DOMContentLoaded', function() {
+            const skeleton = document.getElementById('dashboardSkeleton');
+            const content = document.getElementById('dashboardContent');
+            if (skeleton) skeleton.classList.add('loaded');
+            if (content) content.classList.add('loaded');
+        });
     </script>
 
 </body>

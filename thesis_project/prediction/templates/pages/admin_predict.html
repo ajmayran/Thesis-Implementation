@@ -13,18 +13,64 @@
     <link rel="stylesheet" href="{% static 'fontawesome/css/all.min.css'%}">
 </head>
 
-<body>
+<body class="admin-predict">
     
-    <div class="flex min-h-screen">
+    <div class="main-container" style="display: flex; min-height: 100vh;">
         
         {% include 'components/sidebar.html' %}
 
-        <div class="flex-1 main-content">
-            
-            <!-- Page Header -->
-            <header class="page-header">
-                <div>
-                    <h1>Exam Pass Prediction</h1>
+        <div class="content-wrapper" style="flex: 1; margin-left: 18rem; width: calc(100% - 18rem); display: flex; flex-direction: column;">
+
+            <!-- Skeleton Loading -->
+            <div class="skeleton-wrapper" id="predictSkeleton" style="width: 100%;">
+                <!-- Header skeleton -->
+                <div class="skeleton-card" style="padding: 1.25rem 2rem; margin-bottom: 0; border-radius: 0; border-left: 0; border-right: 0; border-top: 0;">
+                    <div class="skeleton skeleton-line title" style="width: 50%;"></div>
+                    <div class="skeleton skeleton-line subtitle" style="width: 35%;"></div>
+                </div>
+                <div style="padding: 1.5rem 2rem;">
+                    <!-- Progress bar skeleton -->
+                    <div class="skeleton-card" style="padding: 1rem 1.25rem; margin-bottom: 1.5rem;">
+                        <div class="skeleton skeleton-line" style="height: 14px; width: 100%; border-radius: 50px;"></div>
+                    </div>
+                    <!-- Info box skeleton -->
+                    <div class="skeleton-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <div style="display: flex; gap: 1rem;">
+                            <div class="skeleton" style="width: 3rem; height: 3rem; border-radius: 12px; flex-shrink: 0;"></div>
+                            <div style="flex: 1;">
+                                <div class="skeleton skeleton-line title" style="width: 45%;"></div>
+                                <div class="skeleton skeleton-line full"></div>
+                                <div class="skeleton skeleton-line long"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Form sections skeleton -->
+                    {% for i in "12345" %}
+                    <div class="skeleton-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 3px solid #293548;">
+                            <div class="skeleton" style="width: 2rem; height: 2rem; border-radius: 50%;"></div>
+                            <div class="skeleton" style="width: 2.75rem; height: 2.75rem; border-radius: 12px;"></div>
+                            <div style="flex: 1;">
+                                <div class="skeleton skeleton-line" style="width: 55%; height: 16px; margin-bottom: 0.35rem;"></div>
+                                <div class="skeleton skeleton-line" style="width: 40%; height: 12px;"></div>
+                            </div>
+                        </div>
+                        <div class="skeleton-form-row">
+                            <div class="skeleton-form-group"><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line"></div></div>
+                            <div class="skeleton-form-group"><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line"></div></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <!-- Submit skeleton -->
+                    <div style="text-align: center; margin-top: 2rem; padding-bottom: 2rem;">
+                        <div class="skeleton skeleton-btn" style="width: 300px; height: 56px; margin: 0 auto; border-radius: 16px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <header class="header page-content" id="predictHeader">
+                <div class="header-title">
+                    <h1><i class="fa-solid fa-wand-magic-sparkles"></i> Exam Pass Prediction</h1>
                     <p>Social Work Licensure Examination</p>
                 </div>
                 <a href="{% url 'dashboard:home' %}" class="back-btn">
@@ -32,33 +78,45 @@
                 </a>
             </header>
 
-            <!-- Main Content -->
-            <main>
+            <main class="main-content page-content" id="predictContent">
                 
                 <!-- Alert Messages -->
                 {% if messages %}
                     {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }}">
-                            <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% elif message.tags == 'warning' %}fa-triangle-exclamation{% else %}fa-circle-info{% endif %}"></i>
+                        <div class="message {% if message.tags == 'error' %}error{% else %}success{% endif %}">
+                            <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% elif message.tags == 'warning' %}fa-triangle-exclamation{% else %}fa-circle-check{% endif %}"></i>
                             <span>{{ message }}</span>
                         </div>
                     {% endfor %}
                 {% endif %}
 
+                <!-- Progress Tracker -->
+                <div class="form-progress" id="formProgress">
+                    <span class="form-progress-label"><i class="fa-solid fa-chart-simple"></i> Progress</span>
+                    <div class="form-progress-bar">
+                        <div class="form-progress-fill" id="progressFill"></div>
+                    </div>
+                    <span class="form-progress-text" id="progressText">0%</span>
+                </div>
+
                 <!-- Info Box -->
                 <div class="info-box">
-                    <div class="flex items-start">
-                        <div class="flex-shrink-0">
-                            <i class="fa-solid fa-circle-info info-icon"></i>
-                        </div>
-                        <div class="ml-4">
-                            <h3>About This Prediction Tool</h3>
-                            <p>
-                                This AI-powered tool analyzes your academic background, study habits, and preparation level 
-                                to predict your likelihood of passing the Social Work Licensure Examination. 
-                                Fill out all fields accurately for the most reliable prediction.
-                            </p>
-                        </div>
+                    <div class="info-box-icon">
+                        <i class="fa-solid fa-lightbulb"></i>
+                    </div>
+                    <div class="info-box-content">
+                        <h3>About This Prediction Tool</h3>
+                        <p>
+                            This AI-powered tool analyzes academic background, study habits, and preparation level 
+                            to predict the likelihood of passing the Social Work Licensure Examination. 
+                            Fill out all fields accurately for the most reliable prediction.
+                        </p>
+                        <ul>
+                            <li><i class="fa-solid fa-check"></i> Takes under 5 minutes</li>
+                            <li><i class="fa-solid fa-check"></i> Based on real exam data</li>
+                            <li><i class="fa-solid fa-check"></i> Get instant results</li>
+                            <li><i class="fa-solid fa-check"></i> Secure & confidential</li>
+                        </ul>
                     </div>
                 </div>
 
@@ -66,21 +124,30 @@
                 <form method="POST" id="predictionForm">
                     {% csrf_token %}
 
-                    <!-- Personal Information Section -->
-                    <div class="form-section">
+                    <!-- Section 1: Personal Information -->
+                    <div class="form-section" data-section="1">
                         <div class="section-header">
-                            <div class="section-icon">
+                            <span class="section-step">1</span>
+                            <div class="section-icon purple">
                                 <i class="fa-solid fa-user"></i>
                             </div>
-                            <div class="section-info">
+                            <div class="section-title-group">
                                 <h2>Personal Information</h2>
-                                <p>Basic demographic information</p>
+                                <p>Basic demographic details</p>
                             </div>
                         </div>
 
-                        <div class="form-grid form-grid-2">
+                        <div class="section-tip">
+                            <div class="section-tip-icon"><i class="fa-solid fa-lightbulb"></i></div>
+                            <p>Age and gender help the model account for demographic patterns in exam performance.</p>
+                        </div>
+
+                        <div class="form-row">
                             <div class="form-group">
-                                <label class="form-label" for="id_age">{{ form.age.label }}</label>
+                                <label for="id_age">
+                                    {{ form.age.label }}
+                                    <i class="fa-solid fa-circle-question field-hint-icon" title="Enter age at the time of taking the exam (21-100)"></i>
+                                </label>
                                 {{ form.age }}
                                 {% if form.age.errors %}
                                     <ul class="errorlist">
@@ -93,7 +160,10 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" for="id_gender">{{ form.gender.label }}</label>
+                                <label for="id_gender">
+                                    {{ form.gender.label }}
+                                    <i class="fa-solid fa-circle-question field-hint-icon" title="Select gender"></i>
+                                </label>
                                 {{ form.gender }}
                                 {% if form.gender.errors %}
                                     <ul class="errorlist">
@@ -104,21 +174,30 @@
                         </div>
                     </div>
 
-                    <!-- Academic Background Section -->
-                    <div class="form-section">
+                    <!-- Section 2: Academic Background -->
+                    <div class="form-section" data-section="2">
                         <div class="section-header">
-                            <div class="section-icon">
+                            <span class="section-step">2</span>
+                            <div class="section-icon green">
                                 <i class="fa-solid fa-graduation-cap"></i>
                             </div>
-                            <div class="section-info">
+                            <div class="section-title-group">
                                 <h2>Academic Background</h2>
-                                <p>Your academic performance indicators</p>
+                                <p>Academic performance indicators</p>
                             </div>
                         </div>
 
-                        <div class="form-grid form-grid-2">
+                        <div class="section-tip">
+                            <div class="section-tip-icon"><i class="fa-solid fa-lightbulb"></i></div>
+                            <p>GPA and internship grades are strong predictors. Use the 1.0-5.0 Philippine grading scale (1.0 = highest).</p>
+                        </div>
+
+                        <div class="form-row">
                             <div class="form-group">
-                                <label class="form-label" for="id_gpa">{{ form.gpa.label }}</label>
+                                <label for="id_gpa">
+                                    {{ form.gpa.label }}
+                                    <i class="fa-solid fa-circle-question field-hint-icon" title="General Weighted Average on a 1.0-5.0 scale (1.0 = highest)"></i>
+                                </label>
                                 {{ form.gpa }}
                                 {% if form.gpa.errors %}
                                     <ul class="errorlist">
@@ -131,7 +210,10 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" for="id_internship_grade">{{ form.internship_grade.label }}</label>
+                                <label for="id_internship_grade">
+                                    {{ form.internship_grade.label }}
+                                    <i class="fa-solid fa-circle-question field-hint-icon" title="Internship/practicum grade (1.0-5.0 scale)"></i>
+                                </label>
                                 {{ form.internship_grade }}
                                 {% if form.internship_grade.errors %}
                                     <ul class="errorlist">
@@ -144,35 +226,47 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" for="id_scholarship">{{ form.scholarship.label }}</label>
-                                {{ form.scholarship }}
+                                <label for="id_scholarship">
+                                    {{ form.scholarship.label }}
+                                    <i class="fa-solid fa-circle-question field-hint-icon" title="Did the student receive any scholarship?"></i>
+                                </label>
+                                <div class="checkbox-wrapper">
+                                    {{ form.scholarship }}
+                                    <span>Received a scholarship during studies</span>
+                                </div>
                                 {% if form.scholarship.errors %}
                                     <ul class="errorlist">
                                         {% for error in form.scholarship.errors %}<li>{{ error }}</li>{% endfor %}
                                     </ul>
                                 {% endif %}
-                                {% if form.scholarship.help_text %}
-                                    <p class="help-text">{{ form.scholarship.help_text }}</p>
-                                {% endif %}
                             </div>
                         </div>
                     </div>
 
-                    <!-- Study Habits & Preparation Section -->
-                    <div class="form-section">
+                    <!-- Section 3: Study Habits & Preparation -->
+                    <div class="form-section" data-section="3">
                         <div class="section-header">
-                            <div class="section-icon">
-                                <i class="fa-solid fa-book"></i>
+                            <span class="section-step">3</span>
+                            <div class="section-icon blue">
+                                <i class="fa-solid fa-book-open-reader"></i>
                             </div>
-                            <div class="section-info">
+                            <div class="section-title-group">
                                 <h2>Study Habits & Preparation</h2>
-                                <p>Your current preparation routine</p>
+                                <p>Current preparation routine</p>
                             </div>
                         </div>
 
-                        <div class="form-grid form-grid-2">
+                        <div class="section-tip">
+                            <div class="section-tip-icon"><i class="fa-solid fa-lightbulb"></i></div>
+                            <p>This section heavily influences the prediction. Study hours + sleep hours cannot exceed 24.</p>
+                        </div>
+
+                        <div class="form-row">
                             <div class="form-group">
-                                <label class="form-label" for="id_study_hours">{{ form.study_hours.label }}</label>
+                                <label for="id_study_hours">
+                                    {{ form.study_hours.label }}
+                                    <i class="fa-solid fa-circle-question field-hint-icon" title="Average hours per day spent studying (0-24)"></i>
+                                </label>
                                 {{ form.study_hours }}
                                 {% if form.study_hours.errors %}
                                     <ul class="errorlist">
@@ -185,7 +279,10 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" for="id_sleep_hours">{{ form.sleep_hours.label }}</label>
+                                <label for="id_sleep_hours">
+                                    {{ form.sleep_hours.label }}
+                                    <i class="fa-solid fa-circle-question field-hint-icon" title="Average hours of sleep per night (0-24)"></i>
+                                </label>
                                 {{ form.sleep_hours }}
                                 {% if form.sleep_hours.errors %}
                                     <ul class="errorlist">
@@ -198,20 +295,26 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" for="id_review_center">{{ form.review_center.label }}</label>
-                                {{ form.review_center }}
+                                <label for="id_review_center">
+                                    {{ form.review_center.label }}
+                                    <i class="fa-solid fa-circle-question field-hint-icon" title="Is the student enrolled in a review center?"></i>
+                                </label>
+                                <div class="checkbox-wrapper">
+                                    {{ form.review_center }}
+                                    <span>Enrolled in a review center</span>
+                                </div>
                                 {% if form.review_center.errors %}
                                     <ul class="errorlist">
                                         {% for error in form.review_center.errors %}<li>{{ error }}</li>{% endfor %}
                                     </ul>
                                 {% endif %}
-                                {% if form.review_center.help_text %}
-                                    <p class="help-text">{{ form.review_center.help_text }}</p>
-                                {% endif %}
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" for="id_confidence">{{ form.confidence.label }}</label>
+                                <label for="id_confidence">
+                                    {{ form.confidence.label }}
+                                    <i class="fa-solid fa-circle-question field-hint-icon" title="Confidence in passing (1=Very Low, 10=Very High)"></i>
+                                </label>
                                 {{ form.confidence }}
                                 {% if form.confidence.errors %}
                                     <ul class="errorlist">
@@ -224,7 +327,10 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" for="id_test_anxiety">{{ form.test_anxiety.label }}</label>
+                                <label for="id_test_anxiety">
+                                    {{ form.test_anxiety.label }}
+                                    <i class="fa-solid fa-circle-question field-hint-icon" title="Test anxiety level (1=Very Calm, 10=Very Anxious)"></i>
+                                </label>
                                 {{ form.test_anxiety }}
                                 {% if form.test_anxiety.errors %}
                                     <ul class="errorlist">
@@ -237,7 +343,10 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" for="id_mock_exam_score">{{ form.mock_exam_score.label }}</label>
+                                <label for="id_mock_exam_score">
+                                    {{ form.mock_exam_score.label }}
+                                    <i class="fa-solid fa-circle-question field-hint-icon" title="Latest mock exam score out of 100 (optional)"></i>
+                                </label>
                                 {{ form.mock_exam_score }}
                                 {% if form.mock_exam_score.errors %}
                                     <ul class="errorlist">
@@ -251,21 +360,30 @@
                         </div>
                     </div>
 
-                    <!-- Personal Factors Section -->
-                    <div class="form-section">
+                    <!-- Section 4: Personal Factors -->
+                    <div class="form-section" data-section="4">
                         <div class="section-header">
-                            <div class="section-icon">
+                            <span class="section-step">4</span>
+                            <div class="section-icon amber">
                                 <i class="fa-solid fa-lightbulb"></i>
                             </div>
-                            <div class="section-info">
+                            <div class="section-title-group">
                                 <h2>Personal Factors</h2>
                                 <p>Skills and support system assessment</p>
                             </div>
                         </div>
 
-                        <div class="form-grid form-grid-2">
+                        <div class="section-tip">
+                            <div class="section-tip-icon"><i class="fa-solid fa-lightbulb"></i></div>
+                            <p>Rate each factor on a scale of 1-10. Honest self-assessment yields the most accurate predictions.</p>
+                        </div>
+
+                        <div class="form-row">
                             <div class="form-group">
-                                <label class="form-label" for="id_english_proficiency">{{ form.english_proficiency.label }}</label>
+                                <label for="id_english_proficiency">
+                                    {{ form.english_proficiency.label }}
+                                    <i class="fa-solid fa-circle-question field-hint-icon" title="English proficiency (1=Poor, 10=Excellent)"></i>
+                                </label>
                                 {{ form.english_proficiency }}
                                 {% if form.english_proficiency.errors %}
                                     <ul class="errorlist">
@@ -278,7 +396,10 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" for="id_motivation_score">{{ form.motivation_score.label }}</label>
+                                <label for="id_motivation_score">
+                                    {{ form.motivation_score.label }}
+                                    <i class="fa-solid fa-circle-question field-hint-icon" title="Motivation level to pass (1=Low, 10=High)"></i>
+                                </label>
                                 {{ form.motivation_score }}
                                 {% if form.motivation_score.errors %}
                                     <ul class="errorlist">
@@ -291,7 +412,10 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" for="id_social_support">{{ form.social_support.label }}</label>
+                                <label for="id_social_support">
+                                    {{ form.social_support.label }}
+                                    <i class="fa-solid fa-circle-question field-hint-icon" title="Support from family and friends (1=Low, 10=High)"></i>
+                                </label>
                                 {{ form.social_support }}
                                 {% if form.social_support.errors %}
                                     <ul class="errorlist">
@@ -305,21 +429,30 @@
                         </div>
                     </div>
 
-                    <!-- Socioeconomic Background Section -->
-                    <div class="form-section">
+                    <!-- Section 5: Socioeconomic Background -->
+                    <div class="form-section" data-section="5">
                         <div class="section-header">
-                            <div class="section-icon">
+                            <span class="section-step">5</span>
+                            <div class="section-icon violet">
                                 <i class="fa-solid fa-briefcase"></i>
                             </div>
-                            <div class="section-info">
+                            <div class="section-title-group">
                                 <h2>Socioeconomic Background</h2>
-                                <p>Family and employment information</p>
+                                <p>Family and employment context</p>
                             </div>
                         </div>
 
-                        <div class="form-grid form-grid-2">
+                        <div class="section-tip">
+                            <div class="section-tip-icon"><i class="fa-solid fa-lightbulb"></i></div>
+                            <p>These factors help the model understand overall context. All information remains confidential.</p>
+                        </div>
+
+                        <div class="form-row">
                             <div class="form-group">
-                                <label class="form-label" for="id_income_level">{{ form.income_level.label }}</label>
+                                <label for="id_income_level">
+                                    {{ form.income_level.label }}
+                                    <i class="fa-solid fa-circle-question field-hint-icon" title="Select household income level"></i>
+                                </label>
                                 {{ form.income_level }}
                                 {% if form.income_level.errors %}
                                     <ul class="errorlist">
@@ -329,7 +462,10 @@
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" for="id_employment_status">{{ form.employment_status.label }}</label>
+                                <label for="id_employment_status">
+                                    {{ form.employment_status.label }}
+                                    <i class="fa-solid fa-circle-question field-hint-icon" title="Current employment status"></i>
+                                </label>
                                 {{ form.employment_status }}
                                 {% if form.employment_status.errors %}
                                     <ul class="errorlist">
@@ -345,7 +481,7 @@
 
                     <!-- Non-field Errors -->
                     {% if form.non_field_errors %}
-                        <div class="alert alert-error mb-6">
+                        <div class="message error non-field-errors">
                             <i class="fa-solid fa-circle-exclamation"></i>
                             <div>
                                 {% for error in form.non_field_errors %}
@@ -355,15 +491,15 @@
                         </div>
                     {% endif %}
 
-                    <!-- Submit Button -->
+                    <!-- Submit Section -->
                     <div class="submit-section">
-                        <button type="submit" class="btn-predict" id="submitBtn">
+                        <button type="submit" class="submit-btn" id="submitBtn">
                             <i class="fa-solid fa-wand-magic-sparkles"></i>
                             Generate Prediction
                         </button>
-                        <p class="security-note">
-                            <i class="fa-solid fa-shield-halved security-icon"></i>
-                            Your data is processed securely and not stored permanently
+                        <p class="submit-disclaimer">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            Data is processed securely and not stored permanently
                         </p>
                     </div>
 
@@ -375,14 +511,82 @@
     </div>
 
     <script>
-        // Form submission handler
+        // ===== Form Progress Tracker =====
+        const formInputs = document.querySelectorAll('#predictionForm input:not([type="hidden"]):not([type="checkbox"]), #predictionForm select');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const totalFields = formInputs.length;
+
+        function updateProgress() {
+            let filled = 0;
+            formInputs.forEach(input => {
+                if (input.value && input.value.trim() !== '') {
+                    if (input.tagName === 'SELECT') {
+                        if (input.selectedIndex > 0) filled++;
+                    } else {
+                        filled++;
+                    }
+                }
+            });
+            const pct = Math.round((filled / totalFields) * 100);
+            progressFill.style.width = pct + '%';
+            progressText.textContent = pct + '%';
+            
+            // Color transitions
+            if (pct === 100) {
+                progressFill.style.background = 'linear-gradient(90deg, #10b981, #059669)';
+                progressText.style.color = '#10b981';
+            } else if (pct >= 60) {
+                progressFill.style.background = 'linear-gradient(90deg, #667eea, #764ba2)';
+                progressText.style.color = '#a78bfa';
+            } else {
+                progressFill.style.background = 'linear-gradient(90deg, #f59e0b, #d97706)';
+                progressText.style.color = '#fbbf24';
+            }
+        }
+
+        formInputs.forEach(input => input.addEventListener('input', updateProgress));
+        formInputs.forEach(input => input.addEventListener('change', updateProgress));
+        updateProgress();
+
+        // ===== Section Active State =====
+        const sections = document.querySelectorAll('.form-section');
+
+        function updateActiveSections() {
+            sections.forEach(section => {
+                const inputs = section.querySelectorAll('input:not([type="hidden"]):not([type="checkbox"]), select');
+                let allFilled = true;
+                let anyFocused = false;
+
+                inputs.forEach(input => {
+                    if (document.activeElement === input) anyFocused = true;
+                    if (input.tagName === 'SELECT') {
+                        if (input.selectedIndex === 0) allFilled = false;
+                    } else if (!input.value || input.value.trim() === '') {
+                        allFilled = false;
+                    }
+                });
+
+                section.classList.toggle('section-active', anyFocused);
+                section.classList.toggle('section-complete', allFilled && !anyFocused);
+            });
+        }
+
+        document.querySelectorAll('#predictionForm input, #predictionForm select').forEach(el => {
+            el.addEventListener('focus', updateActiveSections);
+            el.addEventListener('blur', () => setTimeout(updateActiveSections, 100));
+            el.addEventListener('input', updateActiveSections);
+            el.addEventListener('change', updateActiveSections);
+        });
+
+        // ===== Form submission handler =====
         document.getElementById('predictionForm').addEventListener('submit', function(e) {
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Analyzing data...';
         });
 
-        // Validate study hours and sleep hours total
+        // ===== Validate study hours + sleep hours =====
         const studyHours = document.getElementById('id_study_hours');
         const sleepHours = document.getElementById('id_sleep_hours');
 
@@ -391,18 +595,31 @@
             const sleep = parseInt(sleepHours.value) || 0;
             
             if (study + sleep > 24) {
-                studyHours.style.borderColor = '#dc2626';
-                sleepHours.style.borderColor = '#dc2626';
+                studyHours.style.borderColor = '#ef4444';
+                sleepHours.style.borderColor = '#ef4444';
                 return false;
             } else {
-                studyHours.style.borderColor = '#e5e7eb';
-                sleepHours.style.borderColor = '#e5e7eb';
+                studyHours.style.borderColor = '';
+                sleepHours.style.borderColor = '';
                 return true;
             }
         }
 
         studyHours.addEventListener('input', validateTotalHours);
         sleepHours.addEventListener('input', validateTotalHours);
+
+        // ===== Reveal content, hide skeleton =====
+        document.addEventListener('DOMContentLoaded', function() {
+            const skeleton = document.getElementById('predictSkeleton');
+            const header = document.getElementById('predictHeader');
+            const content = document.getElementById('predictContent');
+            if (skeleton) skeleton.classList.add('loaded');
+            if (header) header.classList.add('loaded');
+            if (content) content.classList.add('loaded');
+
+            updateProgress();
+            updateActiveSections();
+        });
     </script>
 
 </body>
