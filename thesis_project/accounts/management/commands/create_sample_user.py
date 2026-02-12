@@ -7,10 +7,10 @@ class Command(BaseCommand):
     help = 'Create sample users for testing'
 
     def handle(self, *args, **options):
-        if not User.objects.filter(email='admin@wmsu.edu.ph').exists():
+        if not User.objects.filter(email='admin@email.com').exists():
             admin_user = User.objects.create_superuser(
-                username='admin',
-                email='admin@wmsu.edu.ph',
+                username='Adminj',
+                email='admin@email.com',
                 password='password',
                 first_name='Admin',
                 last_name='User',
