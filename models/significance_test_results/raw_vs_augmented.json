@@ -1,0 +1,134 @@
+[
+  {
+    "model": "base_decision_tree",
+    "raw_mean_rmse": 2.3460085544476774,
+    "aug_mean_rmse": 2.62490806614621,
+    "mean_diff": -0.2788995116985326,
+    "better": "raw",
+    "t_pvalue": 0.457544584112589,
+    "t_significant": false,
+    "w_pvalue": 0.76953125,
+    "w_significant": false
+  },
+  {
+    "model": "base_knn",
+    "raw_mean_rmse": 2.3048186080000046,
+    "aug_mean_rmse": 2.223143942458992,
+    "mean_diff": 0.08167466554101266,
+    "better": "augmented",
+    "t_pvalue": 0.8411470540718786,
+    "t_significant": false,
+    "w_pvalue": 0.083984375,
+    "w_significant": false
+  },
+  {
+    "model": "base_neural_network",
+    "raw_mean_rmse": 2.1872407373266873,
+    "aug_mean_rmse": 11.800248759739992,
+    "mean_diff": -9.613008022413302,
+    "better": "raw",
+    "t_pvalue": 5.839335168397959e-07,
+    "t_significant": true,
+    "w_pvalue": 0.001953125,
+    "w_significant": true
+  },
+  {
+    "model": "base_random_forest",
+    "raw_mean_rmse": 2.2112403066216655,
+    "aug_mean_rmse": 2.4822680878140053,
+    "mean_diff": -0.2710277811923395,
+    "better": "raw",
+    "t_pvalue": 0.5067524905261338,
+    "t_significant": false,
+    "w_pvalue": 0.845703125,
+    "w_significant": false
+  },
+  {
+    "model": "base_ridge",
+    "raw_mean_rmse": 2.185549875736963,
+    "aug_mean_rmse": 2.2211852792616495,
+    "mean_diff": -0.035635403524686325,
+    "better": "raw",
+    "t_pvalue": 0.9322014606297592,
+    "t_significant": false,
+    "w_pvalue": 0.275390625,
+    "w_significant": false
+  },
+  {
+    "model": "base_svr",
+    "raw_mean_rmse": 2.216781004624905,
+    "aug_mean_rmse": 2.120840509108803,
+    "mean_diff": 0.09594049551610133,
+    "better": "augmented",
+    "t_pvalue": 0.8248409037695782,
+    "t_significant": false,
+    "w_pvalue": 0.275390625,
+    "w_significant": false
+  },
+  {
+    "model": "ensemble_bagging_neural_network",
+    "raw_mean_rmse": 3.2852373455903687,
+    "aug_mean_rmse": 11.177325058987844,
+    "mean_diff": -7.892087713397475,
+    "better": "raw",
+    "t_pvalue": 5.386890912769e-05,
+    "t_significant": true,
+    "w_pvalue": 0.001953125,
+    "w_significant": true
+  },
+  {
+    "model": "ensemble_bagging_random_forest",
+    "raw_mean_rmse": 2.2267946192182384,
+    "aug_mean_rmse": 2.5193882342279954,
+    "mean_diff": -0.29259361500975734,
+    "better": "raw",
+    "t_pvalue": 0.4674911591965365,
+    "t_significant": false,
+    "w_pvalue": 0.845703125,
+    "w_significant": false
+  },
+  {
+    "model": "ensemble_boosting_gradient_boost",
+    "raw_mean_rmse": 2.2249835445352093,
+    "aug_mean_rmse": 2.6594423202199597,
+    "mean_diff": -0.43445877568475033,
+    "better": "raw",
+    "t_pvalue": 0.2800696052185736,
+    "t_significant": false,
+    "w_pvalue": 1.0,
+    "w_significant": false
+  },
+  {
+    "model": "ensemble_stacking_neural_only",
+    "raw_mean_rmse": 2.20018090038242,
+    "aug_mean_rmse": 10.441853933230808,
+    "mean_diff": -8.241673032848388,
+    "better": "raw",
+    "t_pvalue": 2.5828369885608425e-06,
+    "t_significant": true,
+    "w_pvalue": 0.001953125,
+    "w_significant": true
+  },
+  {
+    "model": "ensemble_stacking_neural_ridge_neural_final",
+    "raw_mean_rmse": 2.188229170279774,
+    "aug_mean_rmse": 5.74003811277092,
+    "mean_diff": -3.551808942491146,
+    "better": "raw",
+    "t_pvalue": 7.618754852921994e-05,
+    "t_significant": true,
+    "w_pvalue": 0.001953125,
+    "w_significant": true
+  },
+  {
+    "model": "ensemble_stacking_neural_ridge_ridge_final",
+    "raw_mean_rmse": 2.185798971189662,
+    "aug_mean_rmse": 2.220097072188786,
+    "mean_diff": -0.034298100999124004,
+    "better": "raw",
+    "t_pvalue": 0.9368673101190972,
+    "t_significant": false,
+    "w_pvalue": 0.275390625,
+    "w_significant": false
+  }
+]
