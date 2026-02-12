@@ -1,340 +1,24 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Social Work Licensure Exam Predictor</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        .auth-bg {
-            background: linear-gradient(135deg, #58cc02 0%, #89e34a 100%);
-            min-height: 100vh;
-        }
-
-        .login-card {
-            background: #ffffff;
-            border-radius: 20px;
-            border: 3px solid #e5e7eb;
-            box-shadow: 0 6px 0 #d1d5db;
-        }
-
-        .btn-primary {
-            background: #58cc02;
-            color: #ffffff;
-            font-weight: 900;
-            padding: 0.875rem 1.75rem;
-            border-radius: 16px;
-            border: 3px solid #4caf50;
-            box-shadow: 0 4px 0 #3d9140;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-size: 0.9375rem;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 0 #3d9140;
-        }
-
-        .btn-primary:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px 0 #3d9140;
-        }
-
-        .btn-secondary {
-            background: #ffffff;
-            color: #1cb0f6;
-            font-weight: 900;
-            padding: 0.875rem 1.75rem;
-            border-radius: 16px;
-            border: 3px solid #1cb0f6;
-            box-shadow: 0 4px 0 #0d8ec9;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-size: 0.8125rem;
-        }
-
-        .btn-secondary:hover {
-            background: #dbeafe;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 0 #0d8ec9;
-        }
-
-        .btn-secondary:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px 0 #0d8ec9;
-        }
-
-        .form-input {
-            border: 3px solid #e5e7eb;
-            border-radius: 16px;
-            padding: 0.875rem 3rem 0.875rem 3rem;
-            font-size: 0.9375rem;
-            font-weight: 700;
-            transition: all 0.2s ease;
-            background: #f9fafb;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: #1cb0f6;
-            background: #ffffff;
-            box-shadow: 0 4px 12px rgba(28, 176, 246, 0.2);
-        }
-
-        .icon-badge {
-            background: linear-gradient(135deg, #1cb0f6 0%, #0d8ec9 100%);
-            width: 3.5rem;
-            height: 3.5rem;
-            border-radius: 16px;
-            border: 3px solid #0d8ec9;
-            box-shadow: 0 4px 0 #0a6fa0;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .message-alert {
-            border-radius: 16px;
-            border: 3px solid;
-            font-weight: 700;
-            padding: 0.75rem;
-        }
-
-        .input-icon {
-            color: #6b7280;
-            font-size: 1.125rem;
-        }
-
-        .form-input:focus ~ .input-icon {
-            color: #1cb0f6;
-        }
-
-        .form-input:focus ~ .input-icon {
-            color: #1cb0f6;
-        }
-
-        .password-toggle {
-            cursor: pointer;
-            color: #6b7280;
-            font-size: 1.125rem;
-            transition: color 0.2s ease;
-        }
-
-        .password-toggle:hover {
-            color: #1cb0f6;
-        }
-
-        .info-toggle-btn {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            background: linear-gradient(135deg, #58cc02 0%, #89e34a 100%);
-            color: white;
-            width: 3.5rem;
-            height: 3.5rem;
-            border-radius: 50%;
-            border: 3px solid #4caf50;
-            box-shadow: 0 4px 0 #3d9140, 0 6px 20px rgba(88, 204, 2, 0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            z-index: 1000;
-            font-size: 1.25rem;
-        }
-
-        .info-toggle-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 0 #3d9140, 0 8px 25px rgba(88, 204, 2, 0.5);
-        }
-
-        .info-toggle-btn:active {
-            transform: translateY(0);
-            box-shadow: 0 3px 0 #3d9140, 0 4px 15px rgba(88, 204, 2, 0.4);
-        }
-
-        .info-card {
-            background: #ffffff;
-            border-radius: 20px;
-            border: 3px solid #e5e7eb;
-            box-shadow: 0 6px 0 #d1d5db;
-            position: fixed;
-            right: 5rem;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 400px;
-            max-height: 80vh;
-            overflow-y: auto;
-            z-index: 999;
-            display: none;
-        }
-
-        .info-card.active {
-            display: block;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-50%) translateX(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(-50%) translateX(0);
-            }
-        }
-
-        .info-card::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .info-card::-webkit-scrollbar-track {
-            background: #f3f4f6;
-            border-radius: 10px;
-        }
-
-        .info-card::-webkit-scrollbar-thumb {
-            background: #58cc02;
-            border-radius: 10px;
-        }
-
-        .info-card::-webkit-scrollbar-thumb:hover {
-            background: #4caf50;
-        }
-
-        .feature-item {
-            background: #f0fdf4;
-            border-radius: 12px;
-            border: 3px solid #bbf7d0;
-            padding: 0.75rem;
-            transition: all 0.2s ease;
-        }
-
-        .feature-item:hover {
-            background: #dcfce7;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 0 #86efac;
-        }
-
-        .feature-icon {
-            width: 2.5rem;
-            height: 2.5rem;
-            border-radius: 12px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #58cc02 0%, #89e34a 100%);
-            border: 3px solid #4caf50;
-            box-shadow: 0 3px 0 #3d9140;
-        }
-
-        @media (max-width: 1024px) {
-            .info-toggle-btn {
-                display: flex;
-            }
-            
-            .info-card {
-                position: fixed;
-                right: 1rem;
-                left: 1rem;
-                width: auto;
-                max-height: 70vh;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'style/css/auth.css' %}">
+    <link rel="stylesheet" href="{% static 'fontawesome/css/all.min.css'%}">
 </head>
-<body class="auth-bg flex items-center justify-center p-4">
-    <!-- Info Toggle Button -->
-    <button onclick="toggleInfo()" class="info-toggle-btn" id="infoToggle">
-        <i class="fa-solid fa-info"></i>
-    </button>
-
-    <!-- Project Info Section (Floating) -->
-    <div class="info-card p-6" id="infoCard">
-                <div class="mb-4">
-                    <div class="feature-icon mb-3">
-                        <i class="fa-solid fa-graduation-cap text-white text-xl"></i>
-                    </div>
-                    <h2 class="text-2xl font-black mb-2 text-gray-800">Social Work Licensure Exam Predictor</h2>
-                    <p class="text-base font-bold text-gray-600">Prepare smarter, not harder! Get personalized predictions and insights for your exam success.</p>
-                </div>
-
-                <div class="space-y-3">
-                    <div class="feature-item">
-                        <div class="flex items-start gap-3">
-                            <div class="feature-icon flex-shrink-0">
-                                <i class="fa-solid fa-chart-line text-white text-lg"></i>
-                            </div>
-                            <div>
-                                <h3 class="font-black text-base mb-0.5 text-gray-800">Performance Analysis</h3>
-                                <p class="text-gray-700 font-bold text-xs">Get detailed insights into your strengths and areas for improvement based on your academic performance.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="feature-item">
-                        <div class="flex items-start gap-3">
-                            <div class="feature-icon flex-shrink-0">
-                                <i class="fa-solid fa-brain text-white text-lg"></i>
-                            </div>
-                            <div>
-                                <h3 class="font-black text-base mb-0.5 text-gray-800">AI-Powered Predictions</h3>
-                                <p class="text-gray-700 font-bold text-xs">Advanced machine learning models predict your exam performance with high accuracy.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="feature-item">
-                        <div class="flex items-start gap-3">
-                            <div class="feature-icon flex-shrink-0">
-                                <i class="fa-solid fa-bullseye text-white text-lg"></i>
-                            </div>
-                            <div>
-                                <h3 class="font-black text-base mb-0.5 text-gray-800">Personalized Guidance</h3>
-                                <p class="text-gray-700 font-bold text-xs">Receive tailored recommendations to maximize your chances of passing the licensure exam.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="feature-item">
-                        <div class="flex items-start gap-3">
-                            <div class="feature-icon flex-shrink-0">
-                                <i class="fa-solid fa-clock-rotate-left text-white text-lg"></i>
-                            </div>
-                            <div>
-                                <h3 class="font-black text-base mb-0.5 text-gray-800">Progress Tracking</h3>
-                                <p class="text-gray-700 font-bold text-xs">Monitor your academic journey and watch your predicted success rate improve over time.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mt-4 pt-4" style="border-top: 3px solid #e5e7eb;">
-                    <p class="text-center font-black text-xs uppercase tracking-wider text-gray-600">
-                        <i class="fa-solid fa-university mr-2"></i>Western Mindanao State University
-                    </p>
-                </div>
-            </div>
-
-    <div class="w-full max-w-lg">
-            <!-- Login Form -->
-            <div class="login-card p-6">
-            <div class="text-center mb-5">
-                <div class="icon-badge mx-auto mb-3">
-                    <i class="fa-solid fa-right-to-bracket text-white text-xl"></i>
+<body>
+    <div class="gradient-bg">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-icon">
+                    <i class="fa-solid fa-user-graduate"></i>
                 </div>
                 <h1 class="text-2xl font-black text-gray-800 mb-1">Welcome Back!</h1>
                 <p class="text-gray-600 font-bold text-sm">Sign in to continue your journey</p>
+                <h1 class="auth-title">Welcome Back</h1>
+                <p class="auth-subtitle">Social Work Licensure Exam Predictor</p>
             </div>
 
             {% if messages %}
@@ -344,16 +28,23 @@
                             <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% elif message.tags == 'success' %}fa-circle-check{% else %}fa-circle-info{% endif %} text-base mr-2"></i>
                             <span class="font-bold text-sm">{{ message }}</span>
                         </div>
+                    <div class="message {% if message.tags == 'error' %}error{% elif message.tags == 'success' %}success{% else %}info{% endif %}">
+                        <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% elif message.tags == 'success' %}fa-circle-check{% else %}fa-circle-info{% endif %}"></i>
+                        <span>{{ message }}</span>
                     </div>
                 {% endfor %}
             {% endif %}
 
             <form method="post" action="{% url 'accounts:login' %}" class="space-y-3">
+            <form method="post" action="{% url 'accounts:login' %}" class="auth-form">
                 {% csrf_token %}
                 
                 <div>
                     <label for="id_email" class="block text-xs font-black text-gray-700 mb-1.5 uppercase tracking-wide">
                         WMSU Email
+                <div class="form-group">
+                    <label for="id_email" class="form-label">
+                        <i class="fa-solid fa-user"></i>WMSU Email
                     </label>
                     <div class="relative">
                         {{ form.email }}
@@ -366,12 +57,16 @@
                             <i class="fa-solid fa-triangle-exclamation mr-1"></i>
                             {{ form.email.errors.0 }}
                         </p>
+                        <p class="form-error">{{ form.email.errors.0 }}</p>
                     {% endif %}
                 </div>
 
                 <div>
                     <label for="id_password" class="block text-xs font-black text-gray-700 mb-1.5 uppercase tracking-wide">
                         Password
+                <div class="form-group">
+                    <label for="id_password" class="form-label">
+                        <i class="fa-solid fa-lock"></i>Password
                     </label>
                     <div class="relative">
                         {{ form.password }}
@@ -387,19 +82,24 @@
                             <i class="fa-solid fa-triangle-exclamation mr-1"></i>
                             {{ form.password.errors.0 }}
                         </p>
+                        <p class="form-error">{{ form.password.errors.0 }}</p>
                     {% endif %}
                 </div>
 
                 <div class="flex items-center justify-between pt-1">
                     <div class="flex items-center">
+                <div class="form-extras">
+                    <div class="remember-me">
                         {{ form.remember_me }}
                         <label for="id_remember_me" class="ml-2 text-xs font-bold text-gray-700 cursor-pointer">
                             Remember me
                         </label>
+                        <label for="id_remember_me">Remember me</label>
                     </div>
                     <a href="#" class="text-xs text-blue-600 hover:text-blue-800 font-bold">
                         Forgot password?
                     </a>
+                    <a href="#" class="forgot-link">Forgot password?</a>
                 </div>
 
                 <button type="submit" class="btn-primary w-full mt-4" id="loginSubmit">
@@ -408,6 +108,8 @@
                         <i class="fa-solid fa-spinner fa-spin mr-2 hidden" id="loginSpinner"></i>
                         <span id="loginLabel">Sign In</span>
                     </span>
+                <button type="submit" class="btn-primary">
+                    <i class="fa-solid fa-right-to-bracket"></i>Sign In
                 </button>
             </form>
 
@@ -424,6 +126,11 @@
                 <a href="{% url 'accounts:register' %}" class="btn-secondary inline-flex items-center justify-center w-full">
                     <i class="fa-solid fa-user-plus mr-2"></i>Create Account
                 </a>
+            <div class="auth-footer">
+                <p>
+                    Don't have an account? 
+                    <a href="{% url 'accounts:register' %}">Register here</a>
+                </p>
             </div>
 
             <div class="mt-4 pt-3" style="border-top: 3px solid #e5e7eb;">
@@ -433,6 +140,8 @@
                         Secure Login • Thesis Project
                     </p>
                 </div>
+            <div class="copyright">
+                <p>&copy; 2024 Thesis Project</p>
             </div>
         </div>
     </div>

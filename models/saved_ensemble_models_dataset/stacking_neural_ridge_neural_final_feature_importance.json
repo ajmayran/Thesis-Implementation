@@ -1,0 +1,85 @@
+{
+  "method": "permutation",
+  "importance": [
+    {
+      "Feature": "Age",
+      "Importance": 0.9733063325584705,
+      "Std": 0.5706933278489015
+    },
+    {
+      "Feature": "MockExamScore",
+      "Importance": 0.4958021465916813,
+      "Std": 0.6369708407675772
+    },
+    {
+      "Feature": "Confidence",
+      "Importance": 0.2918675163477241,
+      "Std": 0.27104644197841304
+    },
+    {
+      "Feature": "SocialSupport",
+      "Importance": 0.2842918722144648,
+      "Std": 0.3253863813172473
+    },
+    {
+      "Feature": "EmploymentStatus",
+      "Importance": 0.27479924533459443,
+      "Std": 0.3911533476626616
+    },
+    {
+      "Feature": "GPA",
+      "Importance": 0.15224646808627118,
+      "Std": 0.5101892391309293
+    },
+    {
+      "Feature": "Gender",
+      "Importance": 0.11288989783777721,
+      "Std": 0.4066331065603861
+    },
+    {
+      "Feature": "IncomeLevel",
+      "Importance": 0.11276215379269602,
+      "Std": 0.8390652864222592
+    },
+    {
+      "Feature": "StudyHours",
+      "Importance": 0.04750626854126257,
+      "Std": 0.5670791437504196
+    },
+    {
+      "Feature": "SleepHours",
+      "Importance": -0.015661257980617904,
+      "Std": 0.4616959145547186
+    },
+    {
+      "Feature": "Scholarship",
+      "Importance": -0.03440064597248345,
+      "Std": 0.1984437061137767
+    },
+    {
+      "Feature": "ReviewCenter",
+      "Importance": -0.11463687213628018,
+      "Std": 0.29707850878128017
+    },
+    {
+      "Feature": "EnglishProficiency",
+      "Importance": -0.15173821593484588,
+      "Std": 0.42370637462621846
+    },
+    {
+      "Feature": "TestAnxiety",
+      "Importance": -0.18721331667564786,
+      "Std": 0.5951120791228303
+    },
+    {
+      "Feature": "InternshipGrade",
+      "Importance": -0.2960572781579824,
+      "Std": 0.3437319806319399
+    },
+    {
+      "Feature": "MotivationScore",
+      "Importance": -0.4178638909590006,
+      "Std": 0.24419805849069576
+    }
+  ]
+}

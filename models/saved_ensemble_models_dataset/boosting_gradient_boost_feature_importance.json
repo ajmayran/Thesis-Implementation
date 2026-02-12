@@ -1,0 +1,69 @@
+{
+  "method": "native",
+  "importance": [
+    {
+      "Feature": "Age",
+      "Importance": 0.15903481672318087
+    },
+    {
+      "Feature": "TestAnxiety",
+      "Importance": 0.1565376397274766
+    },
+    {
+      "Feature": "SleepHours",
+      "Importance": 0.12041796627550182
+    },
+    {
+      "Feature": "MockExamScore",
+      "Importance": 0.1110976885079339
+    },
+    {
+      "Feature": "EnglishProficiency",
+      "Importance": 0.07749203697527818
+    },
+    {
+      "Feature": "SocialSupport",
+      "Importance": 0.07335957667528883
+    },
+    {
+      "Feature": "StudyHours",
+      "Importance": 0.06745375391553386
+    },
+    {
+      "Feature": "InternshipGrade",
+      "Importance": 0.061340732746315234
+    },
+    {
+      "Feature": "MotivationScore",
+      "Importance": 0.04355122915588611
+    },
+    {
+      "Feature": "GPA",
+      "Importance": 0.039065416330662274
+    },
+    {
+      "Feature": "Confidence",
+      "Importance": 0.03411283611839342
+    },
+    {
+      "Feature": "EmploymentStatus",
+      "Importance": 0.03355853912018339
+    },
+    {
+      "Feature": "IncomeLevel",
+      "Importance": 0.00983845493236965
+    },
+    {
+      "Feature": "Gender",
+      "Importance": 0.0088646232625061
+    },
+    {
+      "Feature": "ReviewCenter",
+      "Importance": 0.004202691951348569
+    },
+    {
+      "Feature": "Scholarship",
+      "Importance": 7.199758214110661e-05
+    }
+  ]
+}
