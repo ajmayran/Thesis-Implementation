@@ -413,7 +413,75 @@
 
         <div class="content-wrapper">
 
-            <main class="main-content">
+            <!-- Skeleton Loading -->
+            <div class="skeleton-wrapper" id="profileSkeleton" style="width: 100%;">
+                <div style="padding: 1.5rem 2rem;">
+                    <!-- Hero skeleton -->
+                    <div class="skeleton-card" style="padding: 2rem; margin-bottom: 1.5rem; background: linear-gradient(135deg, #e5e7eb, #d1d5db); border-color: #d1d5db;">
+                        <div style="display: flex; align-items: center; gap: 1.5rem;">
+                            <div class="skeleton" style="width: 80px; height: 80px; border-radius: 50%; flex-shrink: 0;"></div>
+                            <div style="flex: 1;">
+                                <div class="skeleton skeleton-line" style="width: 45%; height: 24px; margin-bottom: 0.5rem; background: linear-gradient(90deg, #d1d5db 25%, #e5e7eb 50%, #d1d5db 75%); background-size: 800px 100%;"></div>
+                                <div class="skeleton skeleton-line" style="width: 35%; height: 14px; margin-bottom: 0.75rem; background: linear-gradient(90deg, #d1d5db 25%, #e5e7eb 50%, #d1d5db 75%); background-size: 800px 100%;"></div>
+                                <div style="display: flex; gap: 1.5rem;">
+                                    <div class="skeleton skeleton-line" style="width: 100px; height: 12px; background: linear-gradient(90deg, #d1d5db 25%, #e5e7eb 50%, #d1d5db 75%); background-size: 800px 100%;"></div>
+                                    <div class="skeleton skeleton-line" style="width: 120px; height: 12px; background: linear-gradient(90deg, #d1d5db 25%, #e5e7eb 50%, #d1d5db 75%); background-size: 800px 100%;"></div>
+                                    <div class="skeleton skeleton-line" style="width: 140px; height: 12px; background: linear-gradient(90deg, #d1d5db 25%, #e5e7eb 50%, #d1d5db 75%); background-size: 800px 100%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Personal Info skeleton -->
+                    <div class="skeleton-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 3px solid #f3f4f6;">
+                            <div class="skeleton" style="width: 2.5rem; height: 2.5rem; border-radius: 12px;"></div>
+                            <div style="flex: 1;">
+                                <div class="skeleton skeleton-line" style="width: 45%; height: 16px; margin-bottom: 0.35rem;"></div>
+                                <div class="skeleton skeleton-line" style="width: 35%; height: 12px;"></div>
+                            </div>
+                            <div class="skeleton" style="width: 80px; height: 38px; border-radius: 14px;"></div>
+                        </div>
+                        <div class="skeleton-form-row">
+                            <div class="skeleton-form-group"><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line"></div></div>
+                            <div class="skeleton-form-group"><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line"></div></div>
+                        </div>
+                        <div class="skeleton-form-row">
+                            <div class="skeleton-form-group"><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line"></div></div>
+                            <div class="skeleton-form-group"><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line"></div></div>
+                        </div>
+                    </div>
+                    <!-- Password skeleton -->
+                    <div class="skeleton-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 3px solid #f3f4f6;">
+                            <div class="skeleton" style="width: 2.5rem; height: 2.5rem; border-radius: 12px;"></div>
+                            <div style="flex: 1;">
+                                <div class="skeleton skeleton-line" style="width: 40%; height: 16px; margin-bottom: 0.35rem;"></div>
+                                <div class="skeleton skeleton-line" style="width: 30%; height: 12px;"></div>
+                            </div>
+                            <div class="skeleton" style="width: 90px; height: 38px; border-radius: 14px;"></div>
+                        </div>
+                        <div class="skeleton" style="width: 100%; height: 44px; border-radius: 12px;"></div>
+                    </div>
+                    <!-- Security tips skeleton -->
+                    <div class="skeleton-card" style="padding: 1.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 3px solid #f3f4f6;">
+                            <div class="skeleton" style="width: 2.5rem; height: 2.5rem; border-radius: 12px;"></div>
+                            <div style="flex: 1;">
+                                <div class="skeleton skeleton-line" style="width: 35%; height: 16px; margin-bottom: 0.35rem;"></div>
+                                <div class="skeleton skeleton-line" style="width: 40%; height: 12px;"></div>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                            <div class="skeleton" style="height: 48px; border-radius: 12px;"></div>
+                            <div class="skeleton" style="height: 48px; border-radius: 12px;"></div>
+                            <div class="skeleton" style="height: 48px; border-radius: 12px;"></div>
+                            <div class="skeleton" style="height: 48px; border-radius: 12px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <main class="main-content page-content" id="profileContent">
                 
                 {% if messages %}
                     {% for message in messages %}
@@ -676,6 +744,13 @@
                 label.textContent = labels[Math.max(0, score - 1)];
             });
         }
+        // ===== Reveal content, hide skeleton =====
+        document.addEventListener('DOMContentLoaded', function() {
+            const skeleton = document.getElementById('profileSkeleton');
+            const content = document.getElementById('profileContent');
+            if (skeleton) skeleton.classList.add('loaded');
+            if (content) content.classList.add('loaded');
+        });
     </script>
 
 </body>

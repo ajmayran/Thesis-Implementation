@@ -1,6 +1,28 @@
 {% load static %}
 
+<!-- Pre-paint: apply collapsed state instantly to prevent twitch between pages -->
+<script>
+    (function() {
+        if (localStorage.getItem('sidebar-collapsed') === 'true') {
+            document.documentElement.classList.add('sidebar-is-collapsed');
+        }
+    })();
+</script>
+<style>
+    html.sidebar-is-collapsed .sidebar { width: 5rem !important; transition: none !important; }
+    html.sidebar-is-collapsed .content-wrapper { margin-left: 5rem !important; width: calc(100% - 5rem) !important; transition: none !important; }
+    html.sidebar-is-collapsed .sidebar .user-info,
+    html.sidebar-is-collapsed .sidebar .nav-item-text,
+    html.sidebar-is-collapsed .sidebar .footer-badge span,
+    html.sidebar-is-collapsed .sidebar .footer-version { display: none !important; }
+</style>
+
 <aside class="sidebar" id="sidebar">
+    <!-- Collapse Toggle (Desktop only) -->
+    <button class="sidebar-collapse-toggle" id="sidebarCollapseToggle" title="Toggle sidebar">
+        <i class="fa-solid fa-chevron-left"></i>
+    </button>
+
     <div class="sidebar-user">
         <div class="user-avatar">
             {{ request.user.first_name.0|default:'U' }}{{ request.user.last_name.0|default:'S' }}
@@ -12,25 +34,25 @@
     </div>
 
     <nav class="sidebar-nav">
-        <a href="{% url 'dashboard:student_dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'student_dashboard' %}active{% endif %}" data-color="blue">
+        <a href="{% url 'dashboard:student_dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'student_dashboard' %}active{% endif %}" data-color="blue" data-tooltip="Dashboard">
             <div class="nav-item-icon">
                 <i class="fa-solid fa-house"></i>
             </div>
             <span class="nav-item-text">Dashboard</span>
         </a>
-        <a href="{% url 'prediction:student_predict' %}" class="nav-item {% if request.resolver_match.url_name == 'student_predict' %}active{% endif %}" data-color="green">
+        <a href="{% url 'prediction:student_predict' %}" class="nav-item {% if request.resolver_match.url_name == 'student_predict' %}active{% endif %}" data-color="green" data-tooltip="New Prediction">
             <div class="nav-item-icon">
                 <i class="fa-solid fa-wand-magic-sparkles"></i>
             </div>
             <span class="nav-item-text">New Prediction</span>
         </a>
-        <a href="{% url 'prediction:history' %}" class="nav-item {% if request.resolver_match.url_name == 'history' %}active{% endif %}" data-color="purple">
+        <a href="{% url 'prediction:history' %}" class="nav-item {% if request.resolver_match.url_name == 'history' %}active{% endif %}" data-color="purple" data-tooltip="History">
             <div class="nav-item-icon">
                 <i class="fa-solid fa-clock-rotate-left"></i>
             </div>
             <span class="nav-item-text">History</span>
         </a>
-        <a href="{% url 'dashboard:student_profile' %}" class="nav-item {% if request.resolver_match.url_name == 'student_profile' %}active{% endif %}" data-color="orange">
+        <a href="{% url 'dashboard:student_profile' %}" class="nav-item {% if request.resolver_match.url_name == 'student_profile' %}active{% endif %}" data-color="orange" data-tooltip="Profile">
             <div class="nav-item-icon">
                 <i class="fa-solid fa-user"></i>
             </div>
@@ -39,7 +61,7 @@
     </nav>
 
     <div class="sidebar-logout">
-        <a href="{% url 'accounts:logout' %}" class="nav-item logout logout-trigger">
+        <a href="{% url 'accounts:logout' %}" class="nav-item logout logout-trigger" data-tooltip="Logout">
             <div class="nav-item-icon">
                 <i class="fa-solid fa-right-from-bracket"></i>
             </div>
@@ -83,11 +105,58 @@
 </button>
 
 <script>
-    // Mobile sidebar toggle
-    const sidebar = document.getElementById('sidebar');
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    const sidebarOverlay = document.getElementById('sidebarOverlay');
-    const toggleIcon = sidebarToggle.querySelector('i');
+    document.addEventListener('DOMContentLoaded', function() {
+        // Sidebar collapse toggle (Desktop - Discord-style)
+        (function() {
+            const sidebar = document.getElementById('sidebar');
+            const collapseToggle = document.getElementById('sidebarCollapseToggle');
+            const contentWrapper = document.querySelector('.content-wrapper');
+            const STORAGE_KEY = 'sidebar-collapsed';
+
+            // Restore saved state instantly (no transition)
+            function restoreCollapseState() {
+                const isCollapsed = localStorage.getItem(STORAGE_KEY) === 'true';
+                if (isCollapsed) {
+                    // Disable transitions for instant state restore
+                    sidebar.style.transition = 'none';
+                    if (contentWrapper) contentWrapper.style.transition = 'none';
+
+                    sidebar.classList.add('collapsed');
+                    if (contentWrapper) contentWrapper.classList.add('sidebar-collapsed');
+
+                    // Re-enable transitions after paint, then remove pre-paint overrides
+                    requestAnimationFrame(function() {
+                        requestAnimationFrame(function() {
+                            sidebar.style.transition = '';
+                            if (contentWrapper) contentWrapper.style.transition = '';
+                            document.documentElement.classList.remove('sidebar-is-collapsed');
+                        });
+                    });
+                } else {
+                    document.documentElement.classList.remove('sidebar-is-collapsed');
+                }
+            }
+
+            // Toggle collapse
+            if (collapseToggle) {
+                collapseToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('collapsed');
+                    if (contentWrapper) contentWrapper.classList.toggle('sidebar-collapsed');
+                    
+                    const isCollapsed = sidebar.classList.contains('collapsed');
+                    localStorage.setItem(STORAGE_KEY, isCollapsed);
+                });
+            }
+
+            // Apply on load
+            restoreCollapseState();
+        })();
+
+        // Mobile sidebar toggle
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const toggleIcon = sidebarToggle.querySelector('i');
 
     sidebarToggle.addEventListener('click', function() {
         sidebar.classList.toggle('open');
@@ -159,4 +228,5 @@
             });
         }
     })();
+    });
 </script>

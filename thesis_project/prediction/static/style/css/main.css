@@ -10,6 +10,7 @@ body {
     background-color: #f3f4f6;
     color: #1f2937;
     line-height: 1.6;
+    overflow-x: hidden;
 }
 
 /* Layout */
@@ -24,6 +25,13 @@ body {
     flex-direction: column;
     margin-left: 18rem;
     width: calc(100% - 18rem);
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.content-wrapper.sidebar-collapsed {
+    margin-left: 5rem;
+    width: calc(100% - 5rem);
 }
 
 
@@ -597,7 +605,9 @@ body {
 }
 
 @media (max-width: 768px) {
-    .content-wrapper {
+
+    .content-wrapper,
+    .content-wrapper.sidebar-collapsed {
         margin-left: 0;
         width: 100%;
         padding-top: 5rem;
@@ -638,22 +648,150 @@ body {
 
 .skeleton-wrapper {
     display: block;
+    transition: opacity 0.3s ease;
 }
 
 .skeleton-wrapper.loaded {
-    display: none;
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
 }
 
 .page-content {
-    display: none;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
 .page-content.loaded {
     display: block;
+    opacity: 1;
+    transform: translateY(0);
 }
 
 header.page-content.loaded {
     display: flex;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Staggered content reveal animation */
+@keyframes contentFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.page-content.loaded .form-section,
+.page-content.loaded .profile-hero,
+.page-content.loaded .profile-section-card,
+.page-content.loaded .info-box,
+.page-content.loaded .form-progress,
+.page-content.loaded .history-stats,
+.page-content.loaded .history-toolbar,
+.page-content.loaded .history-card,
+.page-content.loaded .submit-section,
+.page-content.loaded .message {
+    animation: contentFadeIn 0.45s ease both;
+}
+
+.page-content.loaded> :nth-child(1) {
+    animation-delay: 0.05s;
+}
+
+.page-content.loaded> :nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.page-content.loaded> :nth-child(3) {
+    animation-delay: 0.15s;
+}
+
+.page-content.loaded> :nth-child(4) {
+    animation-delay: 0.2s;
+}
+
+.page-content.loaded> :nth-child(5) {
+    animation-delay: 0.25s;
+}
+
+.page-content.loaded> :nth-child(6) {
+    animation-delay: 0.3s;
+}
+
+.page-content.loaded> :nth-child(7) {
+    animation-delay: 0.35s;
+}
+
+.page-content.loaded> :nth-child(8) {
+    animation-delay: 0.4s;
+}
+
+.page-content.loaded> :nth-child(9) {
+    animation-delay: 0.45s;
+}
+
+.page-content.loaded> :nth-child(10) {
+    animation-delay: 0.5s;
+}
+
+/* Stagger for form sections inside a form wrapper */
+.page-content.loaded form>.form-section:nth-child(1) {
+    animation-delay: 0.15s;
+}
+
+.page-content.loaded form>.form-section:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.page-content.loaded form>.form-section:nth-child(3) {
+    animation-delay: 0.25s;
+}
+
+.page-content.loaded form>.form-section:nth-child(4) {
+    animation-delay: 0.3s;
+}
+
+.page-content.loaded form>.form-section:nth-child(5) {
+    animation-delay: 0.35s;
+}
+
+.page-content.loaded form>.submit-section {
+    animation-delay: 0.4s;
+}
+
+/* Stagger for history cards in the grid */
+.page-content.loaded .history-card:nth-child(1) {
+    animation-delay: 0.2s;
+}
+
+.page-content.loaded .history-card:nth-child(2) {
+    animation-delay: 0.25s;
+}
+
+.page-content.loaded .history-card:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.page-content.loaded .history-card:nth-child(4) {
+    animation-delay: 0.35s;
+}
+
+.page-content.loaded .history-card:nth-child(5) {
+    animation-delay: 0.4s;
+}
+
+.page-content.loaded .history-card:nth-child(6) {
+    animation-delay: 0.45s;
 }
 
 .skeleton {
