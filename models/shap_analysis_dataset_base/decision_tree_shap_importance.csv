@@ -1,0 +1,17 @@
+Feature,SHAP_Importance
+EnglishProficiency,0.7067592824893901
+Age,0.6307722859001372
+InternshipGrade,0.40882922296558794
+MotivationScore,0.36457529843893555
+TestAnxiety,0.16228168044077235
+Confidence,0.1159043847566576
+EmploymentStatus,0.0
+Gender,0.0
+StudyHours,0.0
+SleepHours,0.0
+IncomeLevel,0.0
+MockExamScore,0.0
+Scholarship,0.0
+GPA,0.0
+SocialSupport,0.0
+ReviewCenter,0.0
