@@ -44,65 +44,29 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
-Windows (PowerShell):
-```powershell
-python -m venv venv
-venv\Scripts\Activate.ps1
-```
-
 Windows (CMD):
 ```cmd
 python -m venv venv
-venv\Scripts\activate.bat
+venv\Scripts\activate
 ```
 
-Confirm:
-```bash
-which python        # mac/linux
-# or
-where python        # windows
-```
 
-### 4. Upgrade pip (optional but recommended)
-```bash
-pip install --upgrade pip
-```
-
-### 5. Install Python Dependencies
+### 4. Install Python Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 6. Environment Variables (If Needed)
-If your Django settings rely on secrets (API keys, DEBUG flags, DB credentials), create a `.env` file (or export variables). Example:
-```
-DEBUG=True
-SECRET_KEY=replace_me
-ALLOWED_HOSTS=localhost,127.0.0.1
-```
-(Adjust according to how `settings.py` is implemented.)
 
-### 7. Apply Database Migrations
+### 5. Apply Database Migrations
 ```bash
+python manage.py makemigrations
 python manage.py migrate
 ```
 
-### 8. (Optional) Create a Superuser for Admin
-```bash
-python manage.py createsuperuser
-```
 
-### 9. Run the Development Server
+### 6. Run the Development Server
 ```bash
 python manage.py runserver
-```
-
-
-Run Tests (if configured):
-```bash
-python -m pytest
-# or
-python manage.py test
 ```
 
 
