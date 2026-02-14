@@ -111,22 +111,17 @@ WSGI_APPLICATION = 'thesis_project.wsgi.application'
 #     }
 # }
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': '<your_username>$<your_database_name>',
-#         'USER': '<your_username>',
-#         'PASSWORD': '<your_mysql_password>',
-#         'HOST': '<your_mysql_hostname>',
-#     }
-# }
-
-
 DATABASES = {
-    'default': dj_database_url.config(
-        conn_max_age=600
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': '<your_username>$<your_database_name>',
+        'USER': '<your_username>',
+        'PASSWORD': '<your_mysql_password>',
+        'HOST': '<your_mysql_hostname>',
+    }
 }
+
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
