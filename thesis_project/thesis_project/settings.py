@@ -33,7 +33,13 @@ ALLOWED_HOSTS = ['social-work-predictor.me', 'www.social-work-predictor.me', 'th
 #     'https://social-work.jkalasas.dev'
 # ]
 
-
+# Database — swap out the entire DATABASES block
+DATABASES = {
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL'),
+        conn_max_age=600
+    )
+}
 # Application definition
 
 INSTALLED_APPS = [
@@ -111,15 +117,15 @@ WSGI_APPLICATION = 'thesis_project.wsgi.application'
 #     }
 # }
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': '<your_username>$<your_database_name>',
-        'USER': '<your_username>',
-        'PASSWORD': '<your_mysql_password>',
-        'HOST': '<your_mysql_hostname>',
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': '<your_username>$<your_database_name>',
+#         'USER': '<your_username>',
+#         'PASSWORD': '<your_mysql_password>',
+#         'HOST': '<your_mysql_hostname>',
+#     }
+# }
 
 
 
