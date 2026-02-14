@@ -3,4 +3,4 @@ services:
     name: my-django-app
     env: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn social-work-predictor.wsgi:application"
+    startCommand: "gunicorn thesis_project.wsgi:application"
