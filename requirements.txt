@@ -15,3 +15,4 @@ shap>=0.42.0
 reportlab==4.0.7
 xgboost
 sdv
+psycopg2-binary 
