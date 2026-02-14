@@ -26,7 +26,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '))"                           
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['social-work-predictor.me', 'www.social-work-predictor.me', '.onrender.com']
+ALLOWED_HOSTS = ['social-work-predictor.me', 'www.social-work-predictor.me', 'thesis-implementation.onrender.com']
 # Allow CSRF requests from deployed domain
 # CSRF_TRUSTED_ORIGINS = [
 #     'https://social-work.jkalasas.dev'
