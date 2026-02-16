@@ -9,214 +9,290 @@
     
     <link rel="stylesheet" href="{% static 'style/css/main.css' %}">
     <link rel="stylesheet" href="{% static 'style/css/sidebar.css' %}">
+    <link rel="stylesheet" href="{% static 'style/css/dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'fontawesome/css/all.min.css'%}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body>
+<body class="dashboard-page">
     <div class="main-container">
         
         {% include 'components/student_sidebar.html' %}
 
         <div class="content-wrapper">
-            
-            <header class="header">
-                <div class="header-title">
-                    <h1>Welcome, {{ request.user.first_name }}!</h1>
-                    <p>Student ID: {{ request.user.student_id }}</p>
-                </div>
-                <div class="header-user">
-                    <div class="user-info">
-                        <p>{{ request.user.get_full_name }}</p>
-                        <span>{{ request.user.email }}</span>
-                    </div>
-                    <div class="user-avatar">
-                        {{ request.user.first_name.0 }}{{ request.user.last_name.0 }}
-                    </div>
-                </div>
-            </header>
 
-            <main class="main-content">
+            <!-- Skeleton Loading -->
+            <div class="skeleton-wrapper" id="dashboardSkeleton">
+                <!-- Hero skeleton -->
+                <div class="skeleton-card skel-hero">
+                    <div class="skeleton skeleton-line title" style="width: 60%;"></div>
+                    <div class="skeleton skeleton-line subtitle" style="width: 40%;"></div>
+                </div>
+                <!-- Stats grid skeleton -->
+                <div class="skel-stats">
+                    <div class="skeleton-card skel-stat-card">
+                        <div class="skeleton skeleton-line short"></div>
+                        <div class="skeleton skeleton-line title" style="width: 50%;"></div>
+                        <div class="skeleton skeleton-line short"></div>
+                    </div>
+                    <div class="skeleton-card skel-stat-card">
+                        <div class="skeleton skeleton-line short"></div>
+                        <div class="skeleton skeleton-line title" style="width: 50%;"></div>
+                        <div class="skeleton skeleton-line short"></div>
+                    </div>
+                    <div class="skeleton-card skel-stat-card">
+                        <div class="skeleton skeleton-line short"></div>
+                        <div class="skeleton skeleton-line title" style="width: 50%;"></div>
+                        <div class="skeleton skeleton-line short"></div>
+                    </div>
+                </div>
+                <!-- CTA button skeleton -->
+                <div class="skel-cta">
+                    <div class="skeleton skeleton-btn skel-cta-btn"></div>
+                </div>
+                <!-- Two column layout skeleton -->
+                <div class="skel-grid">
+                    <div>
+                        <div class="skeleton-card skel-main-card">
+                            <div class="skeleton skeleton-line title" style="width: 50%; margin-bottom: 1.5rem;"></div>
+                            <div class="skeleton skeleton-line full"></div>
+                            <div class="skeleton skeleton-line full"></div>
+                            <div class="skeleton skeleton-line full"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="skeleton-card skel-side-card">
+                            <div class="skeleton skeleton-line title" style="width: 60%;"></div>
+                            <div class="skeleton skeleton-btn" style="margin-top: 1rem;"></div>
+                            <div class="skeleton skeleton-btn" style="margin-top: 0.75rem;"></div>
+                        </div>
+                        <div class="skeleton-card skel-side-card">
+                            <div class="skeleton skeleton-line title" style="width: 50%;"></div>
+                            <div class="skeleton skeleton-line full"></div>
+                            <div class="skeleton skeleton-line full"></div>
+                            <div class="skeleton skeleton-line full"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <main class="main-content page-content" id="dashboardContent">
                 
                 {% if messages %}
                     {% for message in messages %}
-                        <div class="message {% if message.tags == 'error' %}error{% else %}success{% endif %}">
+                        <div class="dash-message {% if message.tags == 'error' %}error{% else %}success{% endif %} dash-slide-in">
                             <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% else %}fa-circle-check{% endif %}"></i>
                             <span>{{ message }}</span>
                         </div>
                     {% endfor %}
                 {% endif %}
 
-                <div class="grid grid-cols-3">
-                    
-                    <div class="stat-card">
-                        <div class="stat-card-content">
-                            <div class="stat-card-info">
-                                <p>Total Predictions</p>
-                                <h2>{{ total_predictions }}</h2>
+                <!-- Hero Welcome Section -->
+                <div class="dash-hero dash-slide-in">
+                    <div class="dash-hero-text">
+                        <h1 class="dash-hero-title">Hello, {{ request.user.first_name }}!</h1>
+                        <p class="dash-hero-subtitle">Ready to predict your exam success?</p>
+                    </div>
+                    <div class="dash-hero-streak dash-bounce">
+                        <div class="dash-hero-streak-icon">
+                            <i class="fa-solid fa-fire"></i>
+                        </div>
+                        <div class="dash-hero-streak-count">{{ total_predictions }}</div>
+                        <div class="dash-hero-streak-label">Predictions</div>
+                    </div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="dash-stats">
+                    <!-- Latest Result Card -->
+                    <div class="dash-stat-card green dash-slide-in dash-wiggle" style="animation-delay: 0.1s;">
+                        <div class="dash-stat-info">
+                            <div class="dash-stat-label">Latest Result</div>
+                            <div class="dash-stat-value">
+                                {% if latest_prediction %}
+                                    {{ latest_prediction.probability|floatformat:0 }}%
+                                {% else %}
+                                    --
+                                {% endif %}
                             </div>
-                            <div class="stat-card-icon">
-                                <i class="fa-solid fa-chart-line"></i>
-                            </div>
+                            <div class="dash-stat-sub">Pass Probability</div>
+                        </div>
+                        <div class="dash-stat-icon">
+                            <i class="fa-solid fa-trophy"></i>
                         </div>
                     </div>
 
-                    <div class="stat-card green">
-                        <div class="stat-card-content">
-                            <div class="stat-card-info">
-                                <p>Latest Result</p>
-                                <h2>
-                                    {% if latest_prediction %}
-                                        {{ latest_prediction.probability|floatformat:0 }}%
-                                    {% else %}
-                                        --
-                                    {% endif %}
-                                </h2>
-                            </div>
-                            <div class="stat-card-icon">
-                                <i class="fa-solid fa-trophy"></i>
-                            </div>
+                    <!-- Average Score Card -->
+                    <div class="dash-stat-card blue dash-slide-in dash-wiggle" style="animation-delay: 0.2s;">
+                        <div class="dash-stat-info">
+                            <div class="dash-stat-label">Average Score</div>
+                            <div class="dash-stat-value">{{ average_probability|floatformat:0 }}%</div>
+                            <div class="dash-stat-sub">Overall Performance</div>
+                        </div>
+                        <div class="dash-stat-icon">
+                            <i class="fa-solid fa-chart-line"></i>
                         </div>
                     </div>
 
-                    <div class="stat-card blue">
-                        <div class="stat-card-content">
-                            <div class="stat-card-info">
-                                <p>Average Score</p>
-                                <h2>{{ average_probability|floatformat:0 }}%</h2>
-                            </div>
-                            <div class="stat-card-icon">
-                                <i class="fa-solid fa-chart-simple"></i>
-                            </div>
+                    <!-- Highest Score Card -->
+                    <div class="dash-stat-card yellow dash-slide-in dash-wiggle" style="animation-delay: 0.3s;">
+                        <div class="dash-stat-info">
+                            <div class="dash-stat-label">Best Score</div>
+                            <div class="dash-stat-value">{{ highest_probability|floatformat:0 }}%</div>
+                            <div class="dash-stat-sub">Personal Best!</div>
+                        </div>
+                        <div class="dash-stat-icon">
+                            <i class="fa-solid fa-star"></i>
                         </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-3">
+                <!-- Main Action Button -->
+                <div class="dash-cta dash-slide-in" style="animation-delay: 0.4s;">
+                    <a href="{% url 'prediction:student_predict' %}" class="dash-cta-btn dash-pulse">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>Start New Prediction</span>
+                    </a>
+                </div>
+
+                <!-- Two Column Layout -->
+                <div class="dash-grid">
                     
-                    <div class="lg-col-span-2">
-                        <div class="card" style="margin-bottom: 1.5rem;">
-                            <div class="card-header">
-                                <h2>
-                                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <!-- Main Column -->
+                    <div>
+                        <!-- Recent Predictions -->
+                        <div class="dash-card dash-slide-in" style="animation-delay: 0.5s;">
+                            <div class="dash-card-header">
+                                <h2 class="dash-card-title">
+                                    <i class="fa-solid fa-clock-rotate-left purple"></i>
                                     Recent Predictions
                                 </h2>
-                                <a href="{% url 'prediction:history' %}">View All</a>
+                                <a href="{% url 'prediction:history' %}" class="dash-view-all">
+                                    View All <i class="fa-solid fa-arrow-right"></i>
+                                </a>
                             </div>
 
                             {% if recent_predictions %}
-                                <div class="prediction-list">
+                                <div class="dash-predictions">
                                     {% for pred in recent_predictions %}
-                                        <div class="prediction-item {% if pred.probability >= 70 %}high{% elif pred.probability >= 50 %}medium{% else %}low{% endif %}">
-                                            <div class="prediction-header">
-                                                <div>
-                                                    <p class="prediction-date">
-                                                        {{ pred.created_at|date:"M d, Y - h:i A" }}
-                                                    </p>
-                                                    <p class="prediction-details">GPA: {{ pred.gpa|floatformat:2 }} | Study: {{ pred.study_hours }}hrs</p>
+                                        <div class="dash-pred-card {% if pred.probability >= 70 %}green{% elif pred.probability >= 50 %}blue{% else %}red{% endif %}">
+                                            <div class="dash-pred-top">
+                                                <div class="dash-pred-score">{{ pred.probability|floatformat:0 }}%</div>
+                                                <div class="dash-pred-date">
+                                                    <div class="dash-pred-date-day">{{ pred.created_at|date:"M d, Y" }}</div>
+                                                    <div class="dash-pred-date-time">{{ pred.created_at|date:"h:i A" }}</div>
                                                 </div>
-                                                <span class="badge {% if pred.probability >= 70 %}high{% elif pred.probability >= 50 %}medium{% else %}low{% endif %}">
-                                                    {{ pred.probability|floatformat:0 }}% Pass Rate
-                                                </span>
                                             </div>
-                                            <div class="prediction-footer">
-                                                <span>
-                                                    <i class="fa-solid fa-{{ pred.review_center|yesno:'check,xmark' }}"></i>
-                                                    Review Center
-                                                </span>
-                                                <a href="{% url 'prediction:detail' pred.id %}">
-                                                    View Details <i class="fa-solid fa-arrow-right"></i>
+                                            <div class="dash-pred-bottom">
+                                                <div class="dash-pred-details">
+                                                    <span><i class="fa-solid fa-graduation-cap"></i> GPA {{ pred.gpa|floatformat:2 }}</span>
+                                                    <span><i class="fa-solid fa-clock"></i> {{ pred.study_hours }}hrs</span>
+                                                    <span><i class="fa-solid fa-{% if pred.review_center %}check{% else %}xmark{% endif %}"></i> Review</span>
+                                                </div>
+                                                <a href="{% url 'prediction:detail' pred.id %}" class="dash-pred-link">
+                                                    Details <i class="fa-solid fa-arrow-right"></i>
                                                 </a>
                                             </div>
                                         </div>
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                <div class="empty-state">
-                                    <i class="fa-solid fa-chart-line"></i>
-                                    <p>No predictions yet</p>
-                                    <a href="{% url 'prediction:predict' %}" class="btn btn-primary">
+                                <div class="dash-empty">
+                                    <div class="dash-empty-icon">
+                                        <i class="fa-solid fa-chart-line"></i>
+                                    </div>
+                                    <p class="dash-empty-title">No predictions yet!</p>
+                                    <p class="dash-empty-text">Get started with your first prediction to see your results here.</p>
+                                    <a href="{% url 'prediction:student_predict' %}" class="dash-empty-btn">
                                         <i class="fa-solid fa-plus"></i>
-                                        Create Your First Prediction
+                                        <span>Create First Prediction</span>
                                     </a>
                                 </div>
                             {% endif %}
                         </div>
 
-                        <div class="card">
-                            <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center;">
-                                <i class="fa-solid fa-chart-area" style="color: #3b82f6; margin-right: 0.5rem;"></i>
+                        <!-- Progress Chart -->
+                        <div class="dash-card dash-chart-card dash-slide-in" style="animation-delay: 0.9s;">
+                            <h2 class="dash-card-title" style="margin-bottom: 1.25rem;">
+                                <i class="fa-solid fa-chart-line blue"></i>
                                 Progress Chart
                             </h2>
                             <canvas id="progressChart" height="100"></canvas>
                         </div>
                     </div>
 
+                    <!-- Sidebar Column -->
                     <div>
-                        
-                        <div class="card" style="margin-bottom: 1.5rem;">
-                            <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center;">
-                                <i class="fa-solid fa-lightbulb" style="color: #eab308; margin-right: 0.5rem;"></i>
+                        <!-- Quick Actions -->
+                        <div class="dash-card dash-slide-in" style="animation-delay: 0.6s;">
+                            <h3 class="dash-card-title" style="margin-bottom: 1rem;">
+                                <i class="fa-solid fa-bolt yellow"></i>
                                 Quick Actions
                             </h3>
-                            <div class="quick-actions">
-                                <a href="{% url 'prediction:predict' %}" class="btn btn-primary">
-                                    <i class="fa-solid fa-wand-magic-sparkles"></i>
-                                    New Prediction
-                                </a>
-                                <a href="{% url 'prediction:history' %}" class="btn btn-secondary">
+                            <div class="dash-actions">
+                                <a href="{% url 'prediction:history' %}" class="dash-action-btn blue">
                                     <i class="fa-solid fa-history"></i>
-                                    View History
+                                    <span>View History</span>
                                 </a>
-                                <a href="{% url 'dashboard:student_profile' %}" class="btn btn-blue">
+                                <a href="{% url 'dashboard:student_profile' %}" class="dash-action-btn purple">
                                     <i class="fa-solid fa-user-pen"></i>
-                                    Update Profile
+                                    <span>Update Profile</span>
                                 </a>
                             </div>
                         </div>
 
-                        <div class="card" style="margin-bottom: 1.5rem;">
-                            <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center;">
-                                <i class="fa-solid fa-graduation-cap" style="color: #3b82f6; margin-right: 0.5rem;"></i>
-                                Study Tips
+                        <!-- Study Tips -->
+                        <div class="dash-card dash-slide-in" style="animation-delay: 0.7s;">
+                            <h3 class="dash-card-title" style="margin-bottom: 1rem;">
+                                <i class="fa-solid fa-lightbulb yellow"></i>
+                                Study Tips  
                             </h3>
-                            <div class="tips-list">
-                                <div class="tip-item">
-                                    <i class="fa-solid fa-circle-check"></i>
-                                    <p>Study 3-4 hours daily for optimal retention</p>
+                            <div class="dash-tips">
+                                <div class="dash-tip-item">
+                                    <div class="dash-tip-icon">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                    </div>
+                                    <p class="dash-tip-text">Study 3-4 hours daily for optimal retention</p>
                                 </div>
-                                <div class="tip-item">
-                                    <i class="fa-solid fa-circle-check"></i>
-                                    <p>Get 7-8 hours of sleep for better focus</p>
+                                <div class="dash-tip-item">
+                                    <div class="dash-tip-icon">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                    </div>
+                                    <p class="dash-tip-text">Get 7-8 hours of sleep for better focus</p>
                                 </div>
-                                <div class="tip-item">
-                                    <i class="fa-solid fa-circle-check"></i>
-                                    <p>Take practice exams regularly</p>
+                                <div class="dash-tip-item">
+                                    <div class="dash-tip-icon">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                    </div>
+                                    <p class="dash-tip-text">Take practice exams regularly</p>
                                 </div>
-                                <div class="tip-item">
-                                    <i class="fa-solid fa-circle-check"></i>
-                                    <p>Join study groups for better understanding</p>
+                                <div class="dash-tip-item">
+                                    <div class="dash-tip-icon">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                    </div>
+                                    <p class="dash-tip-text">Join study groups for better understanding</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="stats-box">
-                            <h3>
-                                <i class="fa-solid fa-star"></i>
+                        <!-- Your Stats -->
+                        <div class="dash-card dash-slide-in" style="animation-delay: 0.8s;">
+                            <h3 class="dash-card-title" style="margin-bottom: 1rem;">
+                                <i class="fa-solid fa-star yellow"></i>
                                 Your Stats
                             </h3>
-                            <div class="stats-list">
-                                <div class="stats-item">
-                                    <span>Member Since</span>
-                                    <span>{{ request.user.date_joined|date:"M Y" }}</span>
+                            <div class="dash-user-stats">
+                                <div class="dash-user-stat">
+                                    <span class="dash-user-stat-label">Member Since</span>
+                                    <span class="dash-user-stat-value">{{ request.user.date_joined|date:"M Y" }}</span>
                                 </div>
-                                <div class="stats-item">
-                                    <span>Predictions Made</span>
-                                    <span>{{ total_predictions }}</span>
+                                <div class="dash-user-stat">
+                                    <span class="dash-user-stat-label">Predictions Made</span>
+                                    <span class="dash-user-stat-value">{{ total_predictions }}</span>
                                 </div>
-                                <div class="stats-item">
-                                    <span>Highest Score</span>
-                                    <span>{{ highest_probability|floatformat:0 }}%</span>
+                                <div class="dash-user-stat">
+                                    <span class="dash-user-stat-label">Highest Score</span>
+                                    <span class="dash-user-stat-value">{{ highest_probability|floatformat:0 }}%</span>
                                 </div>
                             </div>
                         </div>
@@ -230,40 +306,106 @@
     </div>
 
     <script>
-        const ctx = document.getElementById('progressChart').getContext('2d');
-        const progressChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: {{ chart_labels|safe }},
-                datasets: [{
-                    label: 'Pass Probability',
-                    data: {{ chart_data|safe }},
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
+        // Progress Chart
+        const ctx = document.getElementById('progressChart');
+        if (ctx) {
+            const progressChart = new Chart(ctx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: {{ chart_labels|safe }},
+                    datasets: [{
+                        label: 'Pass Probability',
+                        data: {{ chart_data|safe }},
+                        borderColor: '#1cb0f6',
+                        backgroundColor: 'rgba(28, 176, 246, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        pointBackgroundColor: '#1cb0f6',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointHoverBackgroundColor: '#58cc02',
+                        pointHoverBorderColor: '#fff',
+                        pointHoverBorderWidth: 3
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        ticks: {
-                            callback: function(value) {
-                                return value + '%';
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: '#fff',
+                            titleColor: '#1f2937',
+                            bodyColor: '#1f2937',
+                            borderColor: '#e5e7eb',
+                            borderWidth: 2,
+                            padding: 12,
+                            displayColors: false,
+                            titleFont: { weight: '700' },
+                            bodyFont: { weight: '600' },
+                            cornerRadius: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Pass Rate: ' + context.parsed.y + '%';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: {
+                                color: '#f3f4f6',
+                                lineWidth: 2
+                            },
+                            border: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                },
+                                color: '#9ca3af',
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            border: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                },
+                                color: '#9ca3af'
                             }
                         }
                     }
                 }
-            }
+            });
+        }
+    </script>
+
+    <script>
+        // Reveal content, hide skeleton
+        document.addEventListener('DOMContentLoaded', function() {
+            const skeleton = document.getElementById('dashboardSkeleton');
+            const content = document.getElementById('dashboardContent');
+            if (skeleton) skeleton.classList.add('loaded');
+            if (content) content.classList.add('loaded');
         });
     </script>
 

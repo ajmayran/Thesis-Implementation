@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>r
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prediction History - Social Work Predictor</title>
@@ -19,10 +19,69 @@
         {% include 'components/student_sidebar.html' %}
 
         <div class="content-wrapper">
+
+            <!-- Skeleton Loading -->
+            <div class="skeleton-wrapper" id="historySkeleton" style="width: 100%;">
+                <!-- Header skeleton -->
+                <div class="skeleton-card" style="padding: 1.25rem 2rem; margin-bottom: 0; border-radius: 0; border-left: 0; border-right: 0; border-top: 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex: 1;">
+                            <div class="skeleton skeleton-line title" style="width: 40%;"></div>
+                            <div class="skeleton skeleton-line subtitle" style="width: 30%;"></div>
+                        </div>
+                        <div class="skeleton skeleton-btn" style="width: 160px; height: 42px; border-radius: 14px;"></div>
+                    </div>
+                </div>
+                <div style="padding: 1.5rem 2rem;">
+                    <!-- Stats skeleton -->
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+                        {% for i in "1234" %}
+                        <div class="skeleton-card" style="padding: 1.25rem; text-align: center;">
+                            <div class="skeleton" style="width: 2.75rem; height: 2.75rem; border-radius: 12px; margin: 0 auto 0.75rem;"></div>
+                            <div class="skeleton skeleton-line" style="width: 50%; height: 24px; margin: 0 auto 0.25rem;"></div>
+                            <div class="skeleton skeleton-line" style="width: 70%; height: 12px; margin: 0 auto;"></div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <!-- Toolbar skeleton -->
+                    <div class="skeleton-card" style="padding: 0.85rem 1.25rem; margin-bottom: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div class="skeleton skeleton-line" style="width: 25%; height: 16px;"></div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <div class="skeleton" style="width: 80px; height: 32px; border-radius: 10px;"></div>
+                                <div class="skeleton" style="width: 80px; height: 32px; border-radius: 10px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- History cards skeleton -->
+                    {% for i in "123" %}
+                    <div class="skeleton-card" style="padding: 1.5rem; margin-bottom: 1.25rem;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 3px solid #f3f4f6;">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div class="skeleton" style="width: 4.25rem; height: 4.25rem; border-radius: 50%;"></div>
+                                <div>
+                                    <div class="skeleton skeleton-line" style="width: 180px; height: 16px; margin-bottom: 0.35rem;"></div>
+                                    <div class="skeleton skeleton-line" style="width: 120px; height: 13px;"></div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <div class="skeleton" style="width: 75px; height: 36px; border-radius: 12px;"></div>
+                                <div class="skeleton" style="width: 75px; height: 36px; border-radius: 12px;"></div>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;">
+                            {% for j in "123456" %}
+                            <div class="skeleton" style="height: 38px; border-radius: 10px;"></div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
             
-            <header class="header">
+            <header class="header page-content" id="historyHeader">
                 <div class="header-title">
-                    <h1>Prediction History</h1>
+                    <h1><i class="fa-solid fa-clock-rotate-left"></i> Prediction History</h1>
                     <p>View all your past predictions</p>
                 </div>
                 <div class="header-actions">
@@ -33,7 +92,7 @@
                 </div>
             </header>
 
-            <main class="main-content">
+            <main class="main-content page-content" id="historyContent">
                 
                 {% if messages %}
                     {% for message in messages %}
@@ -45,9 +104,60 @@
                 {% endif %}
 
                 {% if predictions %}
-                    <div class="history-grid">
+                    <!-- Stats Summary -->
+                    <div class="history-stats">
+                        <div class="history-stat-card">
+                            <div class="history-stat-icon purple">
+                                <i class="fa-solid fa-chart-line"></i>
+                            </div>
+                            <div class="history-stat-value">{{ predictions|length }}</div>
+                            <div class="history-stat-label">Total Predictions</div>
+                        </div>
+                        <div class="history-stat-card">
+                            <div class="history-stat-icon green">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </div>
+                            <div class="history-stat-value" id="passCount">-</div>
+                            <div class="history-stat-label">Pass Results</div>
+                        </div>
+                        <div class="history-stat-card">
+                            <div class="history-stat-icon amber">
+                                <i class="fa-solid fa-arrow-trend-up"></i>
+                            </div>
+                            <div class="history-stat-value" id="highestScore">-</div>
+                            <div class="history-stat-label">Highest Score</div>
+                        </div>
+                        <div class="history-stat-card">
+                            <div class="history-stat-icon blue">
+                                <i class="fa-solid fa-chart-bar"></i>
+                            </div>
+                            <div class="history-stat-value" id="avgScore">-</div>
+                            <div class="history-stat-label">Ave. Score</div>
+                        </div>
+                    </div>
+
+                    <!-- Toolbar -->
+                    <div class="history-toolbar">
+                        <div class="history-toolbar-left">
+                            <i class="fa-solid fa-list"></i>
+                            <span>Showing {{ predictions|length }} prediction{{ predictions|length|pluralize }}</span>
+                        </div>
+                        <div class="history-toolbar-right">
+                            <button class="sort-btn active" data-sort="newest" onclick="sortPredictions('newest', this)">
+                                <i class="fa-solid fa-arrow-down-short-wide"></i> Newest
+                            </button>
+                            <button class="sort-btn" data-sort="oldest" onclick="sortPredictions('oldest', this)">
+                                <i class="fa-solid fa-arrow-up-short-wide"></i> Oldest
+                            </button>
+                            <button class="sort-btn" data-sort="highest" onclick="sortPredictions('highest', this)">
+                                <i class="fa-solid fa-arrow-up-9-1"></i> Highest
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="history-grid" id="historyGrid">
                         {% for pred in predictions %}
-                            <div class="history-card">
+                            <div class="history-card" data-date="{{ pred.created_at|date:'U' }}" data-score="{{ pred.probability }}" data-result="{{ pred.prediction_result }}">
                                 
                                 <div class="history-header">
                                     <div class="history-score">
@@ -58,6 +168,11 @@
                                             <h3>{{ pred.created_at|date:"F d, Y - h:i A" }}</h3>
                                             <p>
                                                 Result: <span class="result-label {% if pred.prediction_result == 'PASS' %}pass{% else %}fail{% endif %}">
+                                                    {% if pred.prediction_result == 'PASS' %}
+                                                        <i class="fa-solid fa-circle-check"></i>
+                                                    {% else %}
+                                                        <i class="fa-solid fa-circle-xmark"></i>
+                                                    {% endif %}
                                                     {{ pred.prediction_result }}
                                                 </span>
                                             </p>
@@ -66,13 +181,13 @@
                                     <div class="history-actions">
                                         <a href="{% url 'prediction:result' pred.id %}" class="btn-icon btn-view">
                                             <i class="fa-solid fa-eye"></i>
-                                            View
+                                            <span>View</span>
                                         </a>
                                         <form method="POST" action="{% url 'prediction:delete' pred.id %}" onsubmit="return confirm('Are you sure you want to delete this prediction?');" style="display: inline;">
                                             {% csrf_token %}
                                             <button type="submit" class="btn-icon btn-delete">
                                                 <i class="fa-solid fa-trash"></i>
-                                                Delete
+                                                <span>Delete</span>
                                             </button>
                                         </form>
                                     </div>
@@ -80,19 +195,19 @@
 
                                 <div class="history-details">
                                     <div class="detail-item">
-                                        <span class="detail-label">GPA:</span>
+                                        <span class="detail-label">GPA</span>
                                         <span class="detail-value">{{ pred.gpa|floatformat:2 }}</span>
                                     </div>
                                     <div class="detail-item">
-                                        <span class="detail-label">Study Hours:</span>
+                                        <span class="detail-label">Study Hours</span>
                                         <span class="detail-value">{{ pred.study_hours }}hrs</span>
                                     </div>
                                     <div class="detail-item">
-                                        <span class="detail-label">Sleeping Hours:</span>
+                                        <span class="detail-label">Sleep Hours</span>
                                         <span class="detail-value">{{ pred.sleep_hours }}hrs</span>
                                     </div>
                                     <div class="detail-item">
-                                        <span class="detail-label">Review Center:</span>
+                                        <span class="detail-label">Review Center</span>
                                         <span class="detail-value">
                                             {% if pred.review_center %}
                                                 <i class="fa-solid fa-check" style="color: #10b981;"></i> Yes
@@ -102,11 +217,11 @@
                                         </span>
                                     </div>
                                     <div class="detail-item">
-                                        <span class="detail-label">Confidence:</span>
+                                        <span class="detail-label">Confidence</span>
                                         <span class="detail-value">{{ pred.confidence }}/10</span>
                                     </div>
                                     <div class="detail-item">
-                                        <span class="detail-label">Test Anxiety:</span>
+                                        <span class="detail-label">Test Anxiety</span>
                                         <span class="detail-value">{{ pred.test_anxiety }}/10</span>
                                     </div>
                                 </div>
@@ -116,11 +231,13 @@
                     </div>
                 {% else %}
                     <div class="empty-state">
-                        <i class="fa-solid fa-clock-rotate-left"></i>
+                        <div class="empty-icon">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </div>
                         <h3>No Predictions Yet</h3>
-                        <p>Start by creating your first prediction</p>
+                        <p>Start by creating your first exam prediction to see your results here</p>
                         <a href="{% url 'prediction:student_predict' %}" class="btn btn-primary">
-                            <i class="fa-solid fa-plus"></i>
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
                             Create Prediction
                         </a>
                     </div>
@@ -130,6 +247,68 @@
 
         </div>
     </div>
+
+    <script>
+        // Compute stats from cards
+        function computeStats() {
+            const cards = document.querySelectorAll('.history-card');
+            if (!cards.length) return;
+
+            let passCount = 0;
+            let highest = 0;
+            let total = 0;
+
+            cards.forEach(card => {
+                const score = parseFloat(card.dataset.score) || 0;
+                const result = card.dataset.result;
+                if (result === 'PASS') passCount++;
+                if (score > highest) highest = score;
+                total += score;
+            });
+
+            const avg = Math.round(total / cards.length);
+
+            const passEl = document.getElementById('passCount');
+            const highEl = document.getElementById('highestScore');
+            const avgEl = document.getElementById('avgScore');
+
+            if (passEl) passEl.textContent = passCount;
+            if (highEl) highEl.textContent = Math.round(highest) + '%';
+            if (avgEl) avgEl.textContent = avg + '%';
+        }
+
+        // Sort predictions
+        function sortPredictions(mode, btn) {
+            // Update active button
+            document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const grid = document.getElementById('historyGrid');
+            const cards = Array.from(grid.querySelectorAll('.history-card'));
+
+            cards.sort((a, b) => {
+                if (mode === 'newest') return parseInt(b.dataset.date) - parseInt(a.dataset.date);
+                if (mode === 'oldest') return parseInt(a.dataset.date) - parseInt(b.dataset.date);
+                if (mode === 'highest') return parseFloat(b.dataset.score) - parseFloat(a.dataset.score);
+                return 0;
+            });
+
+            // Re-append sorted
+            cards.forEach(card => grid.appendChild(card));
+        }
+
+        // Reveal content, hide skeleton
+        document.addEventListener('DOMContentLoaded', function() {
+            const skeleton = document.getElementById('historySkeleton');
+            const header = document.getElementById('historyHeader');
+            const content = document.getElementById('historyContent');
+            if (skeleton) skeleton.classList.add('loaded');
+            if (header) header.classList.add('loaded');
+            if (content) content.classList.add('loaded');
+
+            computeStats();
+        });
+    </script>
 
 </body>
 </html>

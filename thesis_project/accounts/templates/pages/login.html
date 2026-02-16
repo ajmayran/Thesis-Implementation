@@ -6,17 +6,99 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Social Work Licensure Exam Predictor</title>
     <link rel="stylesheet" href="{% static 'style/css/auth.css' %}">
-    <link rel="stylesheet" href="{% static 'fontawesome/css/all.min.css'%}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 </head>
 <body>
-    <div class="gradient-bg">
-        <div class="auth-card">
+    <!-- Info Toggle Button -->
+    <button onclick="toggleInfo()" class="info-toggle-btn" id="infoToggle">
+        <i class="fa-solid fa-info"></i>
+    </button>
+
+    <!-- Floating Info Card -->
+    <div class="info-card" id="infoCard">
+        <div>
+            <div class="feature-icon" style="margin-bottom: 0.75rem;">
+                <i class="fa-solid fa-graduation-cap" style="font-size: 1.1rem;"></i>
+            </div>
+            <h2 class="info-title">Social Work Licensure Exam Predictor</h2>
+            <p class="info-subtitle">Prepare smarter, not harder! Get personalized predictions and insights for your exam success.</p>
+        </div>
+
+        <div class="feature-list">
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+                <div>
+                    <div class="feature-title">Performance Analysis</div>
+                    <div class="feature-desc">Get detailed insights into your strengths and areas for improvement based on your academic performance.</div>
+                </div>
+            </div>
+
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <i class="fa-solid fa-brain"></i>
+                </div>
+                <div>
+                    <div class="feature-title">AI-Powered Predictions</div>
+                    <div class="feature-desc">Advanced machine learning models predict your exam performance with high accuracy.</div>
+                </div>
+            </div>
+
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <i class="fa-solid fa-bullseye"></i>
+                </div>
+                <div>
+                    <div class="feature-title">Personalized Guidance</div>
+                    <div class="feature-desc">Receive tailored recommendations to maximize your chances of passing the licensure exam.</div>
+                </div>
+            </div>
+
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <div>
+                    <div class="feature-title">Progress Tracking</div>
+                    <div class="feature-desc">Monitor your academic journey and watch your predicted success rate improve over time.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-footer">
+            <i class="fa-solid fa-university"></i>Western Mindanao State University
+        </div>
+    </div>
+
+    <div class="auth-bg-green">
+        <!-- Skeleton Loading -->
+        <div class="skeleton-auth-card skeleton-wrapper" id="loginSkeleton">
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <div class="skeleton skeleton-circle"></div>
+                <div class="skeleton skeleton-line title"></div>
+                <div class="skeleton skeleton-line subtitle"></div>
+            </div>
+            <div class="skeleton-form-group">
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-line"></div>
+            </div>
+            <div class="skeleton-form-group">
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-line"></div>
+            </div>
+            <div class="skeleton skeleton-btn" style="margin-bottom: 1rem;"></div>
+            <div class="skeleton skeleton-divider"></div>
+            <div class="skeleton skeleton-btn"></div>
+        </div>
+
+        <div class="auth-card page-content" id="loginContent">
             <div class="auth-header">
                 <div class="auth-icon">
-                    <i class="fa-solid fa-user-graduate"></i>
+                    <i class="fa-solid fa-right-to-bracket"></i>
                 </div>
-                <h1 class="auth-title">Welcome Back</h1>
-                <p class="auth-subtitle">Social Work Licensure Exam Predictor</p>
+                <h1 class="auth-title">Welcome Back!</h1>
+                <p class="auth-subtitle">Sign in to continue your journey</p>
             </div>
 
             {% if messages %}
@@ -30,24 +112,25 @@
 
             <form method="post" action="{% url 'accounts:login' %}" class="auth-form">
                 {% csrf_token %}
-                
+
                 <div class="form-group">
-                    <label for="id_email" class="form-label">
-                        <i class="fa-solid fa-user"></i>Email
-                    </label>
+                    <label for="id_email" class="form-label">Email</label>
                     {{ form.email }}
                     {% if form.email.errors %}
-                        <p class="form-error">{{ form.email.errors.0 }}</p>
+                        <p class="form-error"><i class="fa-solid fa-triangle-exclamation"></i> {{ form.email.errors.0 }}</p>
                     {% endif %}
                 </div>
 
                 <div class="form-group">
-                    <label for="id_password" class="form-label">
-                        <i class="fa-solid fa-lock"></i>Password
-                    </label>
-                    {{ form.password }}
+                    <label for="id_password" class="form-label">Password</label>
+                    <div class="password-wrapper">
+                        {{ form.password }}
+                        <button type="button" onclick="togglePassword()" class="password-toggle-btn" aria-label="Toggle password visibility">
+                            <i class="fa-solid fa-eye-slash" id="toggleIcon"></i>
+                        </button>
+                    </div>
                     {% if form.password.errors %}
-                        <p class="form-error">{{ form.password.errors.0 }}</p>
+                        <p class="form-error"><i class="fa-solid fa-triangle-exclamation"></i> {{ form.password.errors.0 }}</p>
                     {% endif %}
                 </div>
 
@@ -59,22 +142,94 @@
                     <a href="#" class="forgot-link">Forgot password?</a>
                 </div>
 
-                <button type="submit" class="btn-primary">
-                    <i class="fa-solid fa-right-to-bracket"></i>Sign In
+                <button type="submit" class="btn-primary" id="loginSubmit">
+                    <i class="fa-solid fa-right-to-bracket" id="loginIcon"></i>
+                    <span id="loginLabel">Sign In</span>
                 </button>
             </form>
 
-            <div class="auth-footer">
-                <p>
-                    Don't have an account? 
-                    <a href="{% url 'accounts:register' %}">Register here</a>
-                </p>
+            <div class="auth-divider">
+                <span>New Here?</span>
             </div>
 
-            <div class="copyright">
-                <p>&copy; 2024 Thesis Project</p>
+            <a href="{% url 'accounts:register' %}" class="btn-secondary">
+                <i class="fa-solid fa-user-plus"></i>
+                <span>Create Account</span>
+            </a>
+
+            <div class="auth-footer">
+                <p><i class="fa-solid fa-shield-halved"></i>Secure Login &bull; Thesis Project</p>
             </div>
         </div>
     </div>
+
+    <script>
+        function toggleInfo() {
+            const infoCard = document.getElementById('infoCard');
+            const infoToggle = document.getElementById('infoToggle');
+            infoCard.classList.toggle('active');
+            const icon = infoToggle.querySelector('i');
+            if (infoCard.classList.contains('active')) {
+                icon.classList.remove('fa-info');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-info');
+            }
+        }
+
+        function togglePassword() {
+            const passwordInput = document.getElementById('id_password');
+            const toggleIcon = document.getElementById('toggleIcon');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('input[type="email"], input[type="password"]');
+            inputs.forEach(input => input.classList.add('form-input'));
+
+            const loginForm = document.querySelector('form');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function() {
+                    const submitBtn = document.getElementById('loginSubmit');
+                    const icon = document.getElementById('loginIcon');
+                    const label = document.getElementById('loginLabel');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.style.opacity = '0.6';
+                        submitBtn.style.cursor = 'not-allowed';
+                    }
+                    if (icon) {
+                        icon.classList.remove('fa-right-to-bracket');
+                        icon.classList.add('fa-spinner', 'fa-spin');
+                    }
+                    if (label) label.textContent = 'Signing you in...';
+                });
+            }
+
+            const messages = document.querySelectorAll('.message');
+            messages.forEach(msg => {
+                setTimeout(() => {
+                    msg.style.opacity = '0';
+                    msg.style.transform = 'translateX(120%)';
+                    setTimeout(() => msg.remove(), 400);
+                }, 5000);
+            });
+
+            // Reveal content, hide skeleton
+            const skeleton = document.getElementById('loginSkeleton');
+            const content = document.getElementById('loginContent');
+            if (skeleton) skeleton.classList.add('loaded');
+            if (content) content.classList.add('loaded');
+        });
+    </script>
 </body>
 </html>

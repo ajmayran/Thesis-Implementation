@@ -1,46 +1,102 @@
 {% load static %}
 
+<!-- Pre-paint: apply collapsed state instantly to prevent twitch between pages -->
+<script>
+    (function() {
+        if (localStorage.getItem('sidebar-collapsed') === 'true') {
+            document.documentElement.classList.add('sidebar-is-collapsed');
+        }
+    })();
+</script>
+<style>
+    html.sidebar-is-collapsed .sidebar { width: 5rem !important; transition: none !important; }
+    html.sidebar-is-collapsed .content-wrapper { margin-left: 5rem !important; width: calc(100% - 5rem) !important; transition: none !important; }
+    html.sidebar-is-collapsed .sidebar .user-info,
+    html.sidebar-is-collapsed .sidebar .nav-item-text,
+    html.sidebar-is-collapsed .sidebar .footer-badge span,
+    html.sidebar-is-collapsed .sidebar .footer-version { display: none !important; }
+</style>
+
 <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">
-        <div class="sidebar-logo-icon">
-            <i class="fa-solid fa-user-graduate"></i>
+    <!-- Collapse Toggle (Desktop only) -->
+    <button class="sidebar-collapse-toggle" id="sidebarCollapseToggle" title="Toggle sidebar">
+        <i class="fa-solid fa-chevron-left"></i>
+    </button>
+
+    <div class="sidebar-user">
+        <div class="user-avatar">
+            {{ request.user.first_name.0|default:'U' }}{{ request.user.last_name.0|default:'S' }}
         </div>
-        <div class="sidebar-logo-text">
-            <h1>Social Work<br />Predictor</h1>
+        <div class="user-info">
+            <div class="user-name">{{ request.user.first_name }}</div>
+            <div class="user-email">{{ request.user.email }}</div>
         </div>
     </div>
 
     <nav class="sidebar-nav">
-        <a href="{% url 'dashboard:student_dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'student_dashboard' %}active{% endif %}">
-            <i class="fa-solid fa-house-chimney"></i>
-            Dashboard
+        <a href="{% url 'dashboard:student_dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'student_dashboard' %}active{% endif %}" data-color="blue" data-tooltip="Dashboard">
+            <div class="nav-item-icon">
+                <i class="fa-solid fa-house"></i>
+            </div>
+            <span class="nav-item-text">Dashboard</span>
         </a>
-        <a href="{% url 'prediction:student_predict' %}" class="nav-item {% if request.resolver_match.url_name == 'predict' %}active{% endif %}">
-            <i class="fa-solid fa-brain"></i>
-            New Prediction
+        <a href="{% url 'prediction:student_predict' %}" class="nav-item {% if request.resolver_match.url_name == 'student_predict' %}active{% endif %}" data-color="green" data-tooltip="New Prediction">
+            <div class="nav-item-icon">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+            </div>
+            <span class="nav-item-text">New Prediction</span>
         </a>
-        <a href="{% url 'prediction:history' %}" class="nav-item {% if request.resolver_match.url_name == 'history' %}active{% endif %}">
-            <i class="fa-solid fa-clock-rotate-left"></i>
-            History
+        <a href="{% url 'prediction:history' %}" class="nav-item {% if request.resolver_match.url_name == 'history' %}active{% endif %}" data-color="purple" data-tooltip="History">
+            <div class="nav-item-icon">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+            <span class="nav-item-text">History</span>
         </a>
-        <a href="{% url 'dashboard:student_profile' %}" class="nav-item {% if request.resolver_match.url_name == 'student_profile' %}active{% endif %}">
-            <i class="fa-solid fa-user"></i>
-            Profile
+        <a href="{% url 'dashboard:student_profile' %}" class="nav-item {% if request.resolver_match.url_name == 'student_profile' %}active{% endif %}" data-color="orange" data-tooltip="Profile">
+            <div class="nav-item-icon">
+                <i class="fa-solid fa-user"></i>
+            </div>
+            <span class="nav-item-text">Profile</span>
         </a>
     </nav>
 
     <div class="sidebar-logout">
-        <a href="{% url 'accounts:logout' %}" class="nav-item logout">
-            <i class="fa-solid fa-right-from-bracket"></i>
-            Logout
+        <a href="{% url 'accounts:logout' %}" class="nav-item logout logout-trigger" data-tooltip="Logout">
+            <div class="nav-item-icon">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </div>
+            <span class="nav-item-text">Logout</span>
         </a>
     </div>
 
     <div class="sidebar-footer">
-        <div>© 2024 Thesis Project</div>
-        <div>Version 1.0.0</div>
+        <div class="footer-badge">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Exam Predictor</span>
+        </div>
+        <div class="footer-version">v1.0.0</div>
     </div>
 </aside>
+
+<!-- Logout Confirmation Modal -->
+<div id="logoutModal" class="logout-modal hidden">
+    <div class="logout-modal-backdrop"></div>
+    <div class="logout-modal-content">
+        <div class="logout-modal-header">
+            <div class="logout-modal-icon">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </div>
+            <div>
+                <h2>Ready to sign out?</h2>
+                <p>Your progress is safe. You can come back anytime.</p>
+            </div>
+        </div>
+        <div class="logout-modal-actions">
+            <button type="button" id="cancelLogout" class="btn-secondary">Stay logged in</button>
+            <button type="button" id="confirmLogout" class="btn-danger">Log out</button>
+        </div>
+    </div>
+</div>
 
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
@@ -49,18 +105,128 @@
 </button>
 
 <script>
-    // Mobile sidebar toggle
-    const sidebar = document.getElementById('sidebar');
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    document.addEventListener('DOMContentLoaded', function() {
+        // Sidebar collapse toggle (Desktop - Discord-style)
+        (function() {
+            const sidebar = document.getElementById('sidebar');
+            const collapseToggle = document.getElementById('sidebarCollapseToggle');
+            const contentWrapper = document.querySelector('.content-wrapper');
+            const STORAGE_KEY = 'sidebar-collapsed';
+
+            // Restore saved state instantly (no transition)
+            function restoreCollapseState() {
+                const isCollapsed = localStorage.getItem(STORAGE_KEY) === 'true';
+                if (isCollapsed) {
+                    // Disable transitions for instant state restore
+                    sidebar.style.transition = 'none';
+                    if (contentWrapper) contentWrapper.style.transition = 'none';
+
+                    sidebar.classList.add('collapsed');
+                    if (contentWrapper) contentWrapper.classList.add('sidebar-collapsed');
+
+                    // Re-enable transitions after paint, then remove pre-paint overrides
+                    requestAnimationFrame(function() {
+                        requestAnimationFrame(function() {
+                            sidebar.style.transition = '';
+                            if (contentWrapper) contentWrapper.style.transition = '';
+                            document.documentElement.classList.remove('sidebar-is-collapsed');
+                        });
+                    });
+                } else {
+                    document.documentElement.classList.remove('sidebar-is-collapsed');
+                }
+            }
+
+            // Toggle collapse
+            if (collapseToggle) {
+                collapseToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('collapsed');
+                    if (contentWrapper) contentWrapper.classList.toggle('sidebar-collapsed');
+                    
+                    const isCollapsed = sidebar.classList.contains('collapsed');
+                    localStorage.setItem(STORAGE_KEY, isCollapsed);
+                });
+            }
+
+            // Apply on load
+            restoreCollapseState();
+        })();
+
+        // Mobile sidebar toggle
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const toggleIcon = sidebarToggle.querySelector('i');
 
     sidebarToggle.addEventListener('click', function() {
         sidebar.classList.toggle('open');
         sidebarOverlay.classList.toggle('active');
+        
+        // Toggle icon between bars and X
+        if (sidebar.classList.contains('open')) {
+            toggleIcon.classList.remove('fa-bars');
+            toggleIcon.classList.add('fa-xmark');
+        } else {
+            toggleIcon.classList.remove('fa-xmark');
+            toggleIcon.classList.add('fa-bars');
+        }
     });
 
     sidebarOverlay.addEventListener('click', function() {
         sidebar.classList.remove('open');
         sidebarOverlay.classList.remove('active');
+        toggleIcon.classList.remove('fa-xmark');
+        toggleIcon.classList.add('fa-bars');
+    });
+
+    // Logout confirmation modal behavior
+    (function() {
+        const modal = document.getElementById('logoutModal');
+        const cancelBtn = document.getElementById('cancelLogout');
+        const confirmBtn = document.getElementById('confirmLogout');
+        let pendingLogoutUrl = null;
+
+        function openModal(url) {
+            pendingLogoutUrl = url;
+            if (modal) {
+                modal.classList.remove('hidden');
+            }
+        }
+
+        function closeModal() {
+            pendingLogoutUrl = null;
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            const target = e.target.closest('.logout-trigger');
+            if (!target) return;
+            e.preventDefault();
+            openModal(target.getAttribute('href'));
+        });
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function() {
+                closeModal();
+            });
+        }
+
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', function() {
+                if (pendingLogoutUrl) {
+                    window.location.href = pendingLogoutUrl;
+                }
+            });
+        }
+
+        const backdrop = document.querySelector('.logout-modal-backdrop');
+        if (backdrop) {
+            backdrop.addEventListener('click', function() {
+                closeModal();
+            });
+        }
+    })();
     });
 </script>

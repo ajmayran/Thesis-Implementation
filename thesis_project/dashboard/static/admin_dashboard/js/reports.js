@@ -8,7 +8,7 @@ const API_URLS = {
     exportCSV: '/dashboard/api/reports/export-csv/'
 };
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     console.log('[DEBUG] Reports page loaded');
     initializeReports();
     setupEventListeners();
@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializeReports() {
     const reportTypes = document.querySelectorAll('.report-type-card');
     reportTypes.forEach(card => {
-        card.addEventListener('click', function() {
+        card.addEventListener('click', function () {
             reportTypes.forEach(c => c.classList.remove('active'));
             this.classList.add('active');
             currentReportType = this.dataset.type;
@@ -33,9 +33,9 @@ function setupEventListeners() {
     document.getElementById('resetFiltersBtn')?.addEventListener('click', resetFilters);
     document.getElementById('exportPdfBtn')?.addEventListener('click', exportToPDF);
     document.getElementById('exportCsvBtn')?.addEventListener('click', exportToCSV);
-    
+
     // Print button with proper header handling
-    document.getElementById('printReportBtn')?.addEventListener('click', function() {
+    document.getElementById('printReportBtn')?.addEventListener('click', function () {
         // Set print date
         const printDate = document.getElementById('printDate');
         if (printDate) {
@@ -47,7 +47,7 @@ function setupEventListeners() {
                 minute: '2-digit'
             });
         }
-        
+
         // Trigger print
         window.print();
     });
@@ -61,7 +61,7 @@ function applyFilters() {
         riskLevel: document.getElementById('riskLevel')?.value,
         department: document.getElementById('department')?.value
     };
-    
+
     console.log('[DEBUG] Applying filters:', filters);
     loadReportData(filters);
 }
@@ -71,7 +71,7 @@ function resetFilters() {
     document.getElementById('dateTo').value = '';
     document.getElementById('riskLevel').value = 'all';
     document.getElementById('department').value = 'all';
-    
+
     loadReportData();
 }
 
@@ -79,23 +79,23 @@ async function loadReportData(filters = {}) {
     try {
         showLoading();
         console.log('[DEBUG] Loading report data with filters:', filters);
-        
+
         const queryParams = new URLSearchParams(filters).toString();
         const url = `${API_URLS.reportData}?${queryParams}`;
         console.log('[DEBUG] Fetching from URL:', url);
-        
+
         const response = await fetch(url);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         reportData = await response.json();
         console.log('[DEBUG] Report data loaded:', reportData);
-        
+
         renderReport();
         showMessage('Report data loaded successfully', 'success');
-        
+
     } catch (error) {
         console.error('[ERROR] Error loading report data:', error);
         showMessage(`Failed to load report data: ${error.message}`, 'error');
@@ -111,10 +111,10 @@ function renderReport() {
         renderEmptyState();
         return;
     }
-    
+
     console.log('[DEBUG] Rendering report type:', currentReportType);
     const container = document.getElementById('reportContent');
-    
+
     switch (currentReportType) {
         case 'overview':
             container.innerHTML = renderOverviewReport();
@@ -131,13 +131,13 @@ function renderReport() {
         default:
             container.innerHTML = renderOverviewReport();
     }
-    
+
     setTimeout(() => initializeCharts(), 100);
 }
 
 function renderOverviewReport() {
     const data = reportData.overview || {};
-    
+
     return `
         <div class="report-section">
             <h2>System Overview</h2>
@@ -196,7 +196,7 @@ function renderOverviewReport() {
 
 function renderPerformanceReport() {
     const data = reportData.performance || {};
-    
+
     return `
         <div class="report-section">
             <h2>Model Performance Metrics</h2>
@@ -255,12 +255,12 @@ function renderPerformanceReport() {
 
 function renderPredictionsReport() {
     const data = reportData.predictions || [];
-    
+
     let tableRows = '';
     data.forEach((pred, index) => {
         const riskClass = pred.likelihood >= 70 ? 'low' : pred.likelihood >= 50 ? 'medium' : 'high';
         const riskLabel = pred.likelihood >= 70 ? 'Low Risk' : pred.likelihood >= 50 ? 'Medium Risk' : 'High Risk';
-        
+
         tableRows += `
             <tr>
                 <td>${index + 1}</td>
@@ -272,7 +272,7 @@ function renderPredictionsReport() {
             </tr>
         `;
     });
-    
+
     return `
         <div class="report-section">
             <h2>Recent Predictions</h2>
@@ -311,7 +311,7 @@ function renderPredictionsReport() {
 
 function renderRiskAnalysisReport() {
     const data = reportData.risk_analysis || {};
-    
+
     return `
         <div class="report-section">
             <h2>Risk Analysis Overview</h2>
@@ -371,7 +371,7 @@ function renderRiskAnalysisReport() {
 function initializeCharts() {
     destroyCharts();
     console.log('[DEBUG] Initializing charts for:', currentReportType);
-    
+
     switch (currentReportType) {
         case 'overview':
             initOverviewCharts();
@@ -405,7 +405,7 @@ function initOverviewCharts() {
                     fill: true,
                     pointRadius: 5,
                     pointBackgroundColor: '#667eea',
-                    pointBorderColor: '#fff',
+                    pointBorderColor: '#1e293b',
                     pointBorderWidth: 2
                 }]
             },
@@ -413,19 +413,24 @@ function initOverviewCharts() {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: true, position: 'top' }
+                    legend: { display: true, position: 'top', labels: { color: '#94a3b8' } }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
                         max: 100,
-                        ticks: { callback: value => value + '%' }
+                        ticks: { callback: value => value + '%', color: '#94a3b8' },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                    },
+                    x: {
+                        ticks: { color: '#94a3b8' },
+                        grid: { display: false }
                     }
                 }
             }
         });
     }
-    
+
     const riskCtx = document.getElementById('riskDistributionChart');
     if (riskCtx) {
         const riskData = reportData.risk_distribution || { high: 0, medium: 0, low: 0 };
@@ -437,14 +442,14 @@ function initOverviewCharts() {
                     data: [riskData.high, riskData.medium, riskData.low],
                     backgroundColor: ['#ef4444', '#f59e0b', '#10b981'],
                     borderWidth: 2,
-                    borderColor: '#fff'
+                    borderColor: '#1e293b'
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'bottom' }
+                    legend: { position: 'bottom', labels: { color: '#94a3b8' } }
                 }
             }
         });
@@ -456,9 +461,9 @@ function initPerformanceCharts() {
     if (featureCtx) {
         const features = reportData.feature_importance || {};
         const sortedFeatures = Object.entries(features)
-            .sort(([,a], [,b]) => b - a)
+            .sort(([, a], [, b]) => b - a)
             .slice(0, 10);
-        
+
         charts.featureImportanceChart = new Chart(featureCtx.getContext('2d'), {
             type: 'bar',
             data: {
@@ -481,13 +486,18 @@ function initPerformanceCharts() {
                 scales: {
                     x: {
                         beginAtZero: true,
-                        ticks: { callback: value => (value * 100).toFixed(0) + '%' }
+                        ticks: { callback: value => (value * 100).toFixed(0) + '%', color: '#94a3b8' },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                    },
+                    y: {
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' }
                     }
                 }
             }
         });
     }
-    
+
     const accuracyCtx = document.getElementById('accuracyTrendChart');
     if (accuracyCtx) {
         const accuracyData = reportData.accuracy_trend || { labels: [], values: [] };
@@ -508,7 +518,11 @@ function initPerformanceCharts() {
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
-                    y: { beginAtZero: true, max: 1 }
+                    y: { beginAtZero: true, max: 1, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255, 255, 255, 0.05)' } },
+                    x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                },
+                plugins: {
+                    legend: { labels: { color: '#94a3b8' } }
                 }
             }
         });
@@ -546,16 +560,20 @@ function initPredictionsCharts() {
                 maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false }
+                },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
+                    y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255, 255, 255, 0.05)' } }
                 }
             }
         });
     }
-    
+
     const likelihoodCtx = document.getElementById('likelihoodRangeChart');
     if (likelihoodCtx) {
         const data = reportData.predictions || [];
         const likelihoods = data.map(p => p.likelihood || 0);
-        
+
         charts.likelihoodRangeChart = new Chart(likelihoodCtx.getContext('2d'), {
             type: 'scatter',
             data: {
@@ -573,7 +591,12 @@ function initPredictionsCharts() {
                     y: {
                         beginAtZero: true,
                         max: 100,
-                        ticks: { callback: value => value + '%' }
+                        ticks: { callback: value => value + '%', color: '#94a3b8' },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                    },
+                    x: {
+                        ticks: { color: '#94a3b8' },
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' }
                     }
                 }
             }
@@ -595,7 +618,7 @@ function initRiskCharts() {
                     backgroundColor: 'rgba(239, 68, 68, 0.2)',
                     borderColor: '#ef4444',
                     pointBackgroundColor: '#ef4444',
-                    pointBorderColor: '#fff'
+                    pointBorderColor: '#1e293b'
                 }]
             },
             options: {
@@ -604,13 +627,17 @@ function initRiskCharts() {
                 scales: {
                     r: {
                         beginAtZero: true,
-                        max: 1
+                        max: 1,
+                        ticks: { color: '#94a3b8', backdropColor: 'transparent' },
+                        grid: { color: 'rgba(255, 255, 255, 0.08)' },
+                        pointLabels: { color: '#94a3b8' },
+                        angleLines: { color: 'rgba(255, 255, 255, 0.08)' }
                     }
                 }
             }
         });
     }
-    
+
     const trendsCtx = document.getElementById('riskTrendsChart');
     if (trendsCtx) {
         const trends = reportData.risk_trends || { labels: [], high: [], medium: [], low: [] };
@@ -646,7 +673,11 @@ function initRiskCharts() {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'top' }
+                    legend: { position: 'top', labels: { color: '#94a3b8' } }
+                },
+                scales: {
+                    x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
+                    y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255, 255, 255, 0.05)' } }
                 }
             }
         });
@@ -673,18 +704,18 @@ function renderEmptyState() {
 async function exportToPDF() {
     try {
         showMessage('Generating PDF report...', 'info');
-        
+
         const filters = {
             reportType: currentReportType,
             dateFrom: document.getElementById('dateFrom')?.value,
             dateTo: document.getElementById('dateTo')?.value
         };
-        
+
         const queryParams = new URLSearchParams(filters).toString();
         const response = await fetch(`${API_URLS.exportPDF}?${queryParams}`);
-        
+
         if (!response.ok) throw new Error('Failed to generate PDF');
-        
+
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -694,9 +725,9 @@ async function exportToPDF() {
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
-        
+
         showMessage('PDF report downloaded successfully', 'success');
-        
+
     } catch (error) {
         console.error('[ERROR] Error exporting PDF:', error);
         showMessage('Failed to export PDF. Please try again.', 'error');
@@ -706,18 +737,18 @@ async function exportToPDF() {
 async function exportToCSV() {
     try {
         showMessage('Generating CSV export...', 'info');
-        
+
         const filters = {
             reportType: currentReportType,
             dateFrom: document.getElementById('dateFrom')?.value,
             dateTo: document.getElementById('dateTo')?.value
         };
-        
+
         const queryParams = new URLSearchParams(filters).toString();
         const response = await fetch(`${API_URLS.exportCSV}?${queryParams}`);
-        
+
         if (!response.ok) throw new Error('Failed to generate CSV');
-        
+
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -727,9 +758,9 @@ async function exportToCSV() {
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
-        
+
         showMessage('CSV export downloaded successfully', 'success');
-        
+
     } catch (error) {
         console.error('[ERROR] Error exporting CSV:', error);
         showMessage('Failed to export CSV. Please try again.', 'error');
@@ -770,13 +801,13 @@ function hideLoading() {
 function showMessage(message, type = 'info') {
     const container = document.getElementById('messageContainer');
     if (!container) return;
-    
+
     const messageEl = document.createElement('div');
     messageEl.className = `message message-${type}`;
     messageEl.textContent = message;
-    
+
     container.appendChild(messageEl);
-    
+
     setTimeout(() => {
         messageEl.remove();
     }, 5000);

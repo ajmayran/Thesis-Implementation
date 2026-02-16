@@ -19,8 +19,69 @@
         {% include 'components/student_sidebar.html' %}
 
         <div class="content-wrapper">
+
+            <!-- Skeleton Loading -->
+            <div class="skeleton-wrapper" id="resultSkeleton" style="width: 100%;">
+                <!-- Header skeleton -->
+                <div class="skeleton-card" style="padding: 1.5rem; margin-bottom: 1.5rem; border-radius: 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex: 1;">
+                            <div class="skeleton skeleton-line title" style="width: 45%;"></div>
+                            <div class="skeleton skeleton-line subtitle" style="width: 35%;"></div>
+                        </div>
+                        <div style="display: flex; gap: 0.75rem;">
+                            <div class="skeleton skeleton-btn" style="width: 150px;"></div>
+                            <div class="skeleton skeleton-btn" style="width: 120px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div style="padding: 0 1.5rem;">
+                    <!-- Summary card skeleton -->
+                    <div class="skeleton-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <div class="skeleton skeleton-line title" style="width: 50%; margin-bottom: 1.5rem;"></div>
+                        <div class="skeleton-grid cols-3">
+                            <div class="skeleton-card" style="padding: 1.5rem; min-height: 100px;">
+                                <div class="skeleton skeleton-circle" style="margin: 0 auto 0.75rem;"></div>
+                                <div class="skeleton skeleton-line" style="width: 60%; margin: 0 auto;"></div>
+                                <div class="skeleton skeleton-line title" style="width: 40%; margin: 0.5rem auto 0;"></div>
+                            </div>
+                            <div class="skeleton-card" style="padding: 1.5rem; min-height: 100px;">
+                                <div class="skeleton skeleton-circle" style="margin: 0 auto 0.75rem;"></div>
+                                <div class="skeleton skeleton-line" style="width: 60%; margin: 0 auto;"></div>
+                                <div class="skeleton skeleton-line title" style="width: 40%; margin: 0.5rem auto 0;"></div>
+                            </div>
+                            <div class="skeleton-card" style="padding: 1.5rem; min-height: 100px;">
+                                <div class="skeleton skeleton-circle" style="margin: 0 auto 0.75rem;"></div>
+                                <div class="skeleton skeleton-line" style="width: 60%; margin: 0 auto;"></div>
+                                <div class="skeleton skeleton-line title" style="width: 40%; margin: 0.5rem auto 0;"></div>
+                            </div>
+                        </div>
+                        <!-- Probability bar skeleton -->
+                        <div style="margin-top: 1.5rem;">
+                            <div class="skeleton skeleton-line" style="width: 40%; margin-bottom: 0.75rem;"></div>
+                            <div class="skeleton skeleton-line full" style="height: 24px; border-radius: 12px;"></div>
+                        </div>
+                    </div>
+                    <!-- Input data skeleton -->
+                    <div class="skeleton-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <div class="skeleton skeleton-line title" style="width: 35%; margin-bottom: 1.5rem;"></div>
+                        <div class="skeleton-grid cols-3">
+                            <div class="skeleton-card" style="padding: 1rem;"><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div></div>
+                            <div class="skeleton-card" style="padding: 1rem;"><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div></div>
+                            <div class="skeleton-card" style="padding: 1rem;"><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div><div class="skeleton skeleton-line"></div></div>
+                        </div>
+                    </div>
+                    <!-- Recommendations skeleton -->
+                    <div class="skeleton-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <div class="skeleton skeleton-line title" style="width: 50%; margin-bottom: 1rem;"></div>
+                        <div class="skeleton skeleton-line full"></div>
+                        <div class="skeleton skeleton-line full"></div>
+                        <div class="skeleton skeleton-line long"></div>
+                    </div>
+                </div>
+            </div>
             
-            <header class="header">
+            <header class="header page-content" id="resultHeader">
                 <div class="header-title">
                     <h1>Prediction Results</h1>
                     <p>Social Work Licensure Examination</p>
@@ -37,18 +98,19 @@
                 </div>
             </header>
 
-            <main class="main-content">
+            <main class="main-content page-content" id="resultContent">
                 
-                <div class="result-card">
+                <!-- Overall Prediction Summary -->
+                <div class="result-card res-slide-in">
                     <div class="section-header">
                         <h2>
-                            <i class="fa-solid fa-chart-pie"></i>
+                            <i class="fa-solid fa-chart-pie icon-purple"></i>
                             Overall Prediction Summary
                         </h2>
                     </div>
 
                     <div class="stat-cards-grid">
-                        <div class="result-stat-card">
+                        <div class="result-stat-card green">
                             <div class="stat-icon">
                                 <i class="fa-solid fa-bullseye"></i>
                             </div>
@@ -62,7 +124,7 @@
                             </div>
                         </div>
 
-                        <div class="result-stat-card">
+                        <div class="result-stat-card blue">
                             <div class="stat-icon">
                                 <i class="fa-solid fa-percent"></i>
                             </div>
@@ -70,7 +132,7 @@
                             <div class="stat-value">{{ avg_probability|floatformat:1 }}%</div>
                         </div>
 
-                        <div class="result-stat-card">
+                        <div class="result-stat-card purple">
                             <div class="stat-icon">
                                 <i class="fa-solid fa-gauge-high"></i>
                             </div>
@@ -94,10 +156,11 @@
                     </div>
                 </div>
 
-                <div class="result-card">
+                <!-- Model Performance Details -->
+                <div class="result-card res-slide-in" style="animation-delay: 0.1s;">
                     <div class="section-header">
                         <h2>
-                            <i class="fa-solid fa-robot"></i>
+                            <i class="fa-solid fa-robot icon-blue"></i>
                             Model Performance Details
                         </h2>
                     </div>
@@ -141,10 +204,11 @@
                     {% endif %}
                 </div>
 
-                <div class="result-card">
+                <!-- Your Input Data -->
+                <div class="result-card res-slide-in" style="animation-delay: 0.2s;">
                     <div class="section-header">
                         <h2>
-                            <i class="fa-solid fa-user-check"></i>
+                            <i class="fa-solid fa-user-check icon-green"></i>
                             Your Input Data
                         </h2>
                     </div>
@@ -270,10 +334,11 @@
                     </div>
                 </div>
 
-                <div class="result-card">
+                <!-- Personalized Recommendations -->
+                <div class="result-card res-slide-in" style="animation-delay: 0.3s;">
                     <div class="section-header">
                         <h2>
-                            <i class="fa-solid fa-lightbulb"></i>
+                            <i class="fa-solid fa-lightbulb icon-yellow"></i>
                             Personalized Recommendations
                         </h2>
                     </div>
@@ -312,18 +377,19 @@
                     {% endif %}
                 </div>
 
-                <div class="action-buttons">
+                <!-- Action Buttons -->
+                <div class="action-buttons res-slide-in" style="animation-delay: 0.4s;">
                     <a href="{% url 'prediction:student_predict' %}" class="action-btn btn-primary-action">
                         <i class="fa-solid fa-rotate-right"></i>
                         Make Another Prediction
                     </a>
                     <a href="{% url 'prediction:history' %}" class="action-btn btn-secondary-action">
                         <i class="fa-solid fa-clock-rotate-left"></i>
-                        View Prediction History
+                        View History
                     </a>
                     <a href="{% url 'dashboard:student_dashboard' %}" class="action-btn btn-secondary-action">
                         <i class="fa-solid fa-house"></i>
-                        Back to Dashboard
+                        Dashboard
                     </a>
                 </div>
 
@@ -335,13 +401,22 @@
     <script>
         // Animate probability bar on page load
         document.addEventListener('DOMContentLoaded', function() {
+            // Reveal content, hide skeleton
+            const skeleton = document.getElementById('resultSkeleton');
+            const header = document.getElementById('resultHeader');
+            const content = document.getElementById('resultContent');
+            if (skeleton) skeleton.classList.add('loaded');
+            if (header) header.classList.add('loaded');
+            if (content) content.classList.add('loaded');
+
+            // Animate probability bar
             const probabilityFill = document.querySelector('.probability-fill');
             if (probabilityFill) {
                 const targetWidth = probabilityFill.style.width;
                 probabilityFill.style.width = '0%';
                 setTimeout(() => {
                     probabilityFill.style.width = targetWidth;
-                }, 100);
+                }, 300);
             }
         });
     </script>

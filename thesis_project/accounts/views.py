@@ -72,7 +72,7 @@ def register_view(request):
         
         if form.is_valid():
             user = form.save()
-            messages.success(request, 'Registration successful! Please login with your WMSU email.')
+            messages.success(request, 'Registration successful! Please login with your newly created account!.')
             return redirect('accounts:login')
         else:
             for field, errors in form.errors.items():

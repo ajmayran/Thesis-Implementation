@@ -7,11 +7,273 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prediction Results - Social Work Predictor</title>
     
-    <link rel="stylesheet" href="{% static 'style/css/main.css' %}">
+    <link rel="stylesheet" href="{% static 'admin_dashboard/css/base.css' %}">
     <link rel="stylesheet" href="{% static 'admin_dashboard/css/sidebar.css' %}">
     <link rel="stylesheet" href="{% static 'style/css/result.css' %}">
     <link rel="stylesheet" href="{% static 'fontawesome/css/all.min.css'%}">
-</head>
+
+    <style>
+        /* Dark theme overrides for admin result page */
+        body {
+            background-color: #0f172a;
+            color: #e2e8f0;
+        }
+
+        .main-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin-left: 18rem;
+            width: calc(100% - 18rem);
+        }
+
+        .header {
+            background: #1e293b;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 0 #0f172a;
+            border-bottom: 3px solid #334155;
+        }
+
+        .header-title h1 {
+            color: #e2e8f0;
+            font-weight: 900;
+        }
+
+        .header-title p {
+            color: #94a3b8;
+        }
+
+        .header-actions .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: 3px solid #5a67d8;
+            box-shadow: 0 4px 0 #4c51bf;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        .header-actions .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #4c51bf;
+        }
+
+        .header-actions .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: #e2e8f0;
+            border: 3px solid #475569;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 0 #1e293b;
+            transition: all 0.2s;
+        }
+
+        .header-actions .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #1e293b;
+        }
+
+        .main-content {
+            padding: 1.5rem 2rem;
+        }
+
+        /* Dark result cards */
+        .result-card {
+            background: #1e293b;
+            border: 3px solid #334155;
+            box-shadow: 0 4px 0 #0f172a;
+            border-radius: 20px;
+        }
+
+        .section-header {
+            border-bottom-color: #667eea;
+        }
+
+        .section-header h2 {
+            color: #e2e8f0;
+            font-weight: 900;
+        }
+
+        /* Dark probability bar */
+        .probability-bar-container {
+            background: #0f172a;
+            border: 3px solid #334155;
+            border-radius: 16px;
+        }
+
+        .probability-bar-container h3 {
+            color: #e2e8f0;
+            font-weight: 800;
+        }
+
+        .probability-bar {
+            background: #334155;
+            border-radius: 12px;
+        }
+
+        .probability-labels span {
+            color: #94a3b8;
+        }
+
+        /* Dark info box */
+        .info-box {
+            background: rgba(59, 130, 246, 0.1);
+            border: 3px solid rgba(59, 130, 246, 0.2);
+            border-radius: 20px;
+        }
+
+        .info-box p {
+            color: #94a3b8;
+        }
+
+        .info-box i {
+            color: #60a5fa;
+        }
+
+        /* Dark model performance */
+        .model-performance-item {
+            background: #0f172a;
+            border: 3px solid #334155;
+            border-radius: 20px;
+            box-shadow: 0 3px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .model-header h3 {
+            color: #e2e8f0;
+            font-weight: 800;
+        }
+
+        .model-stat-item .label {
+            color: #94a3b8;
+        }
+
+        .model-stat-item .value {
+            color: #e2e8f0;
+        }
+
+        /* Dark input data */
+        .input-data-section h3 {
+            color: #cbd5e1;
+        }
+
+        .input-data-box {
+            background: #0f172a;
+            border: 3px solid #334155;
+            border-radius: 16px;
+        }
+
+        .info-row {
+            border-bottom-color: #334155;
+        }
+
+        .info-label {
+            color: #94a3b8;
+        }
+
+        .info-value {
+            color: #e2e8f0;
+        }
+
+        /* Dark risk assessment */
+        .risk-assessment-box.low {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .risk-assessment-box.medium {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .risk-assessment-box.high {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .risk-assessment-box.low h3 { color: #f87171; }
+        .risk-assessment-box.medium h3 { color: #fbbf24; }
+        .risk-assessment-box.high h3 { color: #34d399; }
+
+        .risk-assessment-box.low p { color: #fca5a5; }
+        .risk-assessment-box.medium p { color: #fde68a; }
+        .risk-assessment-box.high p { color: #6ee7b7; }
+
+        .risk-assessment-box.low i { color: #f87171; }
+        .risk-assessment-box.medium i { color: #fbbf24; }
+        .risk-assessment-box.high i { color: #34d399; }
+
+        /* Dark recommendations */
+        .recommendations-intro {
+            color: #94a3b8;
+        }
+
+        .recommendation-item {
+            background: #0f172a;
+            border: 3px solid #334155;
+            border-radius: 16px;
+        }
+
+        .recommendation-content p {
+            color: #cbd5e1;
+        }
+
+        .empty-recommendations {
+            background: #0f172a;
+            border-radius: 20px;
+        }
+
+        .empty-recommendations i {
+            color: #475569;
+        }
+
+        .empty-recommendations p {
+            color: #94a3b8;
+        }
+
+        /* Dark action buttons */
+        .btn-secondary-action {
+            background: rgba(255, 255, 255, 0.05);
+            color: #e2e8f0;
+            border: 3px solid #475569;
+            border-radius: 16px;
+            box-shadow: 0 4px 0 #1e293b;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #1e293b;
+        }
+
+        @media (max-width: 768px) {
+            .content-wrapper {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+    </style></head>
 
 <body>
     <div class="main-container">
