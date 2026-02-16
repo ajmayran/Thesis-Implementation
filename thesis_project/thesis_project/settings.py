@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
-import dj_database_url
+from decouple import config
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -27,18 +27,17 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '))"                           
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['social-work-predictor.me', 'www.social-work-predictor.me', 'thesis-implementation.onrender.com']
-# Allow CSRF requests from deployed domain
-# CSRF_TRUSTED_ORIGINS = [
-#     'https://social-work.jkalasas.dev'
-# ]
+ALLOWED_HOSTS = ['social-work-predictor-hqh7bxcbd6baajd5.eastasia-01.azurewebsites.net']
 
-# Database — swap out the entire DATABASES block
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST'),
+        'PORT': config('DB_PORT', default='5432'),
+    }
 }
 
 
