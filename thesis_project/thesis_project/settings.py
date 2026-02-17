@@ -24,6 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '))"                                                                             q=cw)h4)(4*uvx#(^+j9*i9k2e0u5(5747@+3mq5xjdk9-3f44')
 
+CSRF_TRUSTED_ORIGINS = [
+    f"https://{os.environ['WEBSITE_HOSTNAME']}"
+]
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
@@ -32,14 +35,13 @@ ALLOWED_HOSTS = ['social-work-predictor-hqh7bxcbd6baajd5.eastasia-01.azurewebsit
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),
-        'PORT': config('DB_PORT', default='5432'),
+        'NAME': os.environ['DB_NAME'],
+        'USER': os.environ['DB_USER'],
+        'PASSWORD': os.environ['DB_PASSWORD'],
+        'HOST': os.environ['DB_HOST'],
+        'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
-
 
 # Application definition
 
