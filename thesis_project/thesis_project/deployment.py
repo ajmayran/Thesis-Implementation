@@ -26,17 +26,33 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
 
+# connection_string = os.environ['AZURE_POSTGRE_CONNECTIONSTRING']
+# # parameters = dict(pair.split('=') for pair in connection_string.split())
+# parameters = dict(pair.split('=', 1) for pair in connection_string.split())
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': parameters['DB_NAME'],
+#         'USER': parameters['DB_USER'],
+#         'PASSWORD': parameters['DB_PASSWORD'],
+#         'HOST': parameters['DB_HOST'],
+#     }
+# }
+
 connection_string = os.environ['AZURE_STORAGE_CONNECTION_STRING']
-parameters = dict(pair.split('=', 1) for pair in connection_string.split())
+
+# Parse semicolon-separated key=value pairs
+parameters = dict(pair.split('=', 1) for pair in connection_string.split(';') if '=' in pair)
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': parameters['DB_NAME'],
-        'USER': parameters['DB_USER'],
-        'PASSWORD': parameters['DB_PASSWORD'],
-        'HOST': parameters['DB_HOST'],
+        'NAME': parameters['Database'],
+        'USER': parameters['User Id'],
+        'PASSWORD': parameters['Password'],
+        'HOST': parameters['Server'],
+        'PORT': '5432',
+        'OPTIONS': {'sslmode': 'require'},
     }
 }
-
-
