@@ -29,22 +29,14 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 connection_string = os.environ['AZURE_STORAGE_CONNECTION_STRING']
 parameters = dict(pair.split('=') for pair in connection_string.split())
 
-
-DATABASES = {}
-if os.environ.get('AZURE_STORAGE_CONNECTION_STRING'):
-    # Use PostgreSQL
-    connection_string = os.environ['AZURE_STORAGE_CONNECTION_STRING']
-    parameters = dict(pair.split('=') for pair in connection_string.split())
-    DATABASES['default'] = {
+DATABASES = {
+    'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': parameters['DB_NAME'],
         'USER': parameters['DB_USER'],
         'PASSWORD': parameters['DB_PASSWORD'],
         'HOST': parameters['DB_HOST'],
-        'PORT': parameters.get('DB_PORT', '5432'),
     }
-else:
-    DATABASES['default'] = {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',  
-    }
+}
+
+
