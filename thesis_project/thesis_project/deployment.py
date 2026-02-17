@@ -27,7 +27,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
 connection_string = os.environ['AZURE_STORAGE_CONNECTION_STRING']
-parameters = dict(pair.split('=') for pair in connection_string.split())
+parameters = dict(pair.split('=', 1) for pair in connection_string.split())
 
 DATABASES = {
     'default': {
