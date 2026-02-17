@@ -3,6 +3,7 @@ from .settings import *
 from .settings import BASE_DIR
 
 ALLOWED_HOSTS = [os.environ['WEBITE_HOSTNAME']]
+SECRET_KEY = os.environ['SECRET_KEY']
 CSRF_TRUSTED_ORIGINS = [f"https://{os.environ['WEBITE_HOSTNAME']}"]
 DEBUG = False
 
@@ -22,6 +23,7 @@ MIDDLEWARE = [
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 
 
 connection_string = os.environ['AZURE_STORAGE_CONNECTION_STRING']
