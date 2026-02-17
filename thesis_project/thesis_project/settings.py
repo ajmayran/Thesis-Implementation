@@ -27,7 +27,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '))"                           
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-# ALLOWED_HOSTS = ['social-work-predictor-hqh7bxcbd6baajd5.eastasia-01.azurewebsites.net']
+ALLOWED_HOSTS = []
 
 # DATABASES = {
 #     'default': {
