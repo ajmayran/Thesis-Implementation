@@ -48,10 +48,10 @@ parameters = dict(pair.split('=', 1) for pair in connection_string.split(';') if
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': parameters['DB_NAME'],
-        'USER': parameters['DB_USER'],
-        'PASSWORD': parameters['DB_PASSWORD'],
-        'HOST': parameters['DB_HOST'],
+        'NAME': parameters['Database'],
+        'USER': parameters['User Id'],
+        'PASSWORD': parameters['Password'],
+        'HOST': parameters['Server'],
         'PORT': '5432',
         'OPTIONS': {'sslmode': 'require'},
     }
