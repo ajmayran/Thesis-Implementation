@@ -7,8 +7,6 @@ db.sqlite3
 media/
 staticfiles/
 *.log
-*.pkl
-*.joblib
 *.h5
 .vscode/
 .idea/
