@@ -79,5 +79,5 @@ jobs:
         with:
           app-name: 'Social-Work-Predictor'
           slot-name: 'Production'
-          package: ./thesis_project 
+          # package: ./thesis_project 
           
