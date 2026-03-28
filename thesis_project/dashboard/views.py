@@ -116,7 +116,7 @@ def get_default_feature_importance():
     """Return default feature importance values as fallback"""
     return {
         'StudyHours': 0.3607,
-        'GPA': 0.2978,
+        'GWA': 0.2978,
         'ReviewCenter': 0.2658,
         'Age': 0.2646,
         'TestAnxiety': 0.2575,

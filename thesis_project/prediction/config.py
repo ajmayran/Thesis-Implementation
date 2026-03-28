@@ -5,7 +5,7 @@ import sys
 models_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'models')
 
 # Active model configuration - change these to switch models
-SELECTED_MODEL_NAME = 'stacking_neural_ridge_neural_final'
+SELECTED_MODEL_NAME = 'stacking_neural_ridge_ridge_final'
 MODEL_CATEGORY = 'ensemble'
 
 # Model paths
