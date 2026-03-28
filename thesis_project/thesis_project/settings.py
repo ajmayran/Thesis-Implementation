@@ -25,9 +25,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '))"                                                                             q=cw)h4)(4*uvx#(^+j9*i9k2e0u5(5747@+3mq5xjdk9-3f44')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['social-work-predictor.me', 'www.social-work-predictor.me']
+ALLOWED_HOSTS = ['social-work-predictor.me', 'www.social-work-predictor.me', 'localhost', '127.0.0.1']
 
 # DATABASES = {
 #     'default': {
