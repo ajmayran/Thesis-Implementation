@@ -57,19 +57,26 @@ pip install -r requirements.txt
 ```
 
 
-### 5. Apply Database Migrations
+### 5. Collect Staticsfiles
+```bash
+python manage.py collectstatics
+```
+
+### 6. Apply Database Migrations
 ```bash
 python manage.py makemigrations
 python manage.py migrate
 ```
 
+### (Optional) Create Sample User
+```bash
+python manage.py create_sample_user
+```
 
 ### 6. Run the Development Server
 ```bash
 python manage.py runserver
 ```
-
-
 
 ## Members
 - Alvan Jay Mayran
